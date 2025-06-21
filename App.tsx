@@ -5,7 +5,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthNavigator } from '~/navigation/AuthNavigator';
 import { MainNavigator } from '~/navigation/MainNavigator';
 import { RootStackParamList } from '~/navigation/types';
-import WelcomeScreen from '~/screens/auth/WelcomeScreen';
 import { useFonts } from 'expo-font';
 
 import './global.css';
@@ -27,7 +26,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={"Auth"}>
-          <Stack.Screen name="Welcome" component={WelcomeScreen} />
+          {/* <Stack.Screen name="Welcome" component={WelcomeScreen} /> */}
           <Stack.Screen name="Auth" component={AuthNavigator} />
           <Stack.Screen name="Main" component={MainNavigator} />
           <Stack.Screen name="HomePage" component={HomePage} />
