@@ -1,4 +1,4 @@
-# Eternal Green Expo App
+# Fest Go Expo App
 
 A React Native mobile application built with Expo.
 
@@ -13,7 +13,7 @@ Before you begin, ensure you have the following installed:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/aawaiz-eternalgreen/eternalgreen-app.git
+git clone https://github.com/omyratechnologies/festgo-React_Native.git
 cd my-expo-app
 ```
 
