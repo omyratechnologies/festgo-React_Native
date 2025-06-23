@@ -10,6 +10,7 @@ import WalletScreen from '~/screens/Profile/WalletScreen';
 import OrderDetails from '~/screens/Profile/OrderDetails';
 import WishlistPage from '~/screens/Profile/WishlistPage';
 import SavedCards from '~/screens/Profile/SavedCards';
+import HotelBooking from '~/screens/HotelBooking/HotelBooking';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -19,6 +20,8 @@ export const MainNavigator = () => {
       screenOptions={{ headerShown: false, animation: 'simple_push' }}
       initialRouteName="HomePage">
       <Stack.Screen name="HomePage" component={HomePage} />
+
+      {/* Profile pages */}
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="ReferAndEarn" component={ReferAndEarn} />
       <Stack.Screen name="EditProfile" component={EditProfile} />
@@ -27,6 +30,9 @@ export const MainNavigator = () => {
       <Stack.Screen name="Wallet" component={WalletScreen} />
       <Stack.Screen name="Wishlist" component={WishlistPage} />
       <Stack.Screen name="SavedCards" component={SavedCards} />
+
+      {/* Hotel Booking Screens */}
+      <Stack.Screen name="HotelBooking" component={HotelBooking} />
     </Stack.Navigator>
   );
 };

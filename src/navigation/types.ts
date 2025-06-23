@@ -32,6 +32,9 @@ export type MainStackParamList = {
   HomePage: undefined;
   Profile: undefined;
   ReferAndEarn: undefined;
+
+
+  // profile
   EditProfile: undefined;
   MyOrders: undefined;
   Services: undefined;
@@ -40,6 +43,10 @@ export type MainStackParamList = {
   Wallet: undefined;
   Wishlist: undefined;
   SavedCards: undefined;
+
+  
+  // hotel bookings
+  HotelBooking: undefined;
 };
 
 export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
