@@ -26,7 +26,6 @@ const CARD_DATA = [
       'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=400&q=80',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg',
   },
-  // Add more dummy cards as needed
 ];
 
 const { width } = Dimensions.get('window');
