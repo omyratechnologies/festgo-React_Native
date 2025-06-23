@@ -1,33 +1,25 @@
-import { View, Text } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import React from 'react';
-import HomeBackground from '~/assets/images/homepage/HomeBackground.svg';
-import BottomMenu from '~/assets/images/homepage/BottomMenu.svg';
-import MenuPlayButton from '~/assets/images/homepage/MenuPlayButton.svg';
+import BottomMenu from '~/components/common/BottomMenu';
+import HeaderMenu from './HeaderMenu';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import ServiceDetails from '~/components/HomePage/ServiceDetails';
+import OfferBanner from '~/components/HomePage/OfferBanner';
+import OffersScrollable from '~/components/HomePage/OffersScrollable';
 
 const HomePage = () => {
   return (
-    <View style={{ flex: 1, position: 'relative' }}>
-      <HomeBackground width="100%" height={250} preserveAspectRatio="xMidYMax slice" />
-      <Text>HomePage</Text>
-      <MenuPlayButton
-        style={{
-          position: 'absolute',
-          width: 65,
-          height: 65,
-          bottom: 20,
-          left: '50%',
-          transform: [{ translateX: '-50%' }],
-        }}
-      />
-      <BottomMenu
-        width="100%"
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-        }}
-      />
-    </View>
+    <SafeAreaView edges={['top']} className="flex-1 bg-white">
+      <View className="flex-1 justify-start">
+        <HeaderMenu />
+        <ScrollView>
+          <ServiceDetails />
+          <OfferBanner />
+          <OffersScrollable />
+        </ScrollView>
+        <BottomMenu />
+      </View>
+    </SafeAreaView>
   );
 };
 
