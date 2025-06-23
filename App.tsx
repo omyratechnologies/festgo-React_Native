@@ -1,5 +1,4 @@
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthNavigator } from '~/navigation/AuthNavigator';
@@ -8,12 +7,9 @@ import { RootStackParamList } from '~/navigation/types';
 import { useFonts } from 'expo-font';
 
 import './global.css';
-import HomePage from '~/screens/HomePage/HomePage';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
-
-
-
+const Stack = createBottomTabNavigator<RootStackParamList>();
 export default function App() {
   const [fontsLoaded] = useFonts({
     BlackShield: require('./assets/fonts/blackerShield.ttf'),
@@ -25,11 +21,11 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={"Auth"}>
-          {/* <Stack.Screen name="Welcome" component={WelcomeScreen} /> */}
+        <Stack.Navigator
+          screenOptions={{ headerShown: false, tabBarStyle: { display: 'none' } }}
+          initialRouteName="Main">
           <Stack.Screen name="Auth" component={AuthNavigator} />
           <Stack.Screen name="Main" component={MainNavigator} />
-          <Stack.Screen name="HomePage" component={HomePage} />
         </Stack.Navigator>
         <StatusBar style="light" />
       </NavigationContainer>

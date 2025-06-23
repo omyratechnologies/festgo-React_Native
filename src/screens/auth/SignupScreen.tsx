@@ -129,7 +129,11 @@ const SignupScreen = () => {
               title="Confirm"
               variant="primary"
               className="mb-4 mt-6 items-center rounded-full bg-[#F15A29] p-3 font-blackshield"
-              onPress={() => navigation.push('Auth', { screen: 'Onboarding' })}
+              onPress={() =>
+                navigation.navigate('Auth', {
+                  screen: 'Onboarding',
+                })
+              }
             />
           </ScrollView>
         </TouchableWithoutFeedback>

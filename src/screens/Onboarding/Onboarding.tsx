@@ -54,6 +54,13 @@ const Onboarding = () => {
     flatListRef.current?.scrollToIndex({ index: slides.length - 1 });
   };
 
+  const handleGetStarted = () => {
+    // Navigate to Main stack - this will switch from Auth flow to Main flow
+    navigation.navigate('Main', {
+      screen: 'HomePage',
+    });
+  };
+
   const renderItem = ({ item }: any) => {
     const { Image, title, subtitle } = item;
     return (
@@ -85,7 +92,7 @@ const Onboarding = () => {
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
-      <View className="bg-white justify-around">
+      <View className="justify-around bg-white">
         <FlatList
           data={slides}
           keyExtractor={(item) => item.id}
@@ -106,7 +113,7 @@ const Onboarding = () => {
         <Indicator />
 
         {/* Footer Buttons */}
-        <View className="flex-row items-center justify-between mt-10 px-10 pb-10">
+        <View className="mt-10 flex-row items-center justify-between px-10 pb-10">
           {currentIndex < slides.length - 1 ? (
             <>
               <TouchableOpacity onPress={handleSkip}>
@@ -119,13 +126,12 @@ const Onboarding = () => {
               </TouchableOpacity>
             </>
           ) : (
-            <View className='w-full items-center'>
-
-            <TouchableOpacity
-              onPress={() => navigation.replace('HomePage')}
-              className="items-center px-7 justify-center rounded-full bg-[#F15A29] py-3">
-              <Text className="text-base font-bold text-white">Get Started</Text>
-            </TouchableOpacity>
+            <View className="w-full items-center">
+              <TouchableOpacity
+                onPress={handleGetStarted}
+                className="items-center justify-center rounded-full bg-[#F15A29] px-7 py-3">
+                <Text className="text-base font-bold text-white">Get Started</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>

@@ -1,18 +1,14 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { NavigatorScreenParams } from '@react-navigation/native';
 
+// Root Stack - switches between Auth and Main flows
 export type RootStackParamList = {
-  Welcome: undefined;
-  Auth: { screen: string };
-  Main: undefined;
-  Services: undefined;
-  HomePage: undefined;
+  Auth: NavigatorScreenParams<AuthStackParamList>;
+  Main: NavigatorScreenParams<MainStackParamList>;
 };
 
-export type MainTabParamList = {
-  Home: undefined;
-  Profile: undefined;
-};
-
+// Auth Stack - for authentication flow
 export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -31,5 +27,21 @@ export type AuthStackParamList = {
   Onboarding: undefined;
 };
 
+// Main Tab - for main app navigation with tabs
+export type MainStackParamList = {
+  HomePage: undefined;
+  Profile: undefined;
+  ReferAndEarn: undefined;
+  EditProfile: undefined;
+  MyOrders: undefined;
+  Services: undefined;
+  Rewards: undefined;
+  MyOrderDetails: { orderId: string };
+  Wallet: undefined;
+  Wishlist: undefined;
+  SavedCards: undefined;
+};
 
 export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+export type AuthNavigationProp = NativeStackNavigationProp<AuthStackParamList>;
+export type MainTabNavigationProp = BottomTabNavigationProp<MainStackParamList>;

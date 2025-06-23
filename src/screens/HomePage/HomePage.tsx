@@ -1,11 +1,11 @@
 import { View, Text, ScrollView } from 'react-native';
 import React from 'react';
 import BottomMenu from '~/components/common/BottomMenu';
-import HeaderMenu from './HeaderMenu';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ServiceDetails from '~/components/HomePage/ServiceDetails';
 import OfferBanner from '~/components/HomePage/OfferBanner';
 import OffersScrollable from '~/components/HomePage/OffersScrollable';
+import HeaderMenu from './HeaderMenu';
 
 const HomePage = () => {
   return (

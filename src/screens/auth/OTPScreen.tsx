@@ -11,10 +11,10 @@ import LoginLogo from '~/assets/images/auth/Group.svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '~/components/ui/Button';
 import { useNavigation } from '@react-navigation/native';
-import { NavigationProp } from '~/navigation/types';
+import { AuthNavigationProp } from '~/navigation/types';
 
 const OTPScreen = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation<AuthNavigationProp>();
 
   const [otp, setOtp] = useState(['', '', '', '']);
   const [timer, setTimer] = useState(60);
@@ -114,7 +114,7 @@ const OTPScreen = () => {
             title="Confirm"
             variant="primary"
             className="mb-4 items-center rounded-full bg-[#F15A29] p-3 font-blackshield"
-            onPress={() => navigation.push('Auth', { screen: 'SignupScreen' })}
+            onPress={() => navigation.navigate('SignupScreen')}
           />
 
           {/* Bottom Color Div */}

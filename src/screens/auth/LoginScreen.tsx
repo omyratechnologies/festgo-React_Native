@@ -7,10 +7,10 @@ import MailIcon from '~/assets/icons/mail.svg';
 import FacebookIcon from '~/assets/icons/facebook.svg';
 import GoogleIcon from '~/assets/icons/google.svg';
 import { useNavigation } from '@react-navigation/native';
-import { NavigationProp } from '~/navigation/types';
+import { AuthNavigationProp } from '~/navigation/types';
 
 const LoginScreen = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation<AuthNavigationProp>();
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
       <View className="flex-1 justify-between bg-white px-6">
@@ -49,7 +49,13 @@ const LoginScreen = () => {
           title="Confirm"
           variant="primary"
           className="mb-4  items-center rounded-full bg-[#F15A29] p-3 font-blackshield"
-          onPress={() => navigation.push('Auth', { screen: 'OTP' })}
+          onPress={() => navigation.navigate('OTP', {
+            phoneNumber: '',
+            email: '',
+            name: '',
+            referralCode: '',
+            password: ''
+          })}
         />
 
         {/* Divider */}
