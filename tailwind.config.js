@@ -8,6 +8,7 @@ module.exports = {
       fontFamily: {
         blackshield: ['BlackShield'],
         baloo: ['Baloo'],
+        poppins: ['Poppins'],
       },
     },
   },

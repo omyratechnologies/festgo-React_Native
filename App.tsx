@@ -1,6 +1,8 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import 'react-native-gesture-handler';
+import 'react-native-reanimated';
 import { AuthNavigator } from '~/navigation/AuthNavigator';
 import { MainNavigator } from '~/navigation/MainNavigator';
 import { RootStackParamList } from '~/navigation/types';
@@ -14,6 +16,7 @@ export default function App() {
   const [fontsLoaded] = useFonts({
     BlackShield: require('./assets/fonts/blackerShield.ttf'),
     Baloo: require('./assets/fonts/baloodaa.ttf'),
+    Poppins: require('./assets/fonts/poppins.ttf'),
   });
 
   if (!fontsLoaded) return null;

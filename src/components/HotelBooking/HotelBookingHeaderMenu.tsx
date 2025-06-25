@@ -15,7 +15,7 @@ type HeaderMenuProps = {
   white?: boolean;
 };
 
-const HeaderMenu: React.FC<HeaderMenuProps> = ({ white = false }) => {
+const HotelBookingHeaderMenu: React.FC<HeaderMenuProps> = ({ white = false }) => {
   const navigation = useNavigation<MainTabNavigationProp>();
 
   const UserIcon = white ? UserProfileLight : UserProfileIcon;
@@ -25,7 +25,7 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ white = false }) => {
   const textColor = white ? 'text-white' : 'text-black';
 
   return (
-    <View className="z-10 w-full flex-row items-center justify-between bg-transparent px-8 pb-6 pt-2">
+    <View className="absolute mt-16 z-10 w-full flex-row items-center justify-between bg-transparent px-8 pb-6 pt-2">
       {/* Left Section */}
       <View className="flex-row items-center">
         <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
@@ -49,4 +49,4 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ white = false }) => {
   );
 };
 
-export default HeaderMenu;
+export default HotelBookingHeaderMenu;
