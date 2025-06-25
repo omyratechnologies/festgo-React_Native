@@ -47,6 +47,8 @@ export type MainStackParamList = {
   
   // hotel bookings
   HotelBooking: undefined;
+  HotelBookingDetails: { hotelId: string };
+  HotelBookingSearch: undefined;
 };
 
 export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;

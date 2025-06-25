@@ -15,7 +15,7 @@ import LoginLogo from '~/assets/images/auth/Group.svg';
 import { Button } from '~/components/ui/Button';
 import MailIcon from '~/assets/icons/mail.svg';
 import PhoneIcon from '~/assets/icons/phone.svg';
-import LocationIcon from '~/assets/icons/location.svg';
+import LocationIcon from '~/assets/icons/location-icon.svg';
 import LockIcon from '~/assets/icons/lock.svg';
 import ReferralIcon from '~/assets/icons/referral.svg';
 import { useNavigation } from '@react-navigation/native';

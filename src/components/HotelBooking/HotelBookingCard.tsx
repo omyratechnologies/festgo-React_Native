@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, TextInput, TouchableOpacity, Text } from 'react-native';
+import { View, TouchableOpacity, Text } from 'react-native';
 import { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { MainTabNavigationProp } from '~/navigation/types';
 
 const TABS = ['Hotels', 'Resorts', 'HourlyStay'];
 
@@ -12,6 +14,7 @@ type HotelBookingCardProps = {
 
 const HotelBookingCard: React.FC<HotelBookingCardProps> = ({ onLocationPress, onDatePress, onGuestsPress }) => {
   const [activeTab, setActiveTab] = useState('Hotels');
+  const navigation = useNavigation<MainTabNavigationProp>();
 
   return (
     <View className="mx-4 absolute w-[85%] -bottom-1/2 rounded-[30px] bg-white p-7 shadow-md">
@@ -48,7 +51,7 @@ const HotelBookingCard: React.FC<HotelBookingCardProps> = ({ onLocationPress, on
       </View>
 
       {/* Search Button */}
-      <TouchableOpacity className="mt-6 bg-[#0E54EC] py-3 rounded-full">
+      <TouchableOpacity onPress={() => navigation.navigate('HotelBookingSearch')} className="mt-6 bg-[#0E54EC] py-3 rounded-full">
         <Text className="text-center text-white font-semibold text-lg">Search</Text>
       </TouchableOpacity>
     </View>
