@@ -4,12 +4,24 @@ import ArrowRightIcon from '~/assets/icons/rightIcon.svg';
 import PencilIcon from '~/assets/icons/EditIcon.svg';
 import ChevronLeftIcon from '~/assets/icons/ArrowLeft.svg';
 import BottomMenu from '~/components/common/BottomMenu';
+import BackIcon from '~/assets/icons/ArrowLeft.svg';
+import HeartIcon from '~/assets/icons/BlueHeart.svg';
+import CameraIcon from '~/assets/icons/CameraIcon.svg';
+import StarIcon from '~/assets/icons/star.svg';
+import LocationIcon from '~/assets/icons/location-pin.svg';
+import BackIconModal from '~/assets/icons/hotelBooking/BackIcon.svg';
+import TickIcon from '~/assets/icons/Tick.svg';
+import WineglassIcon from '~/assets/icons/hotelBooking/Wineglass.svg';
+import RecommendationHotels from '~/components/HotelBooking/HotelBookingHome/RecommendationHotels';
+import AllFacilitiesModal from '~/components/HotelBooking/AllFacilitiesModal';
+
 // import { Accordion } from 'native-base';
 
 const facilities = [
   { icon: 'wifi', label: 'Free WiFi' },
   { icon: 'pool', label: 'Pool' },
   { icon: 'breakfast', label: 'Breakfast' },
+  { icon: 'wifi', label: 'Free WiFi' },
   // ...more
 ];
 
@@ -24,111 +36,185 @@ const reviews = [
   { user: 'Bob', comment: 'Very clean.', rating: 4 },
 ];
 
-const rules = ['No smoking', 'No pets', 'Check-in after 2PM'];
+const rules = [
+  'Primary guest should be at least 18 years of age.',
+  'Passport, Aadhar, Driving License and Govt. ID are accepted as ID proof(s). ',
+  'Local IDs are allowed.',
+];
 
 export default function HotelBookingSingleDetail() {
   const [showFacilities, setShowFacilities] = useState(false);
 
   return (
     <View className="flex-1 bg-white">
-      <ScrollView className="mb-32 flex-1 bg-white">
-        {/* Image Section */}
-        <Image
-          source={{ uri: 'https://placehold.co/400x200' }}
-          className="h-52 w-full"
-          resizeMode="cover"
-        />
+      <View className="flex-row items-center justify-between bg-[#0E54EC] px-4 pb-4 pt-16"></View>
 
-        {/* Rating, Name, Reviews, Location */}
-        <View className="px-4 py-3">
-          <View className="flex-row items-center space-x-2">
-            <Text className="font-bold text-yellow-500">★ 4.5</Text>
-            <Text className="text-lg font-semibold">Hotel Name</Text>
+      <ScrollView className="mb-32 flex-1 bg-white">
+        <View className="relative flex-row items-center justify-between">
+          <BackIcon
+            width={36}
+            height={36}
+            style={{
+              position: 'absolute',
+              left: 12,
+              top: 12,
+              zIndex: 2,
+            }}
+          />
+          <View className="absolute right-4 top-4 z-50 rounded-full bg-white p-2">
+            <HeartIcon width={20} height={20} />
           </View>
-          <Text className="text-gray-500">123 reviews · New York, USA</Text>
+          <Image
+            source={{
+              uri: 'https://media.istockphoto.com/id/104731717/photo/luxury-resort.jpg?s=612x612&w=0&k=20&c=cODMSPbYyrn1FHake1xYz9M8r15iOfGz9Aosy9Db7mI=',
+            }}
+            className="h-64 w-full"
+            resizeMode="cover"
+          />
+          <View className="absolute bottom-0 w-full flex-row items-center justify-center gap-2 py-2">
+            <View className="flex-row items-center justify-center rounded-full bg-[#00000091] p-1 px-3">
+              <CameraIcon width={10} height={10} color="#ffffff" />
+              <Text className="ml-1 text-sm font-semibold text-white">Hotel Photos 80</Text>
+            </View>
+            <View className="flex-row items-center justify-center rounded-full bg-[#00000091] p-1 px-3">
+              <CameraIcon width={10} height={10} color="#ffffff" />
+              <Text className="ml-1 text-sm font-semibold text-white">Guest Photos 80</Text>
+            </View>
+          </View>
+        </View>
+        {/* Rating, Name, Reviews, Location */}
+        <View className="w-full px-4 py-3">
+          <View className="w-full flex-row items-center justify-between">
+            <View className="w-[75%] flex-col items-start ">
+              <View className="my-2 mb-1 mr-2 flex-row items-center rounded-full border border-[#D2D3D8] px-3 py-1 font-poppins text-xs">
+                <Text className="font-poppins text-sm font-semibold text-gray-700">3</Text>
+                <StarIcon width={12} height={12} className="mx-1" />
+                <Text className="ml-1 font-poppins text-xs text-gray-500">Hotel</Text>
+              </View>
+              <View className="flex-row items-center space-x-2">
+                <Text className="font-poppins text-lg font-semibold">
+                  Aalankrita Resort & Conventi
+                </Text>
+              </View>
+            </View>
+            <View className="mb-2 flex-col items-center justify-between">
+              <View className="w-[80px] rounded-t-xl bg-[#199855] py-2">
+                <Text className="text-center font-poppins text-xs font-semibold text-white">
+                  Very Good
+                </Text>
+              </View>
+              <View className="w-[80px] flex-row items-center justify-center gap-3 rounded-b-xl border border-[#0000001A] py-2">
+                <View className="flex-row items-center">
+                  <HeartIcon width={16} height={16} className="" />
+                  <Text className="ml-1 font-poppins text-xs font-semibold text-gray-700">4.5</Text>
+                </View>
+                <Text className="text-center font-poppins text-xs font-semibold text-black">
+                  120
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View className="mb-2 flex-row items-center">
+            <LocationIcon width={16} height={16} className="mr-1" />
+            <Text className="font-poppins text-sm text-gray-600">Gachibowli</Text>
+          </View>
         </View>
 
         {/* Dates, Rooms, Adults, Edit */}
-        <View className="mx-4 mb-3 flex-row items-center justify-between rounded-lg bg-gray-100 px-4 py-3">
-          <View>
-            <Text className="text-gray-700">12 Jun - 14 Jun</Text>
-            <Text className="text-xs text-gray-500">2 Rooms · 4 Adults</Text>
+        <View className="mx-4 mb-3 flex-row items-center justify-between overflow-hidden rounded-xl border border-[#00000024]">
+          <View className="p-4">
+            <Text className="font-poppins text-gray-700">12 Jun - 14 Jun</Text>
+            <Text className="font-poppins text-xs text-gray-500">Sun · Tue</Text>
           </View>
-          <Pressable className="p-2" onPress={() => {}}>
-            <PencilIcon width={20} color="#2563eb" />
+          <Text className="font-poppins text-xs text-gray-500">2 Rooms · 4 Adults</Text>
+          <Pressable className="rounded-r-xl bg-[#0E54EC] px-4 py-4" onPress={() => {}}>
+            <PencilIcon width={24} color="#2563eb" />
           </Pressable>
         </View>
 
         {/* Description */}
         <View className="mb-3 px-4">
-          <Text className="text-base text-gray-700">
-            This is a beautiful hotel located in the heart of the city. Enjoy modern amenities and
-            excellent service.
+          <Text className="font-poppins text-base text-gray-700">
+            Located in Hyderabad, within 1.9 km of AP State Archaeology Museum and 2.9 km of
+            Ravindra Bharathi, New Hotel Suhail provides accommodation with a garden and free WiFi
+            throughout the property as well as free private parking for guests who drive. The
+            property is around 3.2 km from Charminar, 3.5 km from Mecca Masjid and 4.2 km from
+            Chowmahalla Palace. The accommodation offers room service and a 24-hour front desk for
+            guests
           </Text>
         </View>
 
         {/* Common Facilities */}
-        <Pressable
-          className="mx-4 mb-3 flex-row items-center justify-between rounded-lg bg-gray-100 px-4 py-3"
-          onPress={() => setShowFacilities(true)}>
-          <View className="flex-row space-x-4">
-            {facilities.slice(0, 3).map((f, i) => (
-              <View key={i} className="items-center">
-                {/* Replace with your icon */}
-                <View className="mb-1 rounded-full bg-blue-100 p-2">
-                  <Text className="text-blue-600">{f.icon}</Text>
-                </View>
-                <Text className="text-xs text-gray-700">{f.label}</Text>
-              </View>
-            ))}
+        <View className="my-4 px-4">
+          <Text className="mb-2 text-xl font-bold">Common Facilities</Text>
+          <View className="mb-4 flex-row items-end justify-between">
+            <View className="mt-4 flex-row flex-wrap gap-3">
+              {facilities.map((_facility, index) => {
+                const bgColors = ['#FFBC99', '#CABDFF', '#B1E5FC'];
+                const bgColor = bgColors[index % bgColors.length];
+                return (
+                  <View
+                    key={index}
+                    className="mr-1 h-[60px] w-[60px] flex-row items-center justify-center rounded-full p-4"
+                    style={{ backgroundColor: bgColor }}>
+                    <WineglassIcon width={28} height={28} />
+                  </View>
+                );
+              })}
+            </View>
+            <Pressable
+              className="mx-4 h-[60px] w-[60px] flex-row items-center justify-center rounded-full border border-[#ECECEC] p-4"
+              onPress={() => setShowFacilities(true)}>
+              <ArrowRightIcon width={36} color="#2563eb" />
+            </Pressable>
           </View>
-          <ArrowRightIcon width={20} color="#2563eb" />
-        </Pressable>
+        </View>
 
         {/* Facilities Modal */}
         <Modal visible={showFacilities} animationType="slide">
-          <View className="flex-1 bg-white">
-            <View className="mt-12 flex-row items-center border-b border-gray-200 bg-[#0E54EC] px-4 py-3">
-              <Pressable onPress={() => setShowFacilities(false)} className="mr-2">
-                <ChevronLeftIcon width={24} color="#2563eb" />
+          <View className="flex-row items-center justify-between bg-[#0E54EC] px-4 pb-4 pt-16" />
+          <View className="w-full flex-1 bg-white">
+            <View className="relative w-full flex-row items-center border-b border-gray-200 px-4 py-3">
+              <Pressable onPress={() => setShowFacilities(false)} className="absolute left-4 z-10">
+                <BackIconModal width={24} color="#2563eb" />
               </Pressable>
-              <Text className="text-lg font-semibold">All Facilities</Text>
+              <View className="flex-1 items-center py-3">
+                <Text className="text-center text-lg font-semibold">All Facilities</Text>
+              </View>
             </View>
-            <ScrollView className="px-4">
-              {allFacilities.map((section, idx) => (
-                <View key={idx} className="mb-4">
-                  <Text className="mb-2 font-bold">{section.title}</Text>
-                  {section.data.map((item, i) => (
-                    // <Accordion key={i} title={item}>
-                    <Text className="px-2 py-1 text-gray-600">{item} details...</Text>
-                  ))}
-                </View>
-              ))}
-            </ScrollView>
+            <AllFacilitiesModal />
           </View>
         </Modal>
 
         {/* Price & Select Room */}
         <View className="flex-row items-center justify-between px-4 py-3">
-          <Text className="text-xl font-bold text-gray-900">
-            $120 <Text className="text-base font-normal text-gray-500">/night</Text>
-          </Text>
-          <Pressable className="rounded-lg bg-blue-600 px-5 py-2" onPress={() => {}}>
-            <Text className="font-semibold text-white">Select Room</Text>
+          <View className="flex-col items-start">
+            <Text className="text-3xl font-bold text-[#00AEEF]">₹4617</Text>
+            <Text className="text-md font-normal text-gray-500">Per night</Text>
+          </View>
+          <Pressable className="rounded-full bg-blue-600 px-5 py-3" onPress={() => {}}>
+            <Text className="text-lg font-semibold text-white">Select Room</Text>
           </Pressable>
         </View>
 
         {/* Location & Map */}
-        <View className="mb-3 px-4">
-          <Pressable className="mb-2 flex-row items-center" onPress={() => {}}>
-            <Text className="mr-2 font-semibold text-blue-600">View Map</Text>
-            <ArrowRightIcon width={16} color="#2563eb" />
-          </Pressable>
-          <Image
-            source={{ uri: 'https://placehold.co/400x120' }}
-            className="h-28 w-full rounded-lg"
-            resizeMode="cover"
-          />
+        <View className="my-6 px-4">
+          <View className="mb-1 flex-row items-center justify-between">
+            <Text className="mr-2 font-poppins font-semibold text-blue-600">Location</Text>
+            <Pressable className="mb-2 flex-row items-center" onPress={() => {}}>
+              <Text className="mr-2 font-poppins font-semibold text-[#00AEEF]">View Map</Text>
+            </Pressable>
+          </View>
+          <View className="mb-2 flex-col items-center justify-between rounded-xl border border-[#F3F3F3] p-2">
+            <Image
+              source={{ uri: 'https://staticmapmaker.com/img/google-placeholder.png' }}
+              className="h-40 w-full rounded-lg"
+              resizeMode="cover"
+            />
+            <Text className="w-full py-1 text-start font-poppins text-sm text-gray-600">
+              Madhapur Hitech City, 500081 Hyderabad, India
+            </Text>
+          </View>
         </View>
 
         {/* Reviews */}
@@ -148,26 +234,21 @@ export default function HotelBookingSingleDetail() {
           ))}
         </View>
 
-        {/* Recommendations */}
-        <View className="mb-3 px-4">
-          <Text className="mb-2 text-lg font-bold">Recommendations</Text>
-          {/* Add your recommendations here */}
-          <View className="rounded-lg bg-gray-100 p-4">
-            <Text className="text-gray-700">Hotel ABC, Hotel XYZ...</Text>
-          </View>
-        </View>
+        <RecommendationHotels />
 
         {/* Property Rules */}
-        <View className="mb-3 px-4">
-          <Text className="mb-2 text-lg font-bold">Property Rules</Text>
+        <View className="mb-3 mt-4 px-4">
+          <Text className="mb-2 font-poppins text-xl font-bold">Property Rules</Text>
           {rules.map((rule, i) => (
-            <View key={i} className="mb-1 flex-row items-center">
-              {/* <CheckCircleIcon size={18} color="#2563eb" className="mr-2" /> */}
-              <Text className="text-gray-700">{rule}</Text>
+            <View key={i} className="mb-2 flex-row items-center">
+              <TickIcon width={20} height={20} color="#2563eb" className="" />
+              <Text className="ml-1 font-poppins text-gray-700">{rule}</Text>
             </View>
           ))}
-          <Pressable onPress={() => {}}>
-            <Text className="mt-1 font-semibold text-blue-600">View All Rules</Text>
+          <Pressable
+            className="flex items-center rounded-full bg-[#0E54EC] py-3"
+            onPress={() => {}}>
+            <Text className="font-poppins font-semibold text-white">View All Rules</Text>
           </Pressable>
         </View>
       </ScrollView>

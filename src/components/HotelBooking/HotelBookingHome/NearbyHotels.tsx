@@ -7,7 +7,6 @@ import HeartIcon from '~/assets/icons/profile/Heart.svg';
 import { useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
 
-// Dummy data
 const hotels = [
   {
     id: '1',
@@ -16,7 +15,7 @@ const hotels = [
     rating: 4.5,
     price: 3200,
     image:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
+      'https://media.istockphoto.com/id/119926339/photo/resort-swimming-pool.jpg?s=612x612&w=0&k=20&c=9QtwJC2boq3GFHaeDsKytF4-CavYKQuy1jBD2IRfYKc=',
   },
   {
     id: '2',
@@ -25,7 +24,7 @@ const hotels = [
     rating: 4.2,
     price: 4100,
     image:
-      'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
+      'https://media.istockphoto.com/id/104731717/photo/luxury-resort.jpg?s=612x612&w=0&k=20&c=cODMSPbYyrn1FHake1xYz9M8r15iOfGz9Aosy9Db7mI=',
   },
   {
     id: '3',
@@ -34,7 +33,7 @@ const hotels = [
     rating: 4.8,
     price: 2800,
     image:
-      'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=400&q=80',
+      'https://media.istockphoto.com/id/119926339/photo/resort-swimming-pool.jpg?s=612x612&w=0&k=20&c=9QtwJC2boq3GFHaeDsKytF4-CavYKQuy1jBD2IRfYKc=',
   },
 ];
 
@@ -46,28 +45,37 @@ const HotelCard = ({ hotel }: { hotel: (typeof hotels)[0] }) => {
       className="relative mb-2 h-[230px] w-[170px] overflow-hidden rounded-2xl bg-white">
       <Image source={{ uri: hotel.image }} className="h-full w-full" />
       <LinearGradient
-        colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
-        className="absolute h-full w-full"
-      />
-      <TouchableOpacity className="absolute right-2.5 top-2.5 z-10 rounded-full bg-white p-1.5 shadow">
-        <HeartIcon />
-      </TouchableOpacity>
-      <View className="absolute bottom-3 left-3 right-3">
-        <Text className="mb-1 font-poppins text-base font-bold text-white" numberOfLines={1}>
-          {hotel.name}
-        </Text>
-        <View className="mb-1 flex-row items-center">
-          <MapPinIcon className="mr-2" />
-          <Text className="font-poppins text-xs text-white">{hotel.location}</Text>
-        </View>
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center">
-            <StarIcon />
-            <Text className="font-poppins text-xs font-bold text-yellow-400">{hotel.rating}</Text>
+        colors={['rgba(0,0,0,0.5)', 'transparent']}
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '100%',
+          height: '100%',
+          justifyContent: 'space-between',
+        }}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 0, y: 0 }}>
+        <TouchableOpacity className="absolute right-2.5 top-2.5 z-10 rounded-full bg-white p-1.5 shadow">
+          <HeartIcon />
+        </TouchableOpacity>
+        <View className="absolute bottom-3 left-3 right-3">
+          <Text className="mb-1 font-poppins text-base font-bold text-white" numberOfLines={1}>
+            {hotel.name}
+          </Text>
+          <View className="mb-1 flex-row items-center">
+            <MapPinIcon className="mr-2" />
+            <Text className="font-poppins ml-1 text-xs text-white">{hotel.location}</Text>
           </View>
-          <Text className="font-poppins text-sm font-bold text-white">₹{hotel.price}</Text>
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <StarIcon />
+              <Text className="font-poppins text-xs font-bold text-yellow-400">{hotel.rating}</Text>
+            </View>
+            <Text className="font-poppins text-sm font-bold text-white">₹{hotel.price}</Text>
+          </View>
         </View>
-      </View>
+      </LinearGradient>
     </TouchableOpacity>
   );
 };

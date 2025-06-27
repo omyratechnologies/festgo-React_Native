@@ -11,7 +11,7 @@ import PropertyTypeIcon from '~/assets/icons/hotelBooking/PropertyType.svg';
 const dummyHotels = [
   {
     hotelName: 'Grand Palace Hotel',
-    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
+    image: 'https://media.istockphoto.com/id/104731717/photo/luxury-resort.jpg?s=612x612&w=0&k=20&c=cODMSPbYyrn1FHake1xYz9M8r15iOfGz9Aosy9Db7mI=',
     location: 'Mumbai, India',
     price: 3500,
     discount: 20,
@@ -24,7 +24,7 @@ const dummyHotels = [
   },
   {
     hotelName: 'Seaside Resort',
-    image: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca',
+    image: 'https://media.istockphoto.com/id/119926339/photo/resort-swimming-pool.jpg?s=612x612&w=0&k=20&c=9QtwJC2boq3GFHaeDsKytF4-CavYKQuy1jBD2IRfYKc=',
     location: 'Goa, India',
     price: 5000,
     discount: 10,
@@ -37,7 +37,7 @@ const dummyHotels = [
   },
   {
     hotelName: 'Mountain View Inn',
-    image: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429',
+    image: 'https://media.istockphoto.com/id/104731717/photo/luxury-resort.jpg?s=612x612&w=0&k=20&c=cODMSPbYyrn1FHake1xYz9M8r15iOfGz9Aosy9Db7mI=',
     location: 'Manali, India',
     price: 2500,
     pricePerNight: 2500,

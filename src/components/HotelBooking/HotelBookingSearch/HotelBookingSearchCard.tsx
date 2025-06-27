@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity, ViewComponent } from 'react-native
 import HeartIcon from '~/assets/icons/profile/Heart.svg';
 import StarIcon from '~/assets/icons/star.svg';
 import LocationIcon from '~/assets/icons/location-pin.svg';
+import WineglassIcon from '~/assets/icons/hotelBooking/Wineglass.svg';
 import { useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
 
@@ -41,7 +42,7 @@ const HotelBookingSearchCard: React.FC<HotelBookingSearchCardProps> = ({
       onPress={() => navigation.navigate('HotelBookingDetails', { hotelId: 'something' })}
       className="mb-4 overflow-hidden rounded-xl bg-white shadow-md">
       <View className="relative">
-        <Image source={{ uri: image }} className="h-48 w-full" resizeMode="cover" />
+        <Image source={{ uri: image }} className="h-60 w-full" resizeMode="cover" />
         <TouchableOpacity
           className="absolute right-3 top-3 rounded-full bg-white/80 p-2"
           onPress={onHeartPress}>
@@ -82,29 +83,35 @@ const HotelBookingSearchCard: React.FC<HotelBookingSearchCardProps> = ({
               {features.map((feature, idx) => (
                 <Text
                   key={idx}
-                  className="mb-1 mr-2 rounded-full border border-[#00AEEF1A] bg-[#00AEEF1A] px-3 py-1 font-poppins text-xs text-blue-700">
+                  className="mb-1 mr-2 rounded-full border border-[#00AEEF1A] bg-[#00AEEF1A] px-3 py-1 font-poppins text-xs text-[#04688D]">
                   {feature}
                 </Text>
               ))}
             </View>
             <View className="my-2 flex-row flex-wrap">
-              {amenities.map((amenity, idx) => (
-                <Text
-                  key={idx}
-                  className="mb-1 mr-2 rounded bg-gray-100 px-2 py-0.5 font-poppins text-xs text-gray-700">
-                  {amenity}
-                </Text>
+              {amenities.slice(0, 2).map((amenity, idx) => (
+                <View className="flex-row items-center" key={idx}>
+                  <WineglassIcon width={16} height={16} className="mr-1" />
+                  <Text className=" px-2 py-0.5 font-poppins text-xs text-gray-700">
+                    {amenity}
+                  </Text>
+                </View>
               ))}
+              {amenities.length > 2 && (
+                <Text className="mb-1 mr-2 rounded-full border border-[#00000024]  px-2 py-0.5 font-poppins text-xs text-gray-700">
+                  {/* +{amenities.length - 2} */}
+                  20+
+                </Text>
+              )}
             </View>
           </View>
           <View className="mb-2 w-1/3 flex-col items-end">
-            <Text className="mr-2 font-poppins text-xl font-bold text-primary">
-              ₹{pricePerNight}
-              <Text className="font-poppins text-xs text-gray-500">/night</Text>
+            <Text className="mr-2 pt-2 font-poppins text-xl font-bold text-primary">
+              <Text className="font-poppins text-xs text-gray-500">Per night</Text>₹{pricePerNight}
             </Text>
             {discount && (
-              <View className="ml-2 rounded bg-green-100 px-2 py-0.5">
-                <Text className="font-poppins text-xs font-semibold text-green-600">
+              <View className="ml-2 rounded-full bg-[#199855] px-3 py-1">
+                <Text className="font-poppins text-xs font-semibold text-white">
                   {discount}% OFF
                 </Text>
               </View>
