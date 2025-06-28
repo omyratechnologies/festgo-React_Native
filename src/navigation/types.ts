@@ -32,6 +32,10 @@ export type MainStackParamList = {
   HomePage: undefined;
   Profile: undefined;
   ReferAndEarn: undefined;
+  UpcomingScreen: undefined;
+
+  EventsPage: undefined;
+  EventsInfoPage: { eventId: number };
 
 
   // profile
@@ -43,6 +47,7 @@ export type MainStackParamList = {
   Wallet: undefined;
   Wishlist: undefined;
   SavedCards: undefined;
+  HelpScreen: undefined;
 
   
   // hotel bookings

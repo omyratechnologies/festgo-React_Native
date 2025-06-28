@@ -15,7 +15,7 @@ import { MainTabNavigationProp } from '~/navigation/types';
 const topServices = [
   { icon: HotelIcon, label: 'Hotels', page: 'HotelBooking' },
   { icon: ResortsIcon, label: 'Resorts', page: 'HotelBooking' },
-  { icon: EventsIcon, label: 'Events', page: 'HotelBooking' },
+  { icon: EventsIcon, label: 'Events', page: 'EventsPage' },
   { icon: BanquetsIcon, label: 'Banquets', page: 'HotelBooking' },
 ];
 

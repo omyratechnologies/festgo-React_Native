@@ -13,6 +13,10 @@ import SavedCards from '~/screens/Profile/SavedCards';
 import HotelBooking from '~/screens/HotelBooking/HotelBooking';
 import HotelBookingSingleDetail from '~/screens/HotelBooking/HotelBookingSingleDetail';
 import HotelBookingSearch from '~/screens/HotelBooking/HotelBookingSearch';
+import UpcomingScreen from '~/screens/HomePage/UpcomingScreen';
+import HelpScreen from '~/screens/Profile/HelpScreen';
+import EventsPage from '~/screens/Events/EventsPage';
+import EventInfoPage from '~/screens/Events/EventInfoPage';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -31,7 +35,13 @@ export const MainNavigator = () => {
       <Stack.Screen name="MyOrderDetails" component={OrderDetails} />
       <Stack.Screen name="Wallet" component={WalletScreen} />
       <Stack.Screen name="Wishlist" component={WishlistPage} />
+      <Stack.Screen name="UpcomingScreen" component={UpcomingScreen} />
       <Stack.Screen name="SavedCards" component={SavedCards} />
+      <Stack.Screen name="HelpScreen" component={HelpScreen} />
+
+
+      <Stack.Screen name="EventsPage" component={EventsPage} />
+      <Stack.Screen name="EventsInfoPage" component={EventInfoPage} />
 
       {/* Hotel Booking Screens */}
       <Stack.Screen name="HotelBooking" component={HotelBooking} />
