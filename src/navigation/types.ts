@@ -37,6 +37,20 @@ export type MainStackParamList = {
   EventsPage: undefined;
   EventsInfoPage: { eventId: number };
 
+  BeachFestsPage: undefined;
+  BeachFestCheckout: {
+    festId: string;
+  };
+  BeachFestDetails: { festId: string };
+
+  CityFestsPage: undefined;
+  CityFestCategory: { categoryId: string; categoryName: string };
+  CityFestDetails: { festId: string };
+  CityFestCheckout: {
+    festId: string;
+  };
+
+  FestBite: undefined;
 
   // profile
   EditProfile: undefined;
@@ -49,7 +63,6 @@ export type MainStackParamList = {
   SavedCards: undefined;
   HelpScreen: undefined;
 
-  
   // hotel bookings
   HotelBooking: undefined;
   HotelBookingDetails: { hotelId: string };

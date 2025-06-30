@@ -20,10 +20,10 @@ const topServices = [
 ];
 
 const bottomServices = [
-  { icon: BeachFestIcon, label: 'Beach Fest', page: 'HotelBooking' },
-  { icon: CityFestsIcon, label: 'City Fests', page: 'HotelBooking' },
+  { icon: BeachFestIcon, label: 'Beach Fest', page: 'BeachFestsPage' },
+  { icon: CityFestsIcon, label: 'City Fests', page: 'CityFestsPage' },
   { icon: TripsIcon, label: 'Trips', page: 'HotelBooking' },
-  { icon: FestBiteIcon, label: 'Fest Bite', page: 'HotelBooking' },
+  { icon: FestBiteIcon, label: 'Fest Bite', page: 'FestBite' },
 ];
 
 const ServiceDetails = () => {
@@ -52,9 +52,10 @@ const ServiceDetails = () => {
         ))}
       </View>
       <View className="mb-5 flex-row justify-center space-x-3">
-        {bottomServices.map(({ icon: Icon, label }) => (
-          <View
+        {bottomServices.map(({ icon: Icon, label, page }) => (
+          <TouchableOpacity
             key={label}
+            onPress={() => navigation.navigate({ name: page as any, params: undefined })}
             className="mx-1.5 h-[60px] w-[72px] items-center justify-center rounded-xl bg-white shadow"
             style={{
               shadowColor: '#000',
@@ -67,7 +68,7 @@ const ServiceDetails = () => {
             <Text className="mt-1.5 text-center font-baloo text-xs font-medium text-[#444]">
               {label}
             </Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
     </View>
