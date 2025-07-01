@@ -7,6 +7,8 @@ import LogoutIcon from '~/assets/icons/profile/Logout.svg';
 import Notification from '~/assets/icons/profile/Notification.svg';
 import ProfileIcon from '~/assets/icons/profile/Profile.svg';
 import ChevronRightIcon from '~/assets/icons/profile/ChevronRight.svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NavigationProp } from '~/navigation/types';
 
 const OptionRow = ({
   icon,
@@ -33,20 +35,29 @@ const OptionRow = ({
   </TouchableOpacity>
 );
 
+
 const ProfileOptions = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
+    const handleLogout = async () => {
+    await AsyncStorage.multiRemove(['jwtToken', 'userId', 'isLoggedIn']);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Auth' }],
+    });
+  };
 
   const optionsTop = [
     {
       icon: <ProfileIcon width={24} height={24} color="#0601B4" />,
       title: 'Refer & Earn 5000',
       subtitle: 'Invite friends and earn rewards',
-      onPress: () => navigation.navigate('ReferAndEarn' as never),
+      onPress: () => navigation.navigate('Main', {screen: 'ReferAndEarn'}),
     },
     {
       icon: <ProfileIcon width={24} height={24} color="#0601B4" />,
       title: 'Recommend and Earn',
       subtitle: 'Recommend us and get benefits',
+      onPress: () => navigation.navigate('Main', {screen: 'RecommendAndEarn'}),
     },
     {
       icon: <ShieldDoneIcon width={24} height={24} color="#0601B4" />,
@@ -57,6 +68,7 @@ const ProfileOptions = () => {
       icon: <LogoutIcon width={24} height={24} color="#0601B4" />,
       title: 'Logout',
       subtitle: 'Sign out from your account',
+      onPress: handleLogout,
     },
   ];
 

@@ -1,12 +1,22 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, ToastAndroid, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  ToastAndroid,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Feather, FontAwesome, MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
 import ProfileHeaderMenu from '~/components/Profile/ProfileHeaderMenu';
 import { LinearGradient } from 'expo-linear-gradient';
 import BottomMenu from '~/components/common/BottomMenu';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '~/utils/api';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const referralCode = 'HELLO123';
 
 const referrals = [
   { id: '1', name: 'John Doe' },
@@ -15,6 +25,44 @@ const referrals = [
 
 const ReferAndEarn = () => {
   const [copied, setCopied] = useState(false);
+  const [referralCode, setreferralCode] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const jwtToken = await AsyncStorage.getItem('jwtToken');
+        if (!jwtToken) {
+          console.log('No JWT token found');
+          setLoading(false);
+          return;
+        }
+        const response = await fetch(`${API_URL}/me`, {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        });
+        const data = await response.json();
+        setreferralCode(data.user.referralCode);
+      } catch (error) {
+        console.log('Error fetching user details:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
+
+  if (loading) {
+    return (
+      <SafeAreaView edges={['top']} className="flex-1 items-center justify-center bg-white">
+        {/* <ProfileHeaderMenu /> */}
+        <ActivityIndicator size="large" color="#000" />
+        <BottomMenu />
+      </SafeAreaView>
+    );
+  }
 
   const handleCopy = async () => {
     Clipboard.setStringAsync(referralCode);
@@ -27,7 +75,7 @@ const ReferAndEarn = () => {
   const renderReferral = ({ item }: { item: { id: string; name: string } }) => (
     <View
       className={
-        'mb-3 mx-4 flex-row items-center justify-between rounded-2xl border border-[#F9F9F9] bg-white px-4 py-5'
+        'mx-4 mb-3 flex-row items-center justify-between rounded-2xl border border-[#F9F9F9] bg-white px-4 py-5'
       }>
       <View className={'flex-row items-center'}>
         <FontAwesome name="user-circle" size={28} color="#F15A29" />
@@ -38,10 +86,14 @@ const ReferAndEarn = () => {
       </View>
     </View>
   );
-  
+
   const renderReferralEmpty = () => (
     <View className={'mt-12 items-center'}>
-      <FontAwesome name="users" size={48} color="#F15A29" />
+      <Image
+        source={require('~/assets/images/profile/gift-box.png')}
+        className={'w-44'}
+        resizeMode="contain"
+      />
       <Text className={'mt-4 text-center text-base font-medium text-gray-500'}>
         Start referring your friends and family{'\n'}
         and earn vouchers worth up-to ₹500
@@ -63,7 +115,14 @@ const ReferAndEarn = () => {
                 borderBottomRightRadius: 60,
               }}>
               <View className={'px-6'}>
-                <View className="">
+                <View className="w-full">
+                  <View className={'mb-6 flex w-full items-center justify-between'}>
+                  <Image
+                    source={require('~/assets/images/profile/moneybag.png')}
+                    className={'w-44 rounded-2xl'}
+                    resizeMode="cover"
+                  />
+                  </View>
                   <Text
                     className={'mb-6  px-16 text-center font-baloo text-3xl font-bold text-white'}>
                     Refer your friends and Earn

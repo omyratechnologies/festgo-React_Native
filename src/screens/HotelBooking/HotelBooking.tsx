@@ -18,7 +18,8 @@ const HotelBooking = () => {
     if (item === 'spacer') {
       return (
         <View>
-          <View style={{ height: 280, position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <View
+            style={{ height: 280, position: 'relative', display: 'flex', alignItems: 'center' }}>
             <HotelBookingHeaderMenu white />
             <HotelBackgroundImage
               width="100%"
@@ -26,11 +27,7 @@ const HotelBooking = () => {
               style={StyleSheet.absoluteFill}
               preserveAspectRatio="none"
             />
-            <HotelBookingCard
-              onLocationPress={() => {}}
-              onDatePress={() => {}}
-              onGuestsPress={() => {}}
-            />
+            <HotelBookingCard />
           </View>
         </View>
       );

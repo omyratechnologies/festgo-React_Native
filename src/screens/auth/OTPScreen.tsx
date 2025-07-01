@@ -5,20 +5,28 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   Keyboard,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import React, { useRef, useState, useEffect } from 'react';
 import LoginLogo from '~/assets/images/auth/Group.svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button } from '~/components/ui/Button';
-import { useNavigation } from '@react-navigation/native';
-import { AuthNavigationProp } from '~/navigation/types';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { AuthRouteProp, NavigationProp } from '~/navigation/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '~/utils/api';
+
 
 const OTPScreen = () => {
-  const navigation = useNavigation<AuthNavigationProp>();
+  const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<AuthRouteProp<'OTP'>>();
 
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const { phoneNumber } = route.params;
+
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
   const [isResendEnabled, setIsResendEnabled] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const inputRefs = useRef<TextInput[]>([]);
 
@@ -32,7 +40,7 @@ const OTPScreen = () => {
   }, [timer]);
 
   const handleOtpChange = (text: string, index: number) => {
-    if (!/^\d*$/.test(text)) return; // Allow only digits
+    if (!/^\d*$/.test(text)) return;
 
     const newOtp = [...otp];
     newOtp[index] = text;
@@ -51,41 +59,84 @@ const OTPScreen = () => {
 
   const handleResend = () => {
     if (!isResendEnabled) return;
-    setOtp(['', '', '', '']);
+
+    // Reset UI
+    setOtp(['', '', '', '', '', '']);
     setTimer(60);
     setIsResendEnabled(false);
-    // Trigger resend API call here
+
+    // TODO: Trigger resend OTP API here if needed
+    Alert.alert('OTP Resent', `A new OTP has been sent to ${phoneNumber}`);
+  };
+
+  const handleLogin = async () => {
+    const finalOtp = otp.join('');
+
+    if (finalOtp.length !== 6) {
+      Alert.alert('Error', 'Please enter the complete 6-digit OTP.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          number: phoneNumber,
+          otp: finalOtp,
+        }),
+      });
+
+      const data = await response.json();
+      console.log('OTP Verify Response:', data);
+
+      if (data.success) {
+        await AsyncStorage.setItem('jwtToken', data.jwtToken);
+        await AsyncStorage.setItem('userId', data.user.id);
+        await AsyncStorage.setItem('isLoggedIn', 'true');
+
+        Alert.alert('Success', 'Login successful');
+        navigation.navigate('Main', { screen: 'HomePage' });
+      } else {
+        Alert.alert('Error', data.message || 'Invalid OTP');
+      }
+    } catch (error) {
+      console.error('OTP Verification Error:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View className="flex-1 justify-between bg-white px-6">
-          {/* SVG Graphic */}
+          {/* Logo */}
           <View className="mb-6 items-center">
             <LoginLogo width="256" height="256" />
           </View>
 
-          {/* Heading */}
+          {/* Headings */}
           <View className="mb-2 items-center">
             <Text className="font-blackshield text-3xl font-bold leading-[140%] text-gray-800">
               Verification <Text className="text-[#F15A29]">Code</Text>
             </Text>
             <Text className="mt-1 text-center font-baloo text-gray-500">
-              Enter the verification code that we have sent to your email
+              Enter the code we sent to {phoneNumber}
             </Text>
           </View>
 
-          {/* OTP Input Fields */}
-          <View className="mb-6 items-center ">
-            <View className="mb-2 mt-2 flex-row justify-between gap-5 space-x-3">
+          {/* OTP Inputs */}
+          <View className="mb-6 items-center">
+            <View className="mb-4 mt-2 flex-row justify-between gap-4 space-x-3">
               {otp.map((digit, index) => (
                 <TextInput
                   key={index}
-                  ref={(el) => {
-                    inputRefs.current[index] = el!;
-                  }}
-                  className="h-16 w-14 rounded-xl border border-gray-300 text-center text-2xl text-gray-800"
+                  ref={(el) => { inputRefs.current[index] = el!; }}
+                  className="h-16 w-12 rounded-xl border border-gray-300 text-center text-2xl text-gray-800"
                   keyboardType="number-pad"
                   maxLength={1}
                   value={digit}
@@ -110,14 +161,20 @@ const OTPScreen = () => {
           </View>
 
           {/* Confirm Button */}
-          <Button
-            title="Confirm"
-            variant="primary"
+          <TouchableOpacity
             className="mb-4 items-center rounded-full bg-[#F15A29] p-3 font-blackshield"
-            onPress={() => navigation.navigate('SignupScreen')}
-          />
+            onPress={handleLogin}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text className="text-white text-lg font-blackshield">Confirm</Text>
+            )}
+          </TouchableOpacity>
 
-          {/* Bottom Color Div */}
+          {/* Bottom Color Bar */}
           <View className="mt-6 h-4 flex-row">
             <View className="flex-1 rounded-l-md bg-[#00A450]" />
             <View className="flex-1 rounded-r-md bg-[#F15A29]" />

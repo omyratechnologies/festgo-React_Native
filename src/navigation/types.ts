@@ -1,6 +1,8 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NavigatorScreenParams } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
+import { SearchParams } from '~/screens/HotelBooking/HotelBookingSearch';
 
 // Root Stack - switches between Auth and Main flows
 export type RootStackParamList = {
@@ -32,10 +34,11 @@ export type MainStackParamList = {
   HomePage: undefined;
   Profile: undefined;
   ReferAndEarn: undefined;
+  RecommendAndEarn: undefined;
   UpcomingScreen: undefined;
 
   EventsPage: undefined;
-  EventsInfoPage: { eventId: number };
+  EventsInfoPage: { eventId: string };
 
   BeachFestsPage: undefined;
   BeachFestCheckout: {
@@ -66,9 +69,14 @@ export type MainStackParamList = {
   // hotel bookings
   HotelBooking: undefined;
   HotelBookingDetails: { hotelId: string };
-  HotelBookingSearch: undefined;
+  HotelBookingSearch: {
+    searchResults: any; 
+    searchParams: SearchParams;
+  };
 };
 
 export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export type AuthNavigationProp = NativeStackNavigationProp<AuthStackParamList>;
 export type MainTabNavigationProp = BottomTabNavigationProp<MainStackParamList>;
+
+export type AuthRouteProp<T extends keyof AuthStackParamList> = RouteProp<AuthStackParamList, T>;

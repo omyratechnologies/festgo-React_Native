@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,16 +8,20 @@ import {
   Pressable,
   Image,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomMenu from '~/components/common/BottomMenu';
 import HotelBookingHeaderMenu from '~/components/HotelBooking/HotelBookingHeaderMenu';
 import EventDetailBackgroundImage from '~/assets/images/events/EventDetailBackground.svg';
-import { Picker } from '@react-native-picker/picker';
+import { API_URL } from '~/utils/api';
+import { useNavigation } from '@react-navigation/native';
+import { MainTabNavigationProp } from '~/navigation/types';
 
-const EVENT_TYPES = ['Conference', 'Wedding', 'Birthday', 'Concert', 'Other'];
 const VENUE_OPTIONS = ['Indoor', 'Outdoor'];
 type AdditionalServiceKey = 'decoration' | 'djBand' | 'returnGifts' | 'transportation' | 'others';
 type Additional = {
@@ -38,9 +42,10 @@ const ADDITIONAL_SERVICES: { key: AdditionalServiceKey; label: string }[] = [
 ];
 
 const EventInfoPage = () => {
+  const navigation = useNavigation<MainTabNavigationProp>();
   const [form, setForm] = useState<{
     location: string;
-    eventType: string;
+    eventType: { name: string; id: string };
     date: Date;
     showDatePicker: boolean;
     showEventTypeOptions: boolean;
@@ -53,7 +58,7 @@ const EventInfoPage = () => {
     additional: Additional;
   }>({
     location: '',
-    eventType: '',
+    eventType: { name: '', id: '' },
     date: new Date(),
     showDatePicker: false,
     showEventTypeOptions: false,
@@ -73,6 +78,10 @@ const EventInfoPage = () => {
     },
   });
 
+  const [loading, setLoading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [eventsTypes, setEventTypes] = useState<{ name: string; id: string, imageUrl: string }[]>([]);
+
   const handleInput = (key: string, value: any) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
@@ -84,15 +93,76 @@ const EventInfoPage = () => {
     }));
   };
 
+    useEffect(() => {
+      const fetchEvents = async () => {
+        try {
+          const res = await fetch(`${API_URL}/events/event-types`);
+          const data = await res.json();
+          setEventTypes(data);
+        } catch (e) {
+          setEventTypes([]);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchEvents();
+    }, []);
+
+  const uploadImage = async (imageUri: string) => {
+    try {
+      setImageUploading(true);
+      
+      const formData = new FormData();
+      formData.append('file', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: 'theme-image.jpg',
+      } as any);
+
+      const response = await fetch(`${API_URL}/upload/public`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        return result.url;
+      } else {
+        throw new Error(result.message || 'Image upload failed');
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      Alert.alert('Error', 'Failed to upload image. Please try again.');
+      return null;
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-    if (!result.canceled && result.assets?.[0]?.uri) {
-      handleInput('themeImage', result.assets[0].uri);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets?.[0]?.uri) {
+        const imageUri = result.assets[0].uri;
+        const uploadedUrl = await uploadImage(imageUri);
+        
+        if (uploadedUrl) {
+          handleInput('themeImage', uploadedUrl);
+        }
+      }
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
     }
   };
 
@@ -101,9 +171,125 @@ const EventInfoPage = () => {
     if (selectedDate) handleInput('date', selectedDate);
   };
 
-  const handleSubmit = () => {
-    // Submit logic here
-    // e.g., validate and send form data
+  const validateForm = () => {
+    if (!form.location.trim()) {
+      Alert.alert('Validation Error', 'Please enter event location');
+      return false;
+    }
+    if (!form.eventType.name) {
+      Alert.alert('Validation Error', 'Please select event type');
+      return false;
+    }
+    if (!form.budget.trim()) {
+      Alert.alert('Validation Error', 'Please enter event budget');
+      return false;
+    }
+    if (!form.guests.trim()) {
+      Alert.alert('Validation Error', 'Please enter number of guests');
+      return false;
+    }
+    if (!form.venue) {
+      Alert.alert('Validation Error', 'Please select venue option');
+      return false;
+    }
+    if (!form.soundSystem) {
+      Alert.alert('Validation Error', 'Please select sound system option');
+      return false;
+    }
+    if (!form.photography) {
+      Alert.alert('Validation Error', 'Please select photography option');
+      return false;
+    }
+    return true;
+  };
+
+  const getAdditionalServices = () => {
+    const services = [];
+    if (form.additional.decoration) services.push('decoration');
+    if (form.additional.djBand) services.push('djBand');
+    if (form.additional.returnGifts) services.push('returnGifts');
+    if (form.additional.transportation) services.push('transportation');
+    if (form.additional.others && form.additional.othersText.trim()) {
+      services.push(form.additional.othersText.trim());
+    }
+    return services;
+  };
+
+  const handleSubmit = async () => {
+    try {
+      if (!validateForm()) return;
+      
+      setLoading(true);
+      
+      // Get JWT token from AsyncStorage
+      const token = await AsyncStorage.getItem('jwtToken');
+      if (!token) {
+        Alert.alert('Error', 'Authentication token not found. Please login again.');
+        return;
+      }
+
+      // Prepare request body
+      const requestBody = {
+        eventLocation: form.location.trim(),
+        eventType: form.eventType.name,
+        eventDate: form.date.toISOString(),
+        numberOfGuests: parseInt(form.guests),
+        venueOption: {
+          needVenue: form.venue === 'Indoor' || form.venue === 'Outdoor'
+        },
+        eventBudget: parseInt(form.budget),
+        soundSystem: {
+          required: form.soundSystem === 'Referred by FestGo'
+        },
+        photography: {
+          required: form.photography === 'Referred by FestGo'
+        },
+        additionalThings: getAdditionalServices(),
+        themes: form.themeImage ? [form.themeImage] : [],
+        eventTypeId: form.eventType.id
+      };
+
+      console.log('Submitting event:', requestBody);
+
+      const response = await fetch(`${API_URL}/events/e`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        Alert.alert(
+          'Success', 
+          'Event created successfully!',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                // Reset form or navigate to another screen
+                console.log('Event created:', result.event);
+              }
+            }
+          ]
+        );
+        navigation.navigate('EventsPage'); 
+      } else {
+        throw new Error(result.message || 'Failed to create event');
+      }
+    } catch (error) {
+      console.error('Submit error:', error);
+      const errorMessage =
+        typeof error === 'object' && error !== null && 'message' in error
+          ? (error as { message?: string }).message
+          : undefined;
+      Alert.alert('Error', errorMessage || 'Failed to create event. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -127,121 +313,122 @@ const EventInfoPage = () => {
             onChangeText={(v) => handleInput('location', v)}
             placeholderTextColor="#9CA3AF"
           />
-            <Text className="mb-2 font-poppins font-medium text-gray-700">Event Type</Text>
-            <View style={{ zIndex: 100 }}>
-              <Pressable
-                className="mb-4 relative rounded-xl border border-[#00000036] bg-white px-4 py-3 flex-row items-center justify-between"
-                onPress={() => handleInput('showEventTypeOptions', !form.showEventTypeOptions)}
-              >
-                <Text className={`font-poppins text-base ${form.eventType ? 'text-gray-900' : 'text-gray-400'}`}>
-                  {form.eventType || 'Select event type'}
-                </Text>
-                <Ionicons
-                  name={form.showEventTypeOptions ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color="#0E54EC"
-                />
-              </Pressable>
-              {form.showEventTypeOptions && (
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: 56,
-                    left: 0,
-                    right: 0,
-                    backgroundColor: 'white',
-                    borderRadius: 12,
-                    borderWidth: 2,
-                    borderColor: '#E5E7EB',
-                    zIndex: 999,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 4,
-                    elevation: 5,
-                  }}
-                >
-                  {EVENT_TYPES.map((type) => (
-                    <Pressable
-                      key={type}
-                      className={`px-4 py-3 ${form.eventType === type ? 'bg-[#0E54EC]/10' : ''}`}
-                      onPress={() => {
-                        handleInput('eventType', type);
-                        handleInput('showEventTypeOptions', false);
-                      }}
-                    >
-                      <Text className={`font-poppins text-base ${form.eventType === type ? 'text-[#0E54EC] font-semibold' : 'text-gray-700'}`}>
-                        {type}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              )}
-            </View>
 
-
-          {/* Event Date */}
-            <Text className="mb-2 font-poppins font-medium text-gray-700">Event Date</Text>
-            <TouchableOpacity
-              className="mb-4 flex-row items-center rounded-xl border border-[#00000036] px-4 py-3"
-              onPress={() => handleInput('showDatePicker', true)}
-              activeOpacity={0.7}
+          {/* Event Type */}
+          <Text className="mb-2 font-poppins font-medium text-gray-700">Event Type</Text>
+          <View style={{ zIndex: 100 }}>
+            <Pressable
+              className="mb-4 relative rounded-xl border border-[#00000036] bg-white px-4 py-3 flex-row items-center justify-between"
+              onPress={() => handleInput('showEventTypeOptions', !form.showEventTypeOptions)}
             >
-              <Ionicons name="calendar-outline" size={20} color="#0E54EC" style={{ marginRight: 8 }} />
-              <Text className="text-gray-700">{form.date.toLocaleDateString()}</Text>
-            </TouchableOpacity>
-            {form.showDatePicker && (
-              <View
+              <Text className={`font-poppins text-base ${form.eventType.name ? 'text-gray-900' : 'text-gray-400'}`}>
+                {form.eventType.name || 'Select event type'}
+              </Text>
+              <Ionicons
+                name={form.showEventTypeOptions ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#0E54EC"
+              />
+            </Pressable>
+            {form.showEventTypeOptions && (
+              <ScrollView
                 style={{
                   position: 'absolute',
+                  top: 56,
                   left: 0,
                   right: 0,
-                  top: 0,
-                  bottom: 0,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  zIndex: 9999,
+                  backgroundColor: 'white',
+                  borderRadius: 12,
+                  borderWidth: 2,
+                  borderColor: '#E5E7EB',
+                  zIndex: 999,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4,
+                  elevation: 5,
+                  maxHeight: 200,
                 }}
               >
-                <View
-                  style={{
-                    backgroundColor: '#fff',
-                    borderRadius: 16,
-                    padding: 16,
-                    width: '100%',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 8,
-                    elevation: 10,
-                  }}
-                >
-                  <DateTimePicker
-                    value={form.date}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                    onChange={(event, selectedDate) => {
-                      if (Platform.OS === 'android') {
-                        handleInput('showDatePicker', false);
-                        if (selectedDate) handleInput('date', selectedDate);
-                      } else if (event.type === 'set' && selectedDate) {
-                        handleInput('date', selectedDate);
-                      }
+                {eventsTypes.map((type) => (
+                  <Pressable
+                    key={type.id}
+                    className={`px-4 py-3 ${form.eventType.name === type.name ? 'bg-[#0E54EC]/10' : ''}`}
+                    onPress={() => {
+                      handleInput('eventType', type);
+                      handleInput('showEventTypeOptions', false);
                     }}
-                    minimumDate={new Date()}
-                    style={{ backgroundColor: 'white', borderRadius: 12 }}
-                  />
-                  <TouchableOpacity
-                    className="mt-4 items-center rounded-xl bg-[#0E54EC] py-3"
-                    onPress={() => handleInput('showDatePicker', false)}
-                    activeOpacity={0.8}
                   >
-                    <Text className="text-white font-semibold text-base">Done</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+                    <Text className={`font-poppins text-base ${form.eventType.name === type.name ? 'text-[#0E54EC] font-semibold' : 'text-gray-700'}`}>
+                      {type.name}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
             )}
+          </View>
 
+          {/* Event Date */}
+          <Text className="mb-2 font-poppins font-medium text-gray-700">Event Date</Text>
+          <TouchableOpacity
+            className="mb-4 flex-row items-center rounded-xl border border-[#00000036] px-4 py-3"
+            onPress={() => handleInput('showDatePicker', true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="calendar-outline" size={20} color="#0E54EC" style={{ marginRight: 8 }} />
+            <Text className="text-gray-700">{form.date.toLocaleDateString()}</Text>
+          </TouchableOpacity>
+          {form.showDatePicker && (
+            <View
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 9999,
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 16,
+                  padding: 16,
+                  width: '100%',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 8,
+                  elevation: 10,
+                }}
+              >
+                <DateTimePicker
+                  value={form.date}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                  onChange={(event, selectedDate) => {
+                    if (Platform.OS === 'android') {
+                      handleInput('showDatePicker', false);
+                      if (selectedDate) handleInput('date', selectedDate);
+                    } else if (event.type === 'set' && selectedDate) {
+                      handleInput('date', selectedDate);
+                    }
+                  }}
+                  minimumDate={new Date()}
+                  style={{ backgroundColor: 'white', borderRadius: 12 }}
+                />
+                <TouchableOpacity
+                  className="mt-4 items-center rounded-xl bg-[#0E54EC] py-3"
+                  onPress={() => handleInput('showDatePicker', false)}
+                  activeOpacity={0.8}
+                >
+                  <Text className="text-white font-semibold text-base">Done</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
           {/* Event Budget */}
           <Text className="mb-2 font-poppins font-medium text-gray-700">Event Budget (₹)</Text>
@@ -270,19 +457,29 @@ const EventInfoPage = () => {
           <TouchableOpacity
             className="mb-4 font-poppins items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-6"
             onPress={pickImage}
-            activeOpacity={0.7}>
-            {form.themeImage ? (
-              <Image
-                source={{ uri: form.themeImage }}
-                className="mb-2 h-20 w-32 rounded-lg"
-                resizeMode="cover"
-              />
+            activeOpacity={0.7}
+            disabled={imageUploading}
+          >
+            {imageUploading ? (
+              <View className="items-center">
+                <ActivityIndicator size="large" color="#0E54EC" />
+                <Text className="mt-2 text-gray-500">Uploading...</Text>
+              </View>
+            ) : form.themeImage ? (
+              <View className="items-center">
+                <Image
+                  source={{ uri: form.themeImage }}
+                  className="mb-2 h-20 w-32 rounded-lg"
+                  resizeMode="cover"
+                />
+                <Text className="mt-2 text-gray-500">Change Image</Text>
+              </View>
             ) : (
-              <Ionicons name="image-outline" size={32} color="#9CA3AF" />
+              <View className="items-center">
+                <Ionicons name="image-outline" size={32} color="#9CA3AF" />
+                <Text className="mt-2 text-gray-500">Upload Image</Text>
+              </View>
             )}
-            <Text className="mt-2 text-gray-500">
-              {form.themeImage ? 'Change Image' : 'Upload Image'}
-            </Text>
           </TouchableOpacity>
 
           {/* Venue Option Radio Buttons */}
@@ -392,10 +589,19 @@ const EventInfoPage = () => {
 
           {/* Submit Button */}
           <TouchableOpacity
-            className="mt-4 items-center rounded-xl bg-[#0E54EC] py-4"
+            className={`mt-4 items-center rounded-xl py-4 ${loading ? 'bg-gray-400' : 'bg-[#0E54EC]'}`}
             onPress={handleSubmit}
-            activeOpacity={0.8}>
-            <Text className="text-lg font-poppins font-bold text-white">Submit</Text>
+            activeOpacity={0.8}
+            disabled={loading || imageUploading}
+          >
+            {loading ? (
+              <View className="flex-row items-center">
+                <ActivityIndicator size="small" color="white" style={{ marginRight: 8 }} />
+                <Text className="text-lg font-poppins font-bold text-white">Submitting...</Text>
+              </View>
+            ) : (
+              <Text className="text-lg font-poppins font-bold text-white">Submit</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>

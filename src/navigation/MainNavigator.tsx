@@ -22,9 +22,9 @@ import CityFestCategories from '~/screens/CityFests/CityFestCategories';
 import CityFestDetails from '~/screens/CityFests/CityFestDetails';
 import CityFestCheckout from '~/screens/CityFests/CityFestCheckout';
 import BeachFestCheckout from '~/screens/BeachFests/BeachFestCheckout';
-import BeachFestDetails from '~/screens/BeachFests/BeachFestDetails';
 import BeachFest from '~/screens/BeachFests/BeachFest';
 import FestBite from '~/screens/FestBite/FestBite';
+import RecommendAndEarn from '~/screens/Profile/RecommendAndEarn';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -38,6 +38,7 @@ export const MainNavigator = () => {
       {/* Profile pages */}
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="ReferAndEarn" component={ReferAndEarn} />
+      <Stack.Screen name="RecommendAndEarn" component={RecommendAndEarn} />
       <Stack.Screen name="EditProfile" component={EditProfile} />
       <Stack.Screen name="MyOrders" component={MyOrders} />
       <Stack.Screen name="MyOrderDetails" component={OrderDetails} />
@@ -56,7 +57,6 @@ export const MainNavigator = () => {
       <Stack.Screen name="CityFestCheckout" component={CityFestCheckout} />
 
       <Stack.Screen name="BeachFestsPage" component={BeachFest} />
-      <Stack.Screen name="BeachFestDetails" component={BeachFestDetails} />
       <Stack.Screen name="BeachFestCheckout" component={BeachFestCheckout} />
 
       <Stack.Screen name="FestBite" component={FestBite} />

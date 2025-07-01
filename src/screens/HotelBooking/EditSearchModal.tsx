@@ -6,14 +6,12 @@ import BackIcon from '~/assets/icons/hotelBooking/BackIcon.svg';
 import SearchIcon from '~/assets/icons/search.svg';
 import LocationIcon from '~/assets/icons/navigationPin.svg';
 import { API_URL } from '~/utils/api';
-import { SearchParams } from '~/screens/HotelBooking/HotelBookingSearch';
-import * as Location from 'expo-location';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SearchParams } from './HotelBookingSearch';
 
 const TABS = ['Hotels', 'Resorts', 'HourlyStay'];
 
 // Mock data for recent and popular searches
-const RECENT_SEARCHES = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Vishakapatnam'];
+const RECENT_SEARCHES = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Vishakapatnam', 'Hyderabad'];
 const POPULAR_SEARCHES = ['Goa', 'Udaipur', 'Jaipur', 'Kerala', 'Manali', 'Shimla'];
 const DAYS_OF_WEEK = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
@@ -36,7 +34,7 @@ const generateMonths = () => {
   return months;
 };
 
-const HotelBookingCard: React.FC = () => {
+const EditSearchModal: React.FC<{data: SearchParams, onSave: (SearchParams : SearchParams) => Promise<void>, onClose: () => void }> = ({data, onSave, onClose}) => {
   const [activeTab, setActiveTab] = useState('Hotels');
   const [locationModalVisible, setLocationModalVisible] = useState(false);
   const [dateModalVisible, setDateModalVisible] = useState(false);
@@ -45,27 +43,44 @@ const HotelBookingCard: React.FC = () => {
 
   // Location state
   const [locationSearch, setLocationSearch] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState(data?.destination || '');
 
   // Date state
-  const [selectedStartDate, setSelectedStartDate] = useState<Date | null>(null);
-  const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
-  const [dateRange, setDateRange] = useState('Select dates');
+  const [selectedStartDate, setSelectedStartDate] = useState<Date | null>(
+    data?.checkIn ? new Date(data.checkIn) : null
+  );
+  const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(
+    data?.checkOut ? new Date(data.checkOut) : null
+  );
+  const [dateRange, setDateRange] = useState(() => {
+    if (data?.checkIn && data?.checkOut) {
+      const start = new Date(data.checkIn).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+      const end = new Date(data.checkOut).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+      return `${start} - ${end}`;
+    }
+    return 'Select dates';
+  });
 
   // Guests state
-  const [rooms, setRooms] = useState(1);
-  const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
-  const [guestsText, setGuestsText] = useState('1 Room, 2 Adults');
+  const [rooms, setRooms] = useState(data?.rooms || 1);
+  const [adults, setAdults] = useState(data?.adults || 2);
+  const [children, setChildren] = useState(data?.children || 0);
+  const [guestsText, setGuestsText] = useState(() => {
+    let text = `${data?.rooms || 1} Room${(Number(data?.rooms) || 1) > 1 ? 's' : ''}, ${data?.adults || 2} Adult${(Number(data?.adults) || 2) > 1 ? 's' : ''}`;
+    if ((Number(data?.children) || 0) > 0) {
+      text += `, ${data.children} Child${Number(data.children) > 1 ? 'ren' : ''}`;
+    }
+    return text;
+  });
 
   const navigation = useNavigation<MainTabNavigationProp>();
   const months = generateMonths();
 
   // Update guests text when values change
   useEffect(() => {
-    let text = `${rooms} Room${rooms > 1 ? 's' : ''}, ${adults} Adult${adults > 1 ? 's' : ''}`;
-    if (children > 0) {
-      text += `, ${children} Child${children > 1 ? 'ren' : ''}`;
+    let text = `${rooms} Room${Number(rooms) > 1 ? 's' : ''}, ${adults} Adult${Number(adults) > 1 ? 's' : ''}`;
+    if (Number(children) > 0) {
+      text += `, ${children} Child${Number(children) > 1 ? 'ren' : ''}`;
     }
     setGuestsText(text);
   }, [rooms, adults, children]);
@@ -77,18 +92,8 @@ const HotelBookingCard: React.FC = () => {
     setLocationModalVisible(false);
   };
 
-  const handleNearMeLocation = async () => {
+  const handleNearMeLocation = () => {
     // Mock location for demo - in real app, use geolocation
-    console.log('Requesting location permissions');
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      console.log('Permission to access location was denied');
-      return;
-    }
-
-    console.log('Getting current position');
-    let location = await Location.getCurrentPositionAsync({});
-    console.log('Current position:', location.coords);
     handleLocationSelect('Current Location');
   };
 
@@ -131,13 +136,13 @@ const HotelBookingCard: React.FC = () => {
   const handleDateModalClose = () => {
     if (selectedStartDate && selectedEndDate) {
       const startStr = selectedStartDate.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-      });
+                        day: '2-digit',
+                        month: 'short'
+                      })
       const endStr = selectedEndDate.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-      });
+                        day: '2-digit',
+                        month: 'short',
+                      })
       setDateRange(`${startStr} - ${endStr}`);
     }
     setDateModalVisible(false);
@@ -147,13 +152,13 @@ const HotelBookingCard: React.FC = () => {
   const incrementValue = (type: 'rooms' | 'adults' | 'children') => {
     switch (type) {
       case 'rooms':
-        if (rooms < 10) setRooms(rooms + 1);
+        if (Number(rooms) < 10) setRooms(Number(rooms) + 1);
         break;
       case 'adults':
-        if (adults < 20) setAdults(adults + 1);
+        if (Number(adults) < 20) setAdults(Number(adults) + 1);
         break;
       case 'children':
-        if (children < 10) setChildren(children + 1);
+        if (Number(children) < 10) setChildren(Number(children) + 1);
         break;
     }
   };
@@ -161,13 +166,13 @@ const HotelBookingCard: React.FC = () => {
   const decrementValue = (type: 'rooms' | 'adults' | 'children') => {
     switch (type) {
       case 'rooms':
-        if (rooms > 1) setRooms(rooms - 1);
+        if (Number(rooms) > 1) setRooms(Number(rooms) - 1);
         break;
       case 'adults':
-        if (adults > 1) setAdults(adults - 1);
+        if (Number(adults) > 1) setAdults(Number(adults) - 1);
         break;
       case 'children':
-        if (children > 0) setChildren(children - 1);
+        if (Number(children) > 0) setChildren(Number(children) - 1);
         break;
     }
   };
@@ -191,7 +196,7 @@ const HotelBookingCard: React.FC = () => {
         (selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 60 * 60 * 24)
       );
 
-      const requestBody: SearchParams = {
+      const requestBody = {
         property_type:
           activeTab === 'Hotels' ? 'Hotel' : activeTab === 'Resorts' ? 'Resort' : 'HourlyStay',
         latitude: null,
@@ -204,7 +209,7 @@ const HotelBookingCard: React.FC = () => {
         enddate: selectedEndDate.toLocaleDateString('en-GB'),
         staynight: stayNights.toString(),
       };
-      // console.log('Search request body:', requestBody);
+      console.log('Search request body:', requestBody);
       const response = await fetch(`${API_URL}/properties/active-r`, {
         method: 'POST',
         headers: {
@@ -217,10 +222,7 @@ const HotelBookingCard: React.FC = () => {
 
       if (response.ok) {
         // Navigate to search results with the data
-        navigation.navigate('HotelBookingSearch', {
-          searchResults: data,
-          searchParams: requestBody,
-        });
+        navigation.navigate('HotelBookingSearch', { searchResults: data, searchParams: requestBody });
         console.log('Search results:', data);
       } else {
         Alert.alert('Error', data.message || 'Search failed');
@@ -231,6 +233,15 @@ const HotelBookingCard: React.FC = () => {
     } finally {
       setLoading(false);
     }
+    onSave({
+      destination: selectedLocation,
+      checkIn: selectedStartDate?.toISOString(),
+      checkOut: selectedEndDate?.toISOString(),
+      rooms: rooms.toString(),
+      adults: adults.toString(),
+      children: children.toString(),
+    });
+    onClose();
   };
 
   const renderCalendarDay = (day: number, monthData: any) => {
@@ -348,7 +359,7 @@ const HotelBookingCard: React.FC = () => {
 
   return (
     <>
-      <View className="absolute -bottom-1/2 mx-4 w-[85%] rounded-[30px] bg-white p-7 shadow-md">
+      <View className=" mx-4 py-4 bg-white ">
         {/* Tabs */}
         <View className="mx-1 mb-4 flex-row justify-between overflow-hidden rounded-full bg-blue-100">
           {TABS.map((tab) => (
@@ -411,10 +422,8 @@ const HotelBookingCard: React.FC = () => {
             <TouchableOpacity onPress={() => setLocationModalVisible(false)}>
               <BackIcon width={24} height={24} />
             </TouchableOpacity>
-            <Text className="text-center text-lg font-semibold">Select Location</Text>
-            <TouchableOpacity onPress={() => setLocationModalVisible(false)}>
-              <Text className="font-medium text-[#0E54EC]">Done</Text>
-            </TouchableOpacity>
+            <Text className="text-lg font-semibold">Select Location</Text>
+            <View className="w-6" />
           </View>
 
           {/* Search Bar */}
@@ -423,7 +432,7 @@ const HotelBookingCard: React.FC = () => {
               className="flex-1 text-gray-800"
               placeholder="Search location..."
               value={locationSearch}
-              onChangeText={(text) => setLocationSearch(text)}
+              onChangeText={setLocationSearch}
               autoFocus
             />
             <SearchIcon width={20} height={20} color="#666" />
@@ -497,7 +506,7 @@ const HotelBookingCard: React.FC = () => {
           {/* Date Info */}
           <View className=" px-6 py-4">
             <View className="flex-row rounded-lg  border border-[#00000024] bg-white">
-              <View className="w-1/2 flex-col items-start justify-between border-r border-[#00000020] px-4 py-4 pl-5">
+              <View className="w-1/2 border-r border-[#00000020] pl-5 flex-col items-start justify-between px-4 py-4">
                 <Text className="font-poppins  text-lg font-semibold">Check-in</Text>
                 <Text className="font-poppins text-xl text-[#02AFFF]">
                   {selectedStartDate
@@ -509,7 +518,7 @@ const HotelBookingCard: React.FC = () => {
                     : 'Select date'}
                 </Text>
               </View>
-              <View className="w-1/2 flex-col items-start justify-between px-4 py-4 pl-5">
+              <View className="w-1/2 flex-col pl-5 items-start justify-between px-4 py-4">
                 <Text className="font-poppins text-lg font-semibold">Check-out</Text>
                 <Text className="font-poppins text-xl text-[#02AFFF]">
                   {selectedEndDate
@@ -618,4 +627,4 @@ const HotelBookingCard: React.FC = () => {
   );
 };
 
-export default HotelBookingCard;
+export default EditSearchModal;

@@ -13,10 +13,7 @@ export const AuthNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen
-        name="OTP"
-        component={OTPScreen}
-      />
+      <Stack.Screen name="OTP" component={OTPScreen} />
       <Stack.Screen name="SignupScreen" component={SignupScreen} />
       <Stack.Screen name="Onboarding" component={Onboarding} />
     </Stack.Navigator>

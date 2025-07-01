@@ -32,7 +32,7 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ white = false }) => {
           <UserIcon width={32} height={32} />
         </TouchableOpacity>
         <TouchableOpacity className="ml-3 flex-row items-center">
-          <Text className={`mr-1 text-base font-medium ${textColor}`}>Hyderabad</Text>
+          <Text className={`mr-1 font-poppins text-base font-medium ${textColor}`}>Hyderabad</Text>
           <ChevronDownIcon width={18} height={18} />
         </TouchableOpacity>
       </View>

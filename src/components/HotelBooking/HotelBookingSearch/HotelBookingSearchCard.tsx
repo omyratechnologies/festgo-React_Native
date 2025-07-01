@@ -15,7 +15,6 @@ type HotelBookingSearchCardProps = {
   discount?: number;
   pricePerNight: number;
   amenities: string[];
-  rooms: number;
   numberOfReviews: number;
   features: string[];
   onHeartPress?: () => void;
@@ -30,7 +29,6 @@ const HotelBookingSearchCard: React.FC<HotelBookingSearchCardProps> = ({
   discount,
   pricePerNight,
   amenities,
-  rooms,
   numberOfReviews,
   features,
   onHeartPress,

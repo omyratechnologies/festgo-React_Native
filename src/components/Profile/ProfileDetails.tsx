@@ -17,20 +17,27 @@ const user = {
     { icon: DiscountIcon, number: 18, label: 'Offers', page: 'Wishlist' },
   ],
 };
-const ProfileDetails = () => {
+
+const ProfileDetails = ({ data }: { data: any }) => {
   const navigation = useNavigation<MainTabNavigationProp>();
+  
   return (
     <View className="mx-4 mt-6 rounded-2xl bg-[#F15A29] p-5">
       {/* Top Row */}
       <View className="flex-row items-center">
         {/* Profile Picture */}
         <View className="mr-4 rounded-full border-4 border-white">
-          <Image source={{ uri: user.profilePic }} className="h-16 w-16 rounded-full" />
+          <Image
+            source={{ uri: data?.image_url || user.profilePic }}
+            className="h-16 w-16 rounded-full"
+          />
         </View>
         {/* Name & Email */}
         <View className="flex-1">
-          <Text className="font-baloo text-lg font-bold text-white">{user.name}</Text>
-          <Text className="font-baloo text-sm text-white opacity-80">{user.email}</Text>
+          <Text className="font-baloo text-lg font-bold text-white">
+            {data?.firstname} {data?.lastname}
+          </Text>
+          <Text className="font-baloo text-sm text-white opacity-80">{data?.email}</Text>
         </View>
         {/* Edit Icon */}
         <TouchableOpacity onPress={() => navigation.navigate('EditProfile')}>
@@ -38,18 +45,25 @@ const ProfileDetails = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Profile Completion Bar */}
       <View className="mt-6">
         <View className="h-3 overflow-hidden rounded-full bg-white">
-          <View className="h-3 rounded-full" style={{ width: '70%', backgroundColor: '#08F67C' }} />
+          <View
+            className="h-3 rounded-full"
+            style={{ width: `${data.profileCompletion}%`, backgroundColor: '#08F67C' }}
+          />
         </View>
-        <Text className="mt-2 font-baloo text-sm text-white">Your profile is 70% completed.</Text>
+        <Text className="mt-2 font-baloo text-sm text-white">
+          Your profile is {data.profileCompletion}% completed.
+        </Text>
       </View>
 
+      {/* Stats Section */}
       <View className="mt-6 flex-row items-center justify-between rounded-xl bg-white px-4 py-3">
         {user.stats.map((stat, idx) => (
           <React.Fragment key={stat.label}>
             <TouchableOpacity
-              onPress={() => navigation.navigate({ name: stat.page as any, params: undefined })}
+              onPress={() => navigation.navigate(stat.page as any)}
               className="flex-1 flex-row items-center justify-center">
               <stat.icon width={24} height={24} className="mr-2" />
               <View className="ml-2">

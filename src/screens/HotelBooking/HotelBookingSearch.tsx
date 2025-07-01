@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, JSX } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Modal,
   Pressable,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import BottomMenu from '~/components/common/BottomMenu';
 import HotelBookingSearchCard from '~/components/HotelBooking/HotelBookingSearch/HotelBookingSearchCard';
@@ -16,93 +17,295 @@ import FilterIcon from '~/assets/icons/hotelBooking/Filter.svg';
 import SortIcon from '~/assets/icons/hotelBooking/Sort.svg';
 import PropertyTypeIcon from '~/assets/icons/hotelBooking/PropertyType.svg';
 import FilterOptionsModal from './FilterOptionsModal';
+import EditSearchModal from './EditSearchModal';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { API_URL } from '~/utils/api';
 
-const dummyHotels = [
-  {
-    hotelName: 'Grand Palace Hotel',
-    image:
-      'https://media.istockphoto.com/id/104731717/photo/luxury-resort.jpg?s=612x612&w=0&k=20&c=cODMSPbYyrn1FHake1xYz9M8r15iOfGz9Aosy9Db7mI=',
-    location: 'Mumbai, India',
-    price: 3500,
-    discount: 20,
-    pricePerNight: 2800,
-    amenities: ['Free WiFi', 'Pool', 'Breakfast'],
-    rooms: 2,
-    numberOfReviews: 124,
-    features: ['Pet Friendly', 'Airport Shuttle'],
-    isFavorite: true,
-  },
-  {
-    hotelName: 'Seaside Resort',
-    image:
-      'https://media.istockphoto.com/id/119926339/photo/resort-swimming-pool.jpg?s=612x612&w=0&k=20&c=9QtwJC2boq3GFHaeDsKytF4-CavYKQuy1jBD2IRfYKc=',
-    location: 'Goa, India',
-    price: 5000,
-    discount: 10,
-    pricePerNight: 4500,
-    amenities: ['Beach Access', 'Spa', 'Bar'],
-    rooms: 1,
-    numberOfReviews: 89,
-    features: ['Sea View', 'Free Parking'],
-    isFavorite: false,
-  },
-  {
-    hotelName: 'Mountain View Inn',
-    image:
-      'https://media.istockphoto.com/id/104731717/photo/luxury-resort.jpg?s=612x612&w=0&k=20&c=cODMSPbYyrn1FHake1xYz9M8r15iOfGz9Aosy9Db7mI=',
-    location: 'Manali, India',
-    price: 2500,
-    pricePerNight: 2500,
-    amenities: ['Mountain View', 'Heater'],
-    rooms: 3,
-    numberOfReviews: 56,
-    features: ['Family Rooms'],
-    isFavorite: false,
-  },
-];
+// Type definitions
+export interface SearchParams {
+  destination?: string;
+  checkIn?: string;
+  checkOut?: string;
+  adults?: string;
+  children?: string;
+  rooms?: string;
+  [key: string]: any;
+}
 
-const SORT_OPTIONS = [
+export interface Hotel {
+  id: string;
+  vendorId?: string;
+  name: string;
+  property_type?: string; 
+  email?: string;
+  star_rating?: number;
+  pricePerNight?: string;
+  originalPrice?: string;
+  discount?: string;
+  additionalInfo?: string;
+  freeBreakfast?: string;
+  freeCancellation?: string;
+  review_count?: number;
+  location?: {
+    city?: string;
+    state?: string;
+    address?: string;
+    country?: string;
+    pincode?: string;
+    landmark?: string;
+    latitude?: string;
+    longitude?: string;
+  };
+  facilities?: string[];
+  imageList?: string[];
+  [key: string]: any;
+}
+
+interface SortOption {
+  label: string;
+  value: 'popularity' | 'rating' | 'price';
+}
+
+interface PropertyType {
+  label: string;
+  value: 'hotels' | 'villas' | 'resorts' | 'apartments';
+}
+
+type RootStackParamList = {
+  HotelBookingSearch: {
+    searchResults?: Hotel[];
+    searchParams?: SearchParams;
+  };
+  [key: string]: any;
+};
+
+type HotelBookingSearchRouteProp = RouteProp<RootStackParamList, 'HotelBookingSearch'>;
+type HotelBookingSearchNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+const SORT_OPTIONS: SortOption[] = [
   { label: 'Popularity', value: 'popularity' },
   { label: 'Customer Rating', value: 'rating' },
   { label: 'Price', value: 'price' },
 ];
 
-const PROPERTY_TYPES = [
+const PROPERTY_TYPES: PropertyType[] = [
   { label: 'Hotels', value: 'hotels' },
   { label: 'Villas', value: 'villas' },
   { label: 'Resorts', value: 'resorts' },
   { label: 'Apartments', value: 'apartments' },
 ];
 
-const HotelBookingSearch = () => {
-  const [sortModalVisible, setSortModalVisible] = useState(false);
-  const [filterModalVisible, setFilterModalVisible] = useState(false);
-  const [propertyTypeModalVisible, setPropertyTypeModalVisible] = useState(false);
-  const [editSearchModalVisible, setEditSearchModalVisible] = useState(false);
+const HotelBookingSearch: React.FC = () => {
+  const route = useRoute<HotelBookingSearchRouteProp>();
+  const navigation = useNavigation<HotelBookingSearchNavigationProp>();
+  
+  // Get data from navigation params with proper fallback
+  const routeParams = route.params || {};
+  const { searchResults = [], searchParams = {} } = routeParams;
+  
+  // State management
+  const [sortModalVisible, setSortModalVisible] = useState<boolean>(false);
+  const [filterModalVisible, setFilterModalVisible] = useState<boolean>(false);
+  const [propertyTypeModalVisible, setPropertyTypeModalVisible] = useState<boolean>(false);
+  const [editSearchModalVisible, setEditSearchModalVisible] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [bookingData, setBookingData] = useState<SearchParams>(searchParams);
 
-  const [selectedSort, setSelectedSort] = useState(SORT_OPTIONS[0].value);
-  const [selectedPropertyType, setSelectedPropertyType] = useState(PROPERTY_TYPES[0].value);
+  const [selectedSort, setSelectedSort] = useState<SortOption['value']>(SORT_OPTIONS[0].value);
+  const [selectedPropertyType, setSelectedPropertyType] = useState<PropertyType['value']>(PROPERTY_TYPES[0].value);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  console.log('Search Results:', searchResults);
+  console.log('Search Params:', searchParams);
+  // Initialize hotels data
+  useEffect(() => {
+    if (searchResults && Array.isArray(searchResults) && searchResults.length > 0) {
+      setHotels(searchResults);
+    }
+  }, [searchResults]);
 
-  const toggleFilter = (value: string) => {
-    setSelectedFilters((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+  // Handle edit search
+  const handleEditSearch = async (newSearchParams: SearchParams): Promise<void> => {
+    setLoading(true);
+    setEditSearchModalVisible(false);
+    
+    try {
+      // Make API call with new search parameters
+      const response = await fetch(`${API_URL}/properties/active-r`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newSearchParams),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const properties: Hotel[] = data?.properties || [];
+        setHotels(properties);
+        setBookingData(newSearchParams);
+      } else {
+        console.error('Failed to fetch updated search results');
+      }
+    } catch (error) {
+      console.error('Error updating search:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Apply filters and sorting
+  const getFilteredAndSortedHotels = (): Hotel[] => {
+    if (!Array.isArray(hotels)) return [];
+    
+    let filteredHotels: Hotel[] = [...hotels];
+
+    // Apply property type filter
+    if (selectedPropertyType !== 'hotels') {
+      filteredHotels = filteredHotels.filter((hotel: Hotel) => 
+        hotel.propertyType?.toLowerCase() === selectedPropertyType
+      );
+    }
+
+    // Apply other filters
+    if (selectedFilters.length > 0) {
+      filteredHotels = filteredHotels.filter((hotel: Hotel) =>
+        selectedFilters.some((filter: string) => 
+          hotel.amenities?.includes(filter)
+        )
+      );
+    }
+
+    // Apply sorting
+    switch (selectedSort) {
+      case 'rating':
+        filteredHotels.sort((a: Hotel, b: Hotel) => (b.rating || 0) - (a.rating || 0));
+        break;
+      case 'price':
+        filteredHotels.sort((a: Hotel, b: Hotel) => (a.price || 0) - (b.price || 0));
+        break;
+      case 'popularity':
+      default:
+        filteredHotels.sort((a: Hotel, b: Hotel) => (b.popularity || 0) - (a.popularity || 0));
+        break;
+    }
+
+    return filteredHotels;
+  };
+
+  const toggleFilter = (value: string): void => {
+    setSelectedFilters((prev: string[]) =>
+      prev.includes(value) ? prev.filter((v: string) => v !== value) : [...prev, value]
     );
   };
 
+  const formatSearchDisplay = (): { location: string; details: string } => {
+    if (!bookingData || Object.keys(bookingData).length === 0) {
+      return {
+        location: 'Search Results',
+        details: 'No search details available'
+      };
+    }
+    
+    const { destination, checkIn, checkOut, guests, rooms } = bookingData;
+    
+    let checkInDate = '';
+    let checkOutDate = '';
+    
+    try {
+      if (checkIn) {
+        checkInDate = new Date(checkIn).toLocaleDateString('en-GB', { 
+          day: '2-digit', 
+          month: 'short' 
+        });
+      }
+      if (checkOut) {
+        checkOutDate = new Date(checkOut).toLocaleDateString('en-GB', { 
+          day: '2-digit', 
+          month: 'short' 
+        });
+      }
+    } catch (error) {
+      console.error('Error formatting dates:', error);
+    }
+    
+    return {
+      location: destination || 'Search Results',
+      details: `${checkInDate} - ${checkOutDate} · ${guests || 2} Guests · ${rooms || 1} Room`
+    };
+  };
+
+  const searchDisplay = formatSearchDisplay();
+  const filteredHotels = getFilteredAndSortedHotels();
   const screenHeight = Dimensions.get('window').height;
   const modalHeight = screenHeight * 0.2;
 
+  const renderContent = (): JSX.Element => {
+    if (loading) {
+      return (
+        <View className="flex-1 justify-center items-center bg-gray-50">
+          <ActivityIndicator size="large" color="#0E54EC" />
+          <Text className="mt-4 font-poppins text-base text-gray-600">
+            Searching for hotels...
+          </Text>
+        </View>
+      );
+    }
+
+    if (!filteredHotels || filteredHotels.length === 0) {
+      return (
+        <View className="flex-1 justify-center items-center bg-gray-50 px-6">
+          <Text className="font-poppins text-xl font-semibold text-gray-800 text-center mb-2">
+            No Hotels Found
+          </Text>
+          <Text className="font-poppins text-base text-gray-600 text-center mb-6">
+            We couldn't find any hotels matching your search criteria. Try adjusting your filters or search parameters.
+          </Text>
+          <TouchableOpacity
+            onPress={() => setEditSearchModalVisible(true)}
+            className="bg-[#0E54EC] px-6 py-3 rounded-full">
+            <Text className="font-poppins text-white font-medium">
+              Modify Search
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return (
+      <ScrollView className="mt-2 bg-gray-50 p-4">
+        {filteredHotels.map((hotel: Hotel, idx: number) => (
+          <HotelBookingSearchCard 
+            image={hotel.imageList?.[1] || ''}
+            hotelName={hotel.name}
+            location={hotel.location?.city || ''}
+            price={hotel.originalPrice ? Number(hotel.originalPrice) : 0}
+            pricePerNight={hotel.pricePerNight ? Number(hotel.pricePerNight) : 0}
+            amenities={hotel.facilities || []}
+            numberOfReviews={hotel.review_count || 0}
+            features={hotel.facilities || []}
+          />
+        ))}
+      </ScrollView>
+    );
+  };
+
   return (
-    <View className="flex-1 bg-white ">
+    <View className="flex-1 bg-white">
       <View className="flex-row items-center justify-between bg-[#0E54EC] px-4 pb-4 pt-16"></View>
+      
       <View className="w-full flex-row items-center justify-between bg-white px-6 py-4">
         <View className="flex-row items-center">
-          <BackIcon width={24} height={24} />
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <BackIcon width={24} height={24} />
+          </TouchableOpacity>
           <View className="ml-3">
-            <Text className="font-poppins text-lg font-semibold text-black">Mumbai, India</Text>
+            <Text className="font-poppins text-lg font-semibold text-black">
+              {searchDisplay.location}
+            </Text>
             <Text className="mt-1 font-poppins text-xs text-black">
-              12 Jun - 15 Jun · 2 Guests · 1 Room
+              {searchDisplay.details}
             </Text>
           </View>
         </View>
@@ -110,6 +313,7 @@ const HotelBookingSearch = () => {
           <EditIcon width={24} height={24} />
         </TouchableOpacity>
       </View>
+
       <View className="mb-2 mt-2 flex-row justify-center bg-white px-4">
         <TouchableOpacity
           className="mr-2 flex-row items-center gap-2 rounded-full border border-[#02AFFF] bg-white px-4 py-2"
@@ -121,7 +325,9 @@ const HotelBookingSearch = () => {
           className="mx-1 flex-row items-center gap-2 rounded-full border border-[#02AFFF] bg-white px-4 py-2"
           onPress={() => setFilterModalVisible(true)}>
           <FilterIcon width={16} height={16} className="mx-auto mb-1" />
-          <Text className="text-center font-poppins font-medium text-[#02AFFF]">Filters</Text>
+          <Text className="text-center font-poppins font-medium text-[#02AFFF]">
+            Filters{selectedFilters.length > 0 && ` (${selectedFilters.length})`}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           className="ml-2 flex-row items-center gap-2 rounded-full border border-[#02AFFF] bg-white px-4 py-2"
@@ -138,11 +344,8 @@ const HotelBookingSearch = () => {
         transparent
         onRequestClose={() => setSortModalVisible(false)}>
         <View className="flex-row items-center justify-between bg-[#0E54EC] px-4 pb-4 pt-16"></View>
-
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)' }}>
-          {/* Backdrop */}
           <Pressable style={{ flex: 1 }} onPress={() => setSortModalVisible(false)} />
-          {/* Modal Content */}
           <View
             style={{
               backgroundColor: 'white',
@@ -163,7 +366,7 @@ const HotelBookingSearch = () => {
                 <Text className="font-poppins text-base font-medium text-[#0E54EC]">Done</Text>
               </TouchableOpacity>
             </View>
-            {SORT_OPTIONS.map((option) => (
+            {SORT_OPTIONS.map((option: SortOption) => (
               <TouchableOpacity
                 key={option.value}
                 className="flex-row items-center py-2"
@@ -210,14 +413,11 @@ const HotelBookingSearch = () => {
         transparent
         onRequestClose={() => setPropertyTypeModalVisible(false)}>
         <View className="flex-row items-center justify-between bg-[#0E54EC] px-4 pb-4 pt-16"></View>
-
         <View style={{ flex: 1 }}>
-          {/* Backdrop */}
           <Pressable
             style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)' }}
             onPress={() => setPropertyTypeModalVisible(false)}
           />
-          {/* Modal Content */}
           <View
             style={{
               height: modalHeight,
@@ -233,7 +433,7 @@ const HotelBookingSearch = () => {
               elevation: 5,
             }}>
             <Text className="mb-3 font-poppins text-lg font-semibold">Property Type</Text>
-            {PROPERTY_TYPES.map((type) => (
+            {PROPERTY_TYPES.map((type: PropertyType) => (
               <TouchableOpacity
                 key={type.value}
                 className="flex-row items-center py-2"
@@ -284,14 +484,18 @@ const HotelBookingSearch = () => {
         onRequestClose={() => setFilterModalVisible(false)}>
         <View style={{ flex: 1, backgroundColor: 'white', paddingTop: 40 }}>
           <View className="flex-row items-center justify-between border-b border-gray-200 px-6 py-4">
-            <BackIcon width={24} height={24} />
+            <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
+              <BackIcon width={24} height={24} />
+            </TouchableOpacity>
             <Text className="font-poppins text-lg font-semibold">My Filters</Text>
             <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
               <Text className="font-poppins text-base font-medium text-[#0E54EC]">Done</Text>
             </TouchableOpacity>
           </View>
           <FilterOptionsModal 
-           />
+            // selectedFilters={selectedFilters}
+            // toggleFilter={toggleFilter}
+          />
           <View className="flex-row bg-white justify-between border-t border-gray-200 px-6 py-8">
             <TouchableOpacity
               onPress={() => setSelectedFilters([])}
@@ -310,29 +514,41 @@ const HotelBookingSearch = () => {
       {/* Edit Search Modal */}
       <Modal
         visible={editSearchModalVisible}
-        animationType="slide"
+        animationType="fade"
         transparent
         onRequestClose={() => setEditSearchModalVisible(false)}>
-        <View style={{ flex: 1, backgroundColor: 'white', paddingTop: 40 }}>
-          <View className="flex-row items-center justify-between border-b border-gray-200 px-6 py-4">
-            <Text className="font-poppins text-lg font-semibold">Edit Search</Text>
-            <TouchableOpacity onPress={() => setEditSearchModalVisible(false)}>
-              <Text className="font-poppins text-base font-medium text-[#0E54EC]">Done</Text>
-            </TouchableOpacity>
-          </View>
-          {/* Place your edit search form here */}
-          <View className="flex-1 items-center justify-center">
-            <Text className="font-poppins text-base text-gray-500">Edit search form goes here</Text>
+        <View className="flex-row items-center justify-between bg-[#0E54EC] px-4 pb-4 pt-16"></View>
+        <View style={{ flex: 1 }}>
+          <Pressable
+            style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)' }}
+            onPress={() => setEditSearchModalVisible(false)}
+          />
+          <View
+            style={{
+              backgroundColor: 'white',
+              borderBottomLeftRadius: 32,
+              borderBottomRightRadius: 32,
+              padding: 20,
+              minHeight: 220,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              elevation: 5,
+            }}>
+            <Text className="mb-3 font-poppins text-lg font-semibold">Edit Search</Text>
+            <EditSearchModal 
+              data={bookingData}
+              onSave={handleEditSearch}
+              onClose={() => setEditSearchModalVisible(false)}
+            />
           </View>
         </View>
       </Modal>
 
-      <ScrollView className="mt-2 bg-gray-50 p-4">
-        {dummyHotels.map((hotel, idx) => (
-          <HotelBookingSearchCard key={idx} {...hotel} onHeartPress={() => {}} />
-        ))}
-      </ScrollView>
-      <BottomMenu />
+      {renderContent()}
+      
+      {!loading && <BottomMenu />}
     </View>
   );
 };
