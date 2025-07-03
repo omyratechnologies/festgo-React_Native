@@ -7,6 +7,7 @@ import {
   Linking,
   TouchableWithoutFeedback,
   Keyboard,
+  Image,
 } from 'react-native';
 import React, { useState } from 'react';
 import LoginLogo from '~/assets/images/auth/Group.svg';
@@ -207,22 +208,22 @@ const LoginScreen = () => {
         <BottomSheetModal
           ref={bottomSheetModalRef}
           index={0}
-          snapPoints={['50%']}
+          snapPoints={['70%']}
           backgroundStyle={{ backgroundColor: 'white' }}
           handleIndicatorStyle={{ backgroundColor: '#E2E8F0' }}>
           <BottomSheetView className="flex-1 items-center justify-center px-6">
             {/* Success Icon */}
-            <View className="mb-6 h-20 w-20 items-center justify-center rounded-full bg-green-100">
-              {/* <CheckIcon width={40} height={40} color="#10B981" /> */}
-            </View>
+           <Image
+              source={require('~/assets/images/auth/EmailConfirmation.png')}
+              style={{ marginBottom: 20 }}
+            />
 
             {/* Title */}
-            <Text className="mb-4 text-center font-blackshield text-xl font-bold text-gray-800">
-              Verification Email Sent
-            </Text>
-
+            <Text className="font-blackshield text-3xl font-bold leading-[140%] text-gray-800">
+                Verify your <Text className="text-[#00A651]">email address</Text>
+              </Text>
             {/* Description */}
-            <Text className="mb-8 text-center font-baloo leading-6 text-gray-600">
+            <Text className="mb-8 px-4 mt-4 text-center font-baloo leading-6 text-gray-600">
               A verification email has been sent to your email {inputValue}. Please check your email
               and click the link provided in the email to complete your account registration.
             </Text>
@@ -230,8 +231,8 @@ const LoginScreen = () => {
             {/* Open Email Button */}
             <TouchableOpacity
               onPress={openEmailApp}
-              className="w-full rounded-full bg-[#F15A29] px-6 py-4">
-              <Text className="text-center font-blackshield font-bold text-white">
+              className="w-full rounded-full bg-[#00A651] px-6 py-4">
+              <Text className="text-center font-baloo text-white">
                 Open Email App
               </Text>
             </TouchableOpacity>

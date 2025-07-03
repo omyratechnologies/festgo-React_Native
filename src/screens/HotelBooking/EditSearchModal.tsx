@@ -210,7 +210,7 @@ const EditSearchModal: React.FC<{data: SearchParams, onSave: (SearchParams : Sea
         staynight: stayNights.toString(),
       };
       console.log('Search request body:', requestBody);
-      const response = await fetch(`${API_URL}/properties/active-r`, {
+      const response = await fetch(`${API_URL}/properties/p/active-r`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

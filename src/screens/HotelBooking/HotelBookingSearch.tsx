@@ -132,7 +132,7 @@ const HotelBookingSearch: React.FC = () => {
     
     try {
       // Make API call with new search parameters
-      const response = await fetch(`${API_URL}/properties/active-r`, {
+      const response = await fetch(`${API_URL}/properties/p/active-r`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
