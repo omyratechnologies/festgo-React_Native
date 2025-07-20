@@ -33,13 +33,29 @@ export interface SearchParams {
   [key: string]: any;
 }
 
+export interface Amenity {
+  amenity_id: number;
+  is_selected: string;
+  amenity_name: string;
+  selected_attributes: any[];
+  selected_sub_attributes: {
+    [key: string]: any;
+  };
+}
+
 export interface Hotel {
   id: string;
   vendorId?: string;
   name: string;
-  property_type?: string; 
+  property_type?: string;
   email?: string;
   star_rating?: number;
+  price?: {
+    child_charge?: number;
+    extra_adult_charge?: string;
+    base_price_for_2_adults?: string;
+    [key: string]: any;
+  };
   pricePerNight?: string;
   originalPrice?: string;
   discount?: string;
@@ -48,16 +64,19 @@ export interface Hotel {
   freeCancellation?: string;
   review_count?: number;
   location?: {
+    lat?: number;
+    lng?: number;
     city?: string;
     state?: string;
     address?: string;
     country?: string;
     pincode?: string;
-    landmark?: string;
-    latitude?: string;
-    longitude?: string;
+    locality?: string;
+    houseNumber?: string;
+    searchLocation?: string;
+    [key: string]: any;
   };
-  facilities?: string[];
+  facilities?: Amenity[];
   imageList?: string[];
   [key: string]: any;
 }
@@ -99,11 +118,19 @@ const PROPERTY_TYPES: PropertyType[] = [
 const HotelBookingSearch: React.FC = () => {
   const route = useRoute<HotelBookingSearchRouteProp>();
   const navigation = useNavigation<HotelBookingSearchNavigationProp>();
-  
+
   // Get data from navigation params with proper fallback
   const routeParams = route.params || {};
-  const { searchResults = [], searchParams = {} } = routeParams;
-  
+  // Allow searchResults to be either Hotel[] or an object with a properties field
+  type SearchResultsType = Hotel[] | { properties: Hotel[] };
+
+  const { searchResults = [], searchParams = {} } = routeParams as {
+    searchResults?: SearchResultsType;
+    searchParams?: SearchParams;
+  };
+  console.log('Route Params:', routeParams);
+  console.log('Search Results:', searchResults);
+
   // State management
   const [sortModalVisible, setSortModalVisible] = useState<boolean>(false);
   const [filterModalVisible, setFilterModalVisible] = useState<boolean>(false);
@@ -114,22 +141,34 @@ const HotelBookingSearch: React.FC = () => {
   const [bookingData, setBookingData] = useState<SearchParams>(searchParams);
 
   const [selectedSort, setSelectedSort] = useState<SortOption['value']>(SORT_OPTIONS[0].value);
-  const [selectedPropertyType, setSelectedPropertyType] = useState<PropertyType['value']>(PROPERTY_TYPES[0].value);
+  const [selectedPropertyType, setSelectedPropertyType] = useState<PropertyType['value']>(
+    PROPERTY_TYPES[0].value
+  );
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   console.log('Search Results:', searchResults);
   console.log('Search Params:', searchParams);
   // Initialize hotels data
   useEffect(() => {
-    if (searchResults && Array.isArray(searchResults) && searchResults.length > 0) {
-      setHotels(searchResults);
+    if (searchResults) {
+      if (Array.isArray(searchResults)) {
+        setHotels(searchResults);
+      } else if (
+        typeof searchResults === 'object' &&
+        'properties' in searchResults &&
+        Array.isArray(searchResults.properties)
+      ) {
+        setHotels(searchResults.properties);
+      }
     }
+    console.log('Initial Hotels:', searchResults);
+    console.log('hotels', hotels);
   }, [searchResults]);
 
   // Handle edit search
   const handleEditSearch = async (newSearchParams: SearchParams): Promise<void> => {
     setLoading(true);
     setEditSearchModalVisible(false);
-    
+
     try {
       // Make API call with new search parameters
       const response = await fetch(`${API_URL}/properties/p/active-r`, {
@@ -139,10 +178,12 @@ const HotelBookingSearch: React.FC = () => {
         },
         body: JSON.stringify(newSearchParams),
       });
-
+      console.log('API Response:', response);
       if (response.ok) {
         const data = await response.json();
+        console.log('Updated Search Results:', data);
         const properties: Hotel[] = data?.properties || [];
+        console.log('properties', properties);
         setHotels(properties);
         setBookingData(newSearchParams);
       } else {
@@ -158,22 +199,20 @@ const HotelBookingSearch: React.FC = () => {
   // Apply filters and sorting
   const getFilteredAndSortedHotels = (): Hotel[] => {
     if (!Array.isArray(hotels)) return [];
-    
+
     let filteredHotels: Hotel[] = [...hotels];
 
     // Apply property type filter
     if (selectedPropertyType !== 'hotels') {
-      filteredHotels = filteredHotels.filter((hotel: Hotel) => 
-        hotel.propertyType?.toLowerCase() === selectedPropertyType
+      filteredHotels = filteredHotels.filter(
+        (hotel: Hotel) => hotel.propertyType?.toLowerCase() === selectedPropertyType
       );
     }
 
     // Apply other filters
     if (selectedFilters.length > 0) {
       filteredHotels = filteredHotels.filter((hotel: Hotel) =>
-        selectedFilters.some((filter: string) => 
-          hotel.amenities?.includes(filter)
-        )
+        selectedFilters.some((filter: string) => hotel.amenities?.includes(filter))
       );
     }
 
@@ -183,7 +222,17 @@ const HotelBookingSearch: React.FC = () => {
         filteredHotels.sort((a: Hotel, b: Hotel) => (b.rating || 0) - (a.rating || 0));
         break;
       case 'price':
-        filteredHotels.sort((a: Hotel, b: Hotel) => (a.price || 0) - (b.price || 0));
+        filteredHotels.sort((a: Hotel, b: Hotel) => {
+          const priceA =
+            typeof a.price?.base_price_for_2_adults === 'string'
+              ? Number(a.price.base_price_for_2_adults)
+              : 0;
+          const priceB =
+            typeof b.price?.base_price_for_2_adults === 'string'
+              ? Number(b.price.base_price_for_2_adults)
+              : 0;
+          return priceA - priceB;
+        });
         break;
       case 'popularity':
       default:
@@ -204,35 +253,35 @@ const HotelBookingSearch: React.FC = () => {
     if (!bookingData || Object.keys(bookingData).length === 0) {
       return {
         location: 'Search Results',
-        details: 'No search details available'
+        details: 'No search details available',
       };
     }
-    
+
     const { destination, checkIn, checkOut, guests, rooms } = bookingData;
-    
+
     let checkInDate = '';
     let checkOutDate = '';
-    
+
     try {
       if (checkIn) {
-        checkInDate = new Date(checkIn).toLocaleDateString('en-GB', { 
-          day: '2-digit', 
-          month: 'short' 
+        checkInDate = new Date(checkIn).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
         });
       }
       if (checkOut) {
-        checkOutDate = new Date(checkOut).toLocaleDateString('en-GB', { 
-          day: '2-digit', 
-          month: 'short' 
+        checkOutDate = new Date(checkOut).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
         });
       }
     } catch (error) {
       console.error('Error formatting dates:', error);
     }
-    
+
     return {
       location: destination || 'Search Results',
-      details: `${checkInDate} - ${checkOutDate} · ${guests || 2} Guests · ${rooms || 1} Room`
+      details: `${checkInDate} - ${checkOutDate} · ${guests || 2} Guests · ${rooms || 1} Room`,
     };
   };
 
@@ -244,30 +293,27 @@ const HotelBookingSearch: React.FC = () => {
   const renderContent = (): JSX.Element => {
     if (loading) {
       return (
-        <View className="flex-1 justify-center items-center bg-gray-50">
+        <View className="flex-1 items-center justify-center bg-gray-50">
           <ActivityIndicator size="large" color="#0E54EC" />
-          <Text className="mt-4 font-poppins text-base text-gray-600">
-            Searching for hotels...
-          </Text>
+          <Text className="mt-4 font-poppins text-base text-gray-600">Searching for hotels...</Text>
         </View>
       );
     }
 
     if (!filteredHotels || filteredHotels.length === 0) {
       return (
-        <View className="flex-1 justify-center items-center bg-gray-50 px-6">
-          <Text className="font-poppins text-xl font-semibold text-gray-800 text-center mb-2">
+        <View className="flex-1 items-center justify-center bg-gray-50 px-6">
+          <Text className="mb-2 text-center font-poppins text-xl font-semibold text-gray-800">
             No Hotels Found
           </Text>
-          <Text className="font-poppins text-base text-gray-600 text-center mb-6">
-            We couldn't find any hotels matching your search criteria. Try adjusting your filters or search parameters.
+          <Text className="mb-6 text-center font-poppins text-base text-gray-600">
+            We couldn't find any hotels matching your search criteria. Try adjusting your filters or
+            search parameters.
           </Text>
           <TouchableOpacity
             onPress={() => setEditSearchModalVisible(true)}
-            className="bg-[#0E54EC] px-6 py-3 rounded-full">
-            <Text className="font-poppins text-white font-medium">
-              Modify Search
-            </Text>
+            className="rounded-full bg-[#0E54EC] px-6 py-3">
+            <Text className="font-poppins font-medium text-white">Modify Search</Text>
           </TouchableOpacity>
         </View>
       );
@@ -276,7 +322,7 @@ const HotelBookingSearch: React.FC = () => {
     return (
       <ScrollView className="mt-2 bg-gray-50 p-4">
         {filteredHotels.map((hotel: Hotel, idx: number) => (
-          <HotelBookingSearchCard 
+          <HotelBookingSearchCard
             image={hotel.imageList?.[1] || ''}
             hotelName={hotel.name}
             location={hotel.location?.city || ''}
@@ -284,7 +330,7 @@ const HotelBookingSearch: React.FC = () => {
             pricePerNight={hotel.pricePerNight ? Number(hotel.pricePerNight) : 0}
             amenities={hotel.facilities || []}
             numberOfReviews={hotel.review_count || 0}
-            features={hotel.facilities || []}
+            features={hotel.facilities?.map((f) => f.amenity_name) || []}
           />
         ))}
       </ScrollView>
@@ -294,7 +340,7 @@ const HotelBookingSearch: React.FC = () => {
   return (
     <View className="flex-1 bg-white">
       <View className="flex-row items-center justify-between bg-[#0E54EC] px-4 pb-4 pt-16"></View>
-      
+
       <View className="w-full flex-row items-center justify-between bg-white px-6 py-4">
         <View className="flex-row items-center">
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -304,9 +350,7 @@ const HotelBookingSearch: React.FC = () => {
             <Text className="font-poppins text-lg font-semibold text-black">
               {searchDisplay.location}
             </Text>
-            <Text className="mt-1 font-poppins text-xs text-black">
-              {searchDisplay.details}
-            </Text>
+            <Text className="mt-1 font-poppins text-xs text-black">{searchDisplay.details}</Text>
           </View>
         </View>
         <TouchableOpacity onPress={() => setEditSearchModalVisible(true)}>
@@ -492,14 +536,12 @@ const HotelBookingSearch: React.FC = () => {
               <Text className="font-poppins text-base font-medium text-[#0E54EC]">Done</Text>
             </TouchableOpacity>
           </View>
-          <FilterOptionsModal 
-            // selectedFilters={selectedFilters}
-            // toggleFilter={toggleFilter}
+          <FilterOptionsModal
+          // selectedFilters={selectedFilters}
+          // toggleFilter={toggleFilter}
           />
-          <View className="flex-row bg-white justify-between border-t border-gray-200 px-6 py-8">
-            <TouchableOpacity
-              onPress={() => setSelectedFilters([])}
-              className="rounded px-4 py-2">
+          <View className="flex-row justify-between border-t border-gray-200 bg-white px-6 py-8">
+            <TouchableOpacity onPress={() => setSelectedFilters([])} className="rounded px-4 py-2">
               <Text className="font-poppins text-[#0E54EC]">Reset All</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -537,7 +579,7 @@ const HotelBookingSearch: React.FC = () => {
               elevation: 5,
             }}>
             <Text className="mb-3 font-poppins text-lg font-semibold">Edit Search</Text>
-            <EditSearchModal 
+            <EditSearchModal
               data={bookingData}
               onSave={handleEditSearch}
               onClose={() => setEditSearchModalVisible(false)}
@@ -547,7 +589,7 @@ const HotelBookingSearch: React.FC = () => {
       </Modal>
 
       {renderContent()}
-      
+
       {!loading && <BottomMenu />}
     </View>
   );

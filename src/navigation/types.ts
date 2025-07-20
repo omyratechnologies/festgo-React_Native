@@ -62,6 +62,7 @@ export type MainStackParamList = {
   Rewards: undefined;
   MyOrderDetails: { orderId: string };
   Wallet: undefined;
+  Notifications: undefined;
   Wishlist: undefined;
   SavedCards: undefined;
   HelpScreen: undefined;

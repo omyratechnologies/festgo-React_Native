@@ -9,11 +9,12 @@ import { RootStackParamList } from '~/navigation/types';
 import { useFonts } from 'expo-font';
 
 import './global.css';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-const Stack = createBottomTabNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
 export default function App() {
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
 
@@ -29,7 +30,6 @@ export default function App() {
         const userData = await AsyncStorage.getItem('userId');
         const jwtToken = await AsyncStorage.getItem('jwtToken');
         const isLoggedIn = await AsyncStorage.getItem('isLoggedIn');
-
         if (userData && jwtToken && isLoggedIn === 'true') {
           setInitialRoute('Main');
         } else {
@@ -37,7 +37,7 @@ export default function App() {
         }
       } catch (error) {
         console.error('Error checking user data:', error);
-        setInitialRoute('Main');
+        setInitialRoute('Auth');
       }
     };
 
@@ -51,9 +51,7 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{ headerShown: false, tabBarStyle: { display: 'none' } }}
-          initialRouteName="Auth">
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
           <Stack.Screen name="Auth" component={AuthNavigator} />
           <Stack.Screen name="Main" component={MainNavigator} />
         </Stack.Navigator>

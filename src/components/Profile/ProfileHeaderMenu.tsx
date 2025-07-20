@@ -4,7 +4,7 @@ import HamburngerMenuIcon from '~/assets/images/common/Navbar/HamburgerMenu.svg'
 import WalletIcon from '~/assets/images/common/Navbar/WalletIcon.svg';
 import NotificationIcon from '~/assets/images/common/Navbar/NotificationIcon.svg';
 import BackIcon from '~/assets/icons/ArrowLeft.svg';
-import { useNavigation } from '@react-navigation/native';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
 
 type ProfileHeaderMenuProps = {
@@ -19,6 +19,19 @@ const ProfileHeaderMenu: React.FC<ProfileHeaderMenuProps> = ({
   const navigation = useNavigation<MainTabNavigationProp>();
   const bgColor = isDifferentPage ? '#F15A29' : 'transparent';
 
+  const handleGoBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'HomePage' }],
+        })
+      );
+    }
+  };
+
   return (
     <View
       className={`w-full flex-row items-center justify-between px-8 pb-6 ${isDifferentPage ? 'pt-16' : 'pt-2'}`}
@@ -27,10 +40,10 @@ const ProfileHeaderMenu: React.FC<ProfileHeaderMenuProps> = ({
       <View className="flex-row items-center">
         {isDifferentPage ? (
           <>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
+            <TouchableOpacity onPress={handleGoBack}>
               <BackIcon width={24} height={24} />
             </TouchableOpacity>
-            <Text className="ml-3 font-baloo text-xl pt-1 font-bold text-white">{pageTitle}</Text>
+            <Text className="ml-3 pt-1 font-baloo text-xl font-bold text-white">{pageTitle}</Text>
           </>
         ) : (
           <>

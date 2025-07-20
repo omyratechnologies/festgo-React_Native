@@ -56,6 +56,7 @@ const EventInfoPage = () => {
     soundSystem: string;
     photography: string;
     additional: Additional;
+    referralCode?: string;
   }>({
     location: '',
     eventType: { name: '', id: '' },
@@ -76,11 +77,14 @@ const EventInfoPage = () => {
       others: false,
       othersText: '',
     },
+    referralCode: '',
   });
 
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
-  const [eventsTypes, setEventTypes] = useState<{ name: string; id: string, imageUrl: string }[]>([]);
+  const [eventsTypes, setEventTypes] = useState<{ name: string; id: string; imageUrl: string }[]>(
+    []
+  );
 
   const handleInput = (key: string, value: any) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -93,25 +97,25 @@ const EventInfoPage = () => {
     }));
   };
 
-    useEffect(() => {
-      const fetchEvents = async () => {
-        try {
-          const res = await fetch(`${API_URL}/events/event-types`);
-          const data = await res.json();
-          setEventTypes(data);
-        } catch (e) {
-          setEventTypes([]);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchEvents();
-    }, []);
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await fetch(`${API_URL}/events/event-types`);
+        const data = await res.json();
+        setEventTypes(data);
+      } catch (e) {
+        setEventTypes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEvents();
+  }, []);
 
   const uploadImage = async (imageUri: string) => {
     try {
       setImageUploading(true);
-      
+
       const formData = new FormData();
       formData.append('file', {
         uri: imageUri,
@@ -128,7 +132,7 @@ const EventInfoPage = () => {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         return result.url;
       } else {
@@ -155,7 +159,7 @@ const EventInfoPage = () => {
       if (!result.canceled && result.assets?.[0]?.uri) {
         const imageUri = result.assets[0].uri;
         const uploadedUrl = await uploadImage(imageUri);
-        
+
         if (uploadedUrl) {
           handleInput('themeImage', uploadedUrl);
         }
@@ -218,9 +222,9 @@ const EventInfoPage = () => {
   const handleSubmit = async () => {
     try {
       if (!validateForm()) return;
-      
+
       setLoading(true);
-      
+
       // Get JWT token from AsyncStorage
       const token = await AsyncStorage.getItem('jwtToken');
       if (!token) {
@@ -235,18 +239,18 @@ const EventInfoPage = () => {
         eventDate: form.date.toISOString(),
         numberOfGuests: parseInt(form.guests),
         venueOption: {
-          needVenue: form.venue === 'Indoor' || form.venue === 'Outdoor'
+          needVenue: form.venue === 'Indoor' || form.venue === 'Outdoor',
         },
         eventBudget: parseInt(form.budget),
         soundSystem: {
-          required: form.soundSystem === 'Referred by FestGo'
+          required: form.soundSystem === 'Referred by FestGo',
         },
         photography: {
-          required: form.photography === 'Referred by FestGo'
+          required: form.photography === 'Referred by FestGo',
         },
         additionalThings: getAdditionalServices(),
         themes: form.themeImage ? [form.themeImage] : [],
-        eventTypeId: form.eventType.id
+        eventTypeId: form.eventType.id,
       };
 
       console.log('Submitting event:', requestBody);
@@ -255,28 +259,27 @@ const EventInfoPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestBody),
       });
 
       const result = await response.json();
-      
+
       if (response.ok && result.success) {
-        Alert.alert(
-          'Success', 
-          'Event created successfully!',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                // Reset form or navigate to another screen
-                console.log('Event created:', result.event);
-              }
-            }
-          ]
-        );
-        navigation.navigate('EventsPage'); 
+        Alert.alert('Success', 'Event created successfully!', [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Reset form or navigate to another screen
+              console.log('Event created:', result.event);
+            },
+          },
+        ]);
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'EventsPage' }],
+        });
       } else {
         throw new Error(result.message || 'Failed to create event');
       }
@@ -318,10 +321,10 @@ const EventInfoPage = () => {
           <Text className="mb-2 font-poppins font-medium text-gray-700">Event Type</Text>
           <View style={{ zIndex: 100 }}>
             <Pressable
-              className="mb-4 relative rounded-xl border border-[#00000036] bg-white px-4 py-3 flex-row items-center justify-between"
-              onPress={() => handleInput('showEventTypeOptions', !form.showEventTypeOptions)}
-            >
-              <Text className={`font-poppins text-base ${form.eventType.name ? 'text-gray-900' : 'text-gray-400'}`}>
+              className="relative mb-4 flex-row items-center justify-between rounded-xl border border-[#00000036] bg-white px-4 py-3"
+              onPress={() => handleInput('showEventTypeOptions', !form.showEventTypeOptions)}>
+              <Text
+                className={`font-poppins text-base ${form.eventType.name ? 'text-gray-900' : 'text-gray-400'}`}>
                 {form.eventType.name || 'Select event type'}
               </Text>
               <Ionicons
@@ -348,8 +351,7 @@ const EventInfoPage = () => {
                   shadowRadius: 4,
                   elevation: 5,
                   maxHeight: 200,
-                }}
-              >
+                }}>
                 {eventsTypes.map((type) => (
                   <Pressable
                     key={type.id}
@@ -357,9 +359,9 @@ const EventInfoPage = () => {
                     onPress={() => {
                       handleInput('eventType', type);
                       handleInput('showEventTypeOptions', false);
-                    }}
-                  >
-                    <Text className={`font-poppins text-base ${form.eventType.name === type.name ? 'text-[#0E54EC] font-semibold' : 'text-gray-700'}`}>
+                    }}>
+                    <Text
+                      className={`font-poppins text-base ${form.eventType.name === type.name ? 'font-semibold text-[#0E54EC]' : 'text-gray-700'}`}>
                       {type.name}
                     </Text>
                   </Pressable>
@@ -373,9 +375,13 @@ const EventInfoPage = () => {
           <TouchableOpacity
             className="mb-4 flex-row items-center rounded-xl border border-[#00000036] px-4 py-3"
             onPress={() => handleInput('showDatePicker', true)}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="calendar-outline" size={20} color="#0E54EC" style={{ marginRight: 8 }} />
+            activeOpacity={0.7}>
+            <Ionicons
+              name="calendar-outline"
+              size={20}
+              color="#0E54EC"
+              style={{ marginRight: 8 }}
+            />
             <Text className="text-gray-700">{form.date.toLocaleDateString()}</Text>
           </TouchableOpacity>
           {form.showDatePicker && (
@@ -384,13 +390,12 @@ const EventInfoPage = () => {
                 position: 'absolute',
                 left: 0,
                 right: 0,
-                top: 0,
+                top: -100,
                 bottom: 0,
                 justifyContent: 'center',
                 alignItems: 'center',
                 zIndex: 9999,
-              }}
-            >
+              }}>
               <View
                 style={{
                   backgroundColor: '#fff',
@@ -402,8 +407,7 @@ const EventInfoPage = () => {
                   shadowOpacity: 0.2,
                   shadowRadius: 8,
                   elevation: 10,
-                }}
-              >
+                }}>
                 <DateTimePicker
                   value={form.date}
                   mode="date"
@@ -422,9 +426,8 @@ const EventInfoPage = () => {
                 <TouchableOpacity
                   className="mt-4 items-center rounded-xl bg-[#0E54EC] py-3"
                   onPress={() => handleInput('showDatePicker', false)}
-                  activeOpacity={0.8}
-                >
-                  <Text className="text-white font-semibold text-base">Done</Text>
+                  activeOpacity={0.8}>
+                  <Text className="text-base font-semibold text-white">Done</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -433,7 +436,7 @@ const EventInfoPage = () => {
           {/* Event Budget */}
           <Text className="mb-2 font-poppins font-medium text-gray-700">Event Budget (₹)</Text>
           <TextInput
-            className="mb-4 rounded-xl font-poppins border border-[#00000036] px-4 py-3 focus:border-[#0E54EC]"
+            className="mb-4 rounded-xl border border-[#00000036] px-4 py-3 font-poppins focus:border-[#0E54EC]"
             placeholder="Enter budget"
             keyboardType="numeric"
             value={form.budget}
@@ -444,7 +447,7 @@ const EventInfoPage = () => {
           {/* Number of Guests */}
           <Text className="mb-2 font-poppins font-medium text-gray-700">Number of Guests</Text>
           <TextInput
-            className="mb-4 font-poppins rounded-xl border border-[#00000036] px-4 py-3 focus:border-[#0E54EC]"
+            className="mb-4 rounded-xl border border-[#00000036] px-4 py-3 font-poppins focus:border-[#0E54EC]"
             placeholder="Enter number"
             keyboardType="numeric"
             value={form.guests}
@@ -455,11 +458,10 @@ const EventInfoPage = () => {
           {/* Reference Theme Image Upload */}
           <Text className="mb-2 font-poppins font-medium text-gray-700">Reference Theme Image</Text>
           <TouchableOpacity
-            className="mb-4 font-poppins items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-6"
+            className="mb-4 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-6 font-poppins"
             onPress={pickImage}
             activeOpacity={0.7}
-            disabled={imageUploading}
-          >
+            disabled={imageUploading}>
             {imageUploading ? (
               <View className="items-center">
                 <ActivityIndicator size="large" color="#0E54EC" />
@@ -484,7 +486,7 @@ const EventInfoPage = () => {
 
           {/* Venue Option Radio Buttons */}
           <Text className="mb-2 font-poppins font-medium text-gray-700">Venue Option</Text>
-          <View className="mb-4 flex-col gap-2 items-start">
+          <View className="mb-4 flex-col items-start gap-2">
             {VENUE_OPTIONS.map((option) => (
               <Pressable
                 key={option}
@@ -498,7 +500,7 @@ const EventInfoPage = () => {
                   }`}
                 />
                 <Text
-                  className={`text-base font-poppins ${
+                  className={`font-poppins text-base ${
                     form.venue === option ? 'font-semibold text-[#0E54EC]' : 'text-gray-700'
                   }`}>
                   {option}
@@ -509,7 +511,7 @@ const EventInfoPage = () => {
 
           {/* Sound System Yes/No */}
           <Text className="mb-2 font-poppins font-medium text-gray-700">Sound System</Text>
-          <View className="mb-4 flex-col item-start">
+          <View className="item-start mb-4 flex-col">
             {['Referred by FestGo', 'Not Required'].map((val) => (
               <Pressable
                 key={val}
@@ -548,7 +550,7 @@ const EventInfoPage = () => {
                   }`}
                 />
                 <Text
-                  className={`text-base font-poppins ${
+                  className={`font-poppins text-base ${
                     form.photography === val ? 'font-semibold text-[#0E54EC]' : 'text-gray-700'
                   }`}>
                   {val}
@@ -587,20 +589,30 @@ const EventInfoPage = () => {
             ))}
           </View>
 
+          <Text className="mb-2 font-poppins font-medium text-gray-700">
+            Referral Code (optional)
+          </Text>
+          <TextInput
+            className="mb-4 rounded-xl border border-[#00000036] px-4 py-3 font-poppins focus:border-[#0E54EC]"
+            placeholder="Enter your referral code"
+            value={form.guests}
+            onChangeText={(v) => handleInput('referralCode', v)}
+            placeholderTextColor="#9CA3AF"
+          />
+
           {/* Submit Button */}
           <TouchableOpacity
             className={`mt-4 items-center rounded-xl py-4 ${loading ? 'bg-gray-400' : 'bg-[#0E54EC]'}`}
             onPress={handleSubmit}
             activeOpacity={0.8}
-            disabled={loading || imageUploading}
-          >
+            disabled={loading || imageUploading}>
             {loading ? (
               <View className="flex-row items-center">
                 <ActivityIndicator size="small" color="white" style={{ marginRight: 8 }} />
-                <Text className="text-lg font-poppins font-bold text-white">Submitting...</Text>
+                <Text className="font-poppins text-lg font-bold text-white">Submitting...</Text>
               </View>
             ) : (
-              <Text className="text-lg font-poppins font-bold text-white">Submit</Text>
+              <Text className="font-poppins text-lg font-bold text-white">Submit Request</Text>
             )}
           </TouchableOpacity>
         </View>

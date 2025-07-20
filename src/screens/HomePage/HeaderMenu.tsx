@@ -32,16 +32,16 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ white = false }) => {
           <UserIcon width={32} height={32} />
         </TouchableOpacity>
         <TouchableOpacity className="ml-3 flex-row items-center">
-          <Text className={`mr-1 font-poppins text-base font-medium ${textColor}`}>Hyderabad</Text>
+          <Text className={`mr-1 mt-2 font-baloo text-xl font-medium ${textColor}`}>Hyderabad</Text>
           <ChevronDownIcon width={18} height={18} />
         </TouchableOpacity>
       </View>
       {/* Right Section */}
       <View className="flex-row items-center">
-        <TouchableOpacity className="mr-4">
+        <TouchableOpacity onPress={() => navigation.navigate('Wallet')} className="mr-4">
           <Wallet width={28} height={28} />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Notifications')} >
           <Notification width={28} height={28} />
         </TouchableOpacity>
       </View>
