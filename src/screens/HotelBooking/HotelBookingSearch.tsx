@@ -9,7 +9,6 @@ import {
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
-import BottomMenu from '~/components/common/BottomMenu';
 import HotelBookingSearchCard from '~/components/HotelBooking/HotelBookingSearch/HotelBookingSearchCard';
 import BackIcon from '~/assets/icons/hotelBooking/BackIcon.svg';
 import EditIcon from '~/assets/icons/hotelBooking/EditIcon.svg';
@@ -21,6 +20,7 @@ import EditSearchModal from './EditSearchModal';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { API_URL } from '~/utils/api';
+import HotelBookingBottomFiltersMenu from './HotelBookingBottomFiltersMenu';
 
 // Type definitions
 export interface SearchParams {
@@ -548,7 +548,7 @@ const HotelBookingSearch: React.FC = () => {
 
       {renderContent()}
       
-      {!loading && <BottomMenu />}
+      {!loading && <HotelBookingBottomFiltersMenu />}
     </View>
   );
 };
