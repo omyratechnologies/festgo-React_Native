@@ -4,7 +4,7 @@ import ProfileHeaderMenu from '~/components/Profile/ProfileHeaderMenu';
 import BottomMenu from '~/components/common/BottomMenu';
 import WalletBackground from '~/assets/images/WalletBackground.svg';
 import ReferFriends from '~/assets/images/ReferFriends.svg';
-import LocationIcon from '~/assets/icons/Location.svg';
+import LocationIcon from '~/assets/icons/location.svg';
 import CoinIcon from '~/assets/icons/coinIcon.svg';
 import { useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';

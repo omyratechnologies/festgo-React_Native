@@ -82,7 +82,7 @@ const BeachFestCheckout = () => {
     const fetchFest = async () => {
       try {
         setLoadingFest(true);
-        const res = await fetch(`https://server.festgo.in/api/beachfest/${festId}`);
+        const res = await fetch(`https://server.festgo.in/api/beach-fests/${festId}`);
         if (!res.ok) throw new Error('Failed to fetch fest details');
         const data = await res.json();
         setFest(data);
@@ -184,12 +184,12 @@ const BeachFestCheckout = () => {
 
             {/* Fest Image Placeholder */}
             <View className="mb-6 h-40 w-full items-center justify-center overflow-hidden rounded-xl bg-gray-200">
-              {!loadingFest ? (
+              {loadingFest ? (
                 <ActivityIndicator size="large" color="#888" />
-              ) : fest?.image ? (
-                <Image source={{ uri: fest.image }} className="h-full w-full" resizeMode="cover" />
+              ) : fest?.image_urls ? (
+                <Image source={{ uri: fest.image_url?.[0] }} className="h-full w-full" resizeMode="cover" />
               ) : (
-                <Text className="text-gray-400">Image Placeholder</Text>
+                <Image source={{uri: 'https://festgo.blr1.digitaloceanspaces.com/festgo/public/1753272751709-dd0009ac8f8325258b38268cf5026b7bae72c4ba.png'}} className="h-full w-full" resizeMode="cover" />
               )}
             </View>
 

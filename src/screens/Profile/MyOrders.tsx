@@ -1,44 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import ProfileHeaderMenu from '~/components/Profile/ProfileHeaderMenu';
 import BottomMenu from '~/components/common/BottomMenu';
-import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
-import { useNavigation } from '@react-navigation/native';
-import { MainTabNavigationProp } from '~/navigation/types';
-
-const orders = [
-  {
-    id: '1',
-    type: 'upcoming',
-    image:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
-    title: 'Hotel Best Auto Hogar',
-    location: 'Central Park, NY',
-    bookedOn: '2024-06-10',
-    bookedDate: '2024-06-20',
-  },
-  {
-    id: '2',
-    type: 'upcoming',
-    image:
-      'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
-    title: 'Art Expo',
-    location: 'Gallery Lane, LA',
-    bookedOn: '2024-06-09',
-    bookedDate: '2024-06-22',
-  },
-  {
-    id: '3',
-    type: 'completed',
-    image:
-      'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80',
-    title: 'Food Carnival',
-    location: 'Downtown, SF',
-    bookedOn: '2024-05-01',
-    bookedDate: '2024-05-10',
-  },
-];
+// import { useNavigation } from '@react-navigation/native';
+// import { MainTabNavigationProp } from '~/navigation/types';
+import { API_URL } from '~/utils/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TABS = [
   { key: 'upcoming', label: 'Upcoming' },
@@ -47,15 +15,170 @@ const TABS = [
 
 const MyOrders = () => {
   const [activeTab, setActiveTab] = useState('upcoming');
-  const navigation = useNavigation<MainTabNavigationProp>();
-  const filteredOrders = orders.filter((order) => order.type === activeTab);
+  // const navigation = useNavigation<MainTabNavigationProp>();
+  const [propertyBookings, setPropertyBookings] = useState<any[]>([]);
+  const [eventBookings, setEventBookings] = useState<any[]>([]);
+  const [beachfestBookings, setBeachfestBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const jwtToken = await AsyncStorage.getItem('jwtToken');
+        const res = await fetch(`${API_URL}/property-booking/my-bookings`, {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        });
+        const data = await res.json();
+        // console.log('data', data);
+        setPropertyBookings(data.propertyBookings || []);
+        setEventBookings(data.events || []);
+        setBeachfestBookings(data.beachfestBookings || []);
+      } catch (e) {
+        // handle error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
+
+  // Helper to determine if an event is upcoming or completed
+  const isUpcoming = (date: string) => {
+    return dayjs(date).isAfter(dayjs(), 'day');
+  };
+
+  // Map and filter bookings by tab
+  const filteredEventBookings = eventBookings.filter((event) =>
+    activeTab === 'upcoming' ? isUpcoming(event.eventDate) : !isUpcoming(event.eventDate)
+  );
+
+  const filteredPropertyBookings = propertyBookings.filter((booking) =>
+    activeTab === 'upcoming'
+      ? isUpcoming(booking.checkInDate || booking.bookedDate)
+      : !isUpcoming(booking.checkInDate || booking.bookedDate)
+  );
+
+  const filteredBeachfestBookings = beachfestBookings.filter((booking) =>
+    activeTab === 'upcoming'
+      ? isUpcoming(booking.eventDate || booking.bookedDate)
+      : !isUpcoming(booking.eventDate || booking.bookedDate)
+  );
+
+  // Helper to get days left or completed
   const getDaysLeft = (date: string) => {
     const today = dayjs();
     const eventDate = dayjs(date);
     const diff = eventDate.diff(today, 'day');
-    return diff > 0 ? `${diff} days left` : true;
+    return diff > 0 ? `${diff} days left` : 'Completed';
   };
+
+  // Render a single event booking card
+  const renderEventBooking = (event: any) => (
+    <View
+      key={event.id}
+      className="mb-4 flex-row rounded-xl bg-white p-3"
+      style={{
+        shadowColor: '#000',
+        shadowOffset: { width: 1, height: 2 },
+        shadowOpacity: 0.07,
+        shadowRadius: 4,
+        elevation: 3,
+      }}
+    >
+      <Image
+        source={{ uri: event.eventTypeImage }}
+        className="h-20 w-20 rounded-lg bg-gray-200"
+        resizeMode="cover"
+      />
+      <View className="flex-1 pl-3">
+        <Text className="font-baloo text-base font-bold text-black">{event.eventType}</Text>
+        <Text className="text-xs text-gray-500 mt-1">{event.eventLocation}</Text>
+        <Text className="text-xs text-gray-500 mt-1">
+          Guests: {event.numberOfGuests}
+        </Text>
+        <Text className="text-xs text-gray-500 mt-1">
+          Date: {dayjs(event.eventDate).format('DD MMM YYYY')}
+        </Text>
+        <Text className="text-xs text-gray-500 mt-1">
+          Booked On: {dayjs(event.createdAt).format('DD MMM YYYY')}
+        </Text>
+        <Text className="text-xs mt-1" style={{ color: isUpcoming(event.eventDate) ? '#F15A29' : '#888' }}>
+          {getDaysLeft(event.eventDate)}
+        </Text>
+      </View>
+    </View>
+  );
+
+  // Render a single property booking card
+  const renderPropertyBooking = (booking: any) => (
+    <View
+      key={booking.id}
+      className="mb-4 flex-row rounded-xl bg-white p-3"
+      style={{
+        shadowColor: '#000',
+        shadowOffset: { width: 1, height: 2 },
+        shadowOpacity: 0.07,
+        shadowRadius: 4,
+        elevation: 3,
+      }}
+    >
+      <Image
+        source={{ uri: booking.propertyImage || 'https://festgo.blr1.digitaloceanspaces.com/festgo/public/1753272751709-dd0009ac8f8325258b38268cf5026b7bae72c4ba.png' }}
+        className="h-20 w-20 rounded-lg bg-gray-200"
+        resizeMode="cover"
+      />
+      <View className="flex-1 pl-3">
+        <Text className="font-baloo text-base font-bold text-black">{booking.propertyName || 'Property Booking'}</Text>
+        <Text className="text-xs text-gray-500 mt-1">{booking.location || booking.address}</Text>
+        <Text className="text-xs text-gray-500 mt-1">
+          Date: {dayjs(booking.checkInDate || booking.bookedDate).format('DD MMM YYYY')}
+        </Text>
+        <Text className="text-xs text-gray-500 mt-1">
+          Booked On: {dayjs(booking.createdAt).format('DD MMM YYYY')}
+        </Text>
+        <Text className="text-xs mt-1" style={{ color: isUpcoming(booking.checkInDate || booking.bookedDate) ? '#F15A29' : '#888' }}>
+          {getDaysLeft(booking.checkInDate || booking.bookedDate)}
+        </Text>
+      </View>
+    </View>
+  );
+
+  // Render a single beachfest booking card
+  const renderBeachfestBooking = (booking: any) => (
+    <View
+      key={booking.id}
+      className="mb-4 flex-row rounded-xl bg-white p-3"
+      style={{
+        shadowColor: '#000',
+        shadowOffset: { width: 1, height: 2 },
+        shadowOpacity: 0.07,
+        shadowRadius: 4,
+        elevation: 3,
+      }}
+    >
+      <Image
+        source={{ uri: booking.image_url || 'https://festgo.blr1.digitaloceanspaces.com/festgo/public/1753272751709-dd0009ac8f8325258b38268cf5026b7bae72c4ba.png' }}
+        className="h-20 w-20 rounded-lg bg-gray-200"
+        resizeMode="cover"
+      />
+      <View className="flex-1 pl-3">
+        <Text className="font-baloo text-base font-bold text-black">{booking.fest_type || 'Beach Fest'}</Text>
+        <Text className="text-xs text-gray-500 mt-1">{booking.location || booking.venue}</Text>
+        <Text className="text-xs text-gray-500 mt-1">
+          Date: {dayjs(booking.eventDate || booking.bookedDate).format('DD MMM YYYY')}
+        </Text>
+        <Text className="text-xs text-gray-500 mt-1">
+          Booked On: {dayjs(booking.createdAt).format('DD MMM YYYY')}
+        </Text>
+        <Text className="text-xs mt-1" style={{ color: isUpcoming(booking.eventDate || booking.bookedDate) ? '#F15A29' : '#888' }}>
+          {getDaysLeft(booking.eventDate || booking.bookedDate)}
+        </Text>
+      </View>
+    </View>
+  );
 
   return (
     <View className="flex-1 bg-white">
@@ -63,7 +186,7 @@ const MyOrders = () => {
       {/* Tabs */}
       <View className="w-full flex-row items-center justify-center px-12 pb-2 pt-4 ">
         {TABS.map((tab) => (
-          <TouchableOpacity key={tab.key} className=" w-1/2" onPress={() => setActiveTab(tab.key)}>
+          <TouchableOpacity key={tab.key} className="w-1/2" onPress={() => setActiveTab(tab.key)}>
             <Text
               style={{
                 color: activeTab === tab.key ? '#F15A29' : '#888',
@@ -81,89 +204,18 @@ const MyOrders = () => {
       </View>
       <ScrollView>
         <View className="p-4">
-          {filteredOrders.length === 0 && (
-            <Text className="mt-8 text-center text-gray-500">No orders found.</Text>
+          {loading && (
+            <Text className="text-center text-gray-500 mt-8">Loading your bookings...</Text>
           )}
-          {filteredOrders.map((order) => (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('MyOrderDetails', { orderId: order.id })}
-              key={order.id}
-              className="relative mb-4 flex-row items-center rounded-3xl bg-white p-3 shadow"
-              style={{
-                shadowColor: '#000',
-                shadowOffset: { width: 1, height: 2 },
-                shadowOpacity: 0.07,
-                shadowRadius: 4,
-                elevation: 9,
-              }}>
-              {/* Image */}
-              <Image
-                source={{ uri: order.image }}
-                className="h-full w-28 rounded-lg"
-                resizeMode="cover"
-              />
-              {/* Details */}
-              <View className="ml-4 flex-1">
-                <Text className="pt-1 font-baloo text-base font-bold text-gray-900">
-                  {order.title}
-                </Text>
-                <View className="mt-1 flex-row items-center">
-                  <Ionicons name="location-sharp" size={16} color="#F15A29" />
-                  <Text className="ml-1 pt-1 font-baloo text-sm text-gray-700">
-                    {order.location}
-                  </Text>
-                </View>
-                <Text className="mt-2 font-baloo text-xs text-gray-500">
-                  Booked on:{' '}
-                  <Text className="font-medium text-black">
-                    {dayjs(order.bookedOn).format('DD MMM YYYY')}
-                  </Text>
-                </Text>
-                <Text className="font-baloo text-xs text-gray-500">
-                  Booked date:{' '}
-                  <Text className="font-baloo font-medium text-black">
-                    {dayjs(order.bookedDate).format('DD MMM YYYY')}
-                  </Text>
-                </Text>
-              </View>
-              {/* Chevron */}
-              <Ionicons name="chevron-forward" size={24} color="#000" />
-              {activeTab === 'upcoming' ? (
-                (() => {
-                  const daysLeft = getDaysLeft(order.bookedDate);
-                  return daysLeft ? (
-                    <View
-                      style={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 36,
-                        backgroundColor: '#22C55E',
-                        borderRadius: 12,
-                        paddingHorizontal: 10,
-                        paddingVertical: 3,
-                      }}>
-                      <Text style={{ color: 'white', fontSize: 8, fontWeight: 'bold' }}>
-                        {/* {daysLeft} */}3 days left
-                      </Text>
-                    </View>
-                  ) : null;
-                })()
-              ) : (
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 36,
-                    backgroundColor: '#F15A29',
-                    borderRadius: 12,
-                    paddingHorizontal: 10,
-                    paddingVertical: 2,
-                  }}>
-                  <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>Finished</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          ))}
+          {!loading && filteredEventBookings.length === 0 && filteredPropertyBookings.length === 0 && filteredBeachfestBookings.length === 0 && (
+            <Text className="text-center text-gray-500 mt-8">No {activeTab === 'upcoming' ? 'upcoming' : 'completed'} bookings found.</Text>
+          )}
+          {/* Event Bookings */}
+          {filteredEventBookings.map(renderEventBooking)}
+          {/* Property Bookings */}
+          {filteredPropertyBookings.map(renderPropertyBooking)}
+          {/* Beachfest Bookings */}
+          {filteredBeachfestBookings.map(renderBeachfestBooking)}
         </View>
       </ScrollView>
       <BottomMenu />

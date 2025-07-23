@@ -50,13 +50,13 @@ const ProfileDetails = ({ data }: { data: any }) => {
         <View className="h-3 overflow-hidden rounded-full bg-white">
           <View
             className="h-3 rounded-full"
-            style={{ width: `${data.profileCompletion}%`, backgroundColor: '#08F67C' }}
+            style={{ width: `${data.profileCompletion ? data.profileCompletion : 0}%`, backgroundColor: '#08F67C' }}
           />
         </View>
         <Text className="mt-2 font-baloo text-sm text-white">
-          Your profile is {data.profileCompletion}% completed.
+          Your profile is {data.profileCompletion ? data.profileCompletion : 0}% completed.
         </Text>
-      </View>
+      </View> 
 
       {/* Stats Section */}
       <View className="mt-6 flex-row items-center justify-between rounded-xl bg-white px-4 py-3">
