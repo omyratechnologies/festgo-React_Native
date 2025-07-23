@@ -5,6 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BeachFestItem } from './BeachFest';
 import BeachFestImageBackground from '~/assets/images/events/CityFests.svg';
 import HotelBookingHeaderMenu from '~/components/HotelBooking/HotelBookingHeaderMenu';
+import { useNavigation } from '@react-navigation/native';
+import { MainTabNavigationProp } from '~/navigation/types';
 
 type Props = {
   fest: BeachFestItem;
@@ -12,8 +14,11 @@ type Props = {
 };
 
 const BeachFestDetails = ({ fest, onClose }: Props) => {
+  const navigation = useNavigation<MainTabNavigationProp>();
   const handleBookNow = () => {
-    console.log('Booking for fest:', fest.id);
+    if (!fest.id) return;
+    onClose();
+    navigation.navigate('BeachFestCheckout', { festId: fest.id });
   };
 
   return (
@@ -62,11 +67,11 @@ const BeachFestDetails = ({ fest, onClose }: Props) => {
           }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
             <Ionicons name="location-sharp" size={16} color="#d1d5db" style={{ marginRight: 4 }} />
-            <Text className="text-sm font-poppins text-white">{fest.location}</Text>
+            <Text className="font-poppins text-sm text-white">{fest.location}</Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
             <Ionicons name="calendar" size={16} color="#d1d5db" style={{ marginRight: 4 }} />
-            <Text className="text-sm font-poppins text-white">
+            <Text className="font-poppins text-sm text-white">
               {new Date(fest.event_start).toLocaleString('en-US', {
                 month: 'short',
                 day: 'numeric',
@@ -134,7 +139,7 @@ const BeachFestDetails = ({ fest, onClose }: Props) => {
         </View>
 
         <TouchableOpacity
-          className="mt-2 rounded-full mb-12 bg-blue-600 px-4 py-3 text-center"
+          className="mb-12 mt-2 rounded-full bg-blue-600 px-4 py-3 text-center"
           onPress={handleBookNow}>
           <Text className="text-center text-lg font-semibold text-white">
             Entry Pass at ₹{fest.price_per_pass} only

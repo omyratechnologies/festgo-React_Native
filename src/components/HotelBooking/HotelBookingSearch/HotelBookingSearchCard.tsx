@@ -6,6 +6,7 @@ import LocationIcon from '~/assets/icons/location-pin.svg';
 import WineglassIcon from '~/assets/icons/hotelBooking/Wineglass.svg';
 import { useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
+import { Amenity } from '~/screens/HotelBooking/HotelBookingSearch';
 
 type HotelBookingSearchCardProps = {
   hotelName: string;
@@ -14,7 +15,7 @@ type HotelBookingSearchCardProps = {
   price: number;
   discount?: number;
   pricePerNight: number;
-  amenities: string[];
+  amenities: Amenity[];
   numberOfReviews: number;
   features: string[];
   onHeartPress?: () => void;
@@ -78,7 +79,7 @@ const HotelBookingSearchCard: React.FC<HotelBookingSearchCardProps> = ({
               <Text className="font-poppins text-sm text-gray-600">{location}</Text>
             </View>
             <View className="flex-row flex-wrap">
-              {features.map((feature, idx) => (
+              {features.slice(0, 3).map((feature, idx) => (
                 <Text
                   key={idx}
                   className="mb-1 mr-2 rounded-full border border-[#00AEEF1A] bg-[#00AEEF1A] px-3 py-1 font-poppins text-xs text-[#04688D]">
@@ -91,7 +92,7 @@ const HotelBookingSearchCard: React.FC<HotelBookingSearchCardProps> = ({
                 <View className="flex-row items-center" key={idx}>
                   <WineglassIcon width={16} height={16} className="mr-1" />
                   <Text className=" px-2 py-0.5 font-poppins text-xs text-gray-700">
-                    {amenity}
+                    {amenity.amenity_name}
                   </Text>
                 </View>
               ))}

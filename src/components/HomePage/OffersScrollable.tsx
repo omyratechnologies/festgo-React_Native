@@ -41,7 +41,7 @@ const OffersScrollable = () => {
   return (
     <View className="m-4 mb-32 mt-12 rounded-3xl border border-[#66656580] bg-white p-4">
       {/* Heading */}
-      <Text className="mb-3 text-lg font-bold text-black">Offers</Text>
+      <Text className="mb-3 text-lg font-baloo font-bold text-black">Offers</Text>
 
       {/* Filter Options */}
       <View className="mb-4 flex-row items-center">

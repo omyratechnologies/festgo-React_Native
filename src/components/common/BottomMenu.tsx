@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import React from 'react';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import BottomMenuIcon from '~/assets/images/homepage/BottomMenu.svg';
 import MenuPlayButton from '~/assets/images/homepage/MenuPlayButton.svg';
 import HomeIcon from '~/assets/images/common/BottomMenu/Home.svg';
@@ -38,11 +38,15 @@ const BottomMenu = () => {
   const navigation = useNavigation();
   const route = useRoute();
 
-  // Find the menu item whose route matches the current route name
   const activeKey = MENU_ITEMS.find((item) => item.route === route.name)?.key || 'home';
 
-  const handlePress = (key: string, route: string) => {
-    navigation.navigate(route as never);
+  const handlePress = (key: string, routeName: string) => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: routeName }],
+      })
+    );
   };
 
   return (

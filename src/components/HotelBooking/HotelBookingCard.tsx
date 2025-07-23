@@ -191,6 +191,13 @@ const HotelBookingCard: React.FC = () => {
         (selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 60 * 60 * 24)
       );
 
+      const formatDate = (date: Date) => {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+      };
+
       const requestBody: SearchParams = {
         property_type:
           activeTab === 'Hotels' ? 'Hotel' : activeTab === 'Resorts' ? 'Resort' : 'HourlyStay',
@@ -200,8 +207,8 @@ const HotelBookingCard: React.FC = () => {
         rooms: rooms.toString(),
         adult: adults.toString(),
         child: children.toString(),
-        todate: selectedStartDate.toLocaleDateString('en-GB'),
-        enddate: selectedEndDate.toLocaleDateString('en-GB'),
+        todate: formatDate(selectedStartDate),
+        enddate: formatDate(selectedEndDate),
         staynight: stayNights.toString(),
       };
       // console.log('Search request body:', requestBody);
@@ -212,7 +219,7 @@ const HotelBookingCard: React.FC = () => {
         },
         body: JSON.stringify(requestBody),
       });
-
+      console.log('Search response status:', response.status);
       const data = await response.json();
 
       if (response.ok) {

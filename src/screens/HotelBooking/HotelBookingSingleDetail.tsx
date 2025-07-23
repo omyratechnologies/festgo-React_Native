@@ -89,7 +89,7 @@ export default function HotelBookingSingleDetail() {
     try {
       setLoading(true);
       setError(null);
-
+      console.log('Fetching hotel details for propertyId:', propertyId);
       const response = await fetch(`${API_URL}/properties/p/property-details`, {
         method: 'POST',
         headers: {
@@ -119,6 +119,9 @@ export default function HotelBookingSingleDetail() {
     if (propertyId) {
       fetchHotelDetails();
     }
+    console.log('--------------------------------')
+    console.log('Fetching hotel details for propertyId:', propertyId);
+    console.log('Hotel data:', hotelData);
   }, [propertyId]);
 
   // Loading state
