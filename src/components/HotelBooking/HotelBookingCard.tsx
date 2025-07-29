@@ -61,6 +61,17 @@ const HotelBookingCard: React.FC = () => {
   const navigation = useNavigation<MainTabNavigationProp>();
   const months = generateMonths();
 
+  // Calculate number of nights
+  const calculateNights = () => {
+    if (selectedStartDate && selectedEndDate) {
+      const nights = Math.ceil(
+        (selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      return `${nights} night${nights > 1 ? 's' : ''}`;
+    }
+    return '';
+  };
+
   // Update guests text when values change
   useEffect(() => {
     let text = `${rooms} Room${rooms > 1 ? 's' : ''}, ${adults} Adult${adults > 1 ? 's' : ''}`;
@@ -106,10 +117,45 @@ const HotelBookingCard: React.FC = () => {
     } else if (selectedStartDate && !selectedEndDate) {
       if (date >= selectedStartDate) {
         setSelectedEndDate(date);
+        // Trigger checkout when both dates are selected
+        setTimeout(() => {
+          handleCheckout();
+        }, 500); // Small delay to show the selection
       } else {
         setSelectedStartDate(date);
         setSelectedEndDate(null);
       }
+    }
+  };
+
+  const handleCheckout = () => {
+    if (selectedStartDate && selectedEndDate && selectedLocation) {
+      const stayNights = Math.ceil(
+        (selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      const formatDate = (date: Date) => {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+      };
+
+      const checkoutData = {
+        property_type:
+          activeTab === 'Hotels' ? 'Hotel' : activeTab === 'Resorts' ? 'Resort' : 'HourlyStay',
+        location: selectedLocation,
+        rooms: rooms.toString(),
+        adult: adults.toString(),
+        child: children.toString(),
+        todate: formatDate(selectedStartDate),
+        enddate: formatDate(selectedEndDate),
+        staynight: stayNights.toString(),
+      };
+
+      // Navigate to checkout screen
+      navigation.navigate('HotelBookingCheckout', { checkoutData });
+      setDateModalVisible(false);
     }
   };
 
@@ -261,9 +307,9 @@ const HotelBookingCard: React.FC = () => {
           backgroundColor: isDisabled
             ? 'transparent'
             : isStart || isEnd
-              ? '#02AFFF'
+              ? '#0E54EC'
               : inRange
-                ? '#02AFFF13'
+                ? '#0E54EC13'
                 : 'transparent',
           opacity: isDisabled ? 0.3 : 1,
         }}>
@@ -378,18 +424,18 @@ const HotelBookingCard: React.FC = () => {
         </TouchableOpacity>
 
         {/* Date and Guests */}
-        <View className="flex-row space-x-4">
+        <View className="flex-row gap-4">
           <TouchableOpacity
             onPress={() => setDateModalVisible(true)}
             className="flex-1 rounded-l-2xl border-y border-l border-[#00000024] p-3">
-            <Text className="text-sm text-gray-500">Date</Text>
             <Text className="text-gray-700">{dateRange}</Text>
+            <Text className="text-sm text-gray-500">{calculateNights()}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setGuestsModalVisible(true)}
             className="flex-1 rounded-r-2xl border border-[#00000024] p-3">
-            <Text className="text-sm text-gray-500">Guests</Text>
-            <Text className="text-gray-700">{guestsText}</Text>
+            <Text className="text-gray-700">{`${rooms} Room${rooms > 1 ? 's' : ''}`}</Text>
+            <Text className="text-sm text-gray-500">{`${adults} Guest${adults > 1 ? 's' : ''}${children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}`}</Text>
           </TouchableOpacity>
         </View>
 

@@ -14,14 +14,18 @@ interface CounterProps {
 }
 
 const Counter: React.FC<CounterProps> = ({ label, count, setCount }) => (
-  <View className="flex-row justify-between items-center py-3">
+  <View className="flex-row items-center justify-between py-3">
     <Text className="text-base">{label}</Text>
-    <View className="flex-row items-center space-x-4">
-      <TouchableOpacity onPress={() => setCount(Math.max(0, count - 1))} className="px-3 py-1 bg-gray-200 rounded-full">
+    <View className="flex-row items-center gap-4">
+      <TouchableOpacity
+        onPress={() => setCount(Math.max(0, count - 1))}
+        className="rounded-full bg-gray-200 px-3 py-1">
         <Text className="text-lg">−</Text>
       </TouchableOpacity>
       <Text className="text-lg">{count}</Text>
-      <TouchableOpacity onPress={() => setCount(count + 1)} className="px-3 py-1 bg-gray-200 rounded-full">
+      <TouchableOpacity
+        onPress={() => setCount(count + 1)}
+        className="rounded-full bg-gray-200 px-3 py-1">
         <Text className="text-lg">+</Text>
       </TouchableOpacity>
     </View>
@@ -39,7 +43,7 @@ const GuestsBottomSheet = ({ visible, onClose }: GuestsBottomSheetProps) => {
   return (
     <BottomSheet index={0} snapPoints={snapPoints} onClose={onClose}>
       <View className="p-4">
-        <Text className="text-lg font-semibold mb-4">Guests & Rooms</Text>
+        <Text className="mb-4 text-lg font-semibold">Guests & Rooms</Text>
         <Counter label="Rooms" count={rooms} setCount={setRooms} />
         <Counter label="Adults" count={adults} setCount={setAdults} />
         <Counter label="Children" count={children} setCount={setChildren} />

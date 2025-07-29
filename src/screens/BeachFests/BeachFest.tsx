@@ -6,17 +6,18 @@ import {
   ActivityIndicator,
   Image,
   Modal,
+  Dimensions,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import BottomMenu from '~/components/common/BottomMenu';
-import HotelBookingHeaderMenu from '~/components/HotelBooking/HotelBookingHeaderMenu';
-import BeachFestImageBackground from '~/assets/images/events/CityFests.svg';
 import { MainTabNavigationProp } from '~/navigation/types';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '~/utils/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import BeachFestDetails from './BeachFestDetails';
+import Svg, { Path } from 'react-native-svg';
+
+const { width } = Dimensions.get('window');
 
 export type BeachFestItem = {
   id: string;
@@ -50,6 +51,7 @@ const BeachFest = () => {
   const [fests, setFests] = useState<BeachFestItem[]>([]);
   const [selectedFest, setSelectedFest] = useState<BeachFestItem | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState('Hyderabad');
 
   const handleFestPress = (fest: BeachFestItem) => {
     setSelectedFest(fest);
@@ -80,169 +82,247 @@ const BeachFest = () => {
   }, []);
 
   return (
-    <View className="flex-1 justify-start bg-white">
-      <View>
-        <View
-          style={{
-            height: 180,
-            position: 'relative',
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-          }}>
-          <HotelBookingHeaderMenu white />
-          <BeachFestImageBackground
-            width="100%"
-            height="100%"
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-            preserveAspectRatio="none"
+    <View className="flex-1 bg-white">
+      {/* Header Section */}
+      <View
+        style={{
+          height: 280,
+          position: 'relative',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+        }}>
+        {/* Background Image */}
+        <View className="absolute inset-0 overflow-hidden rounded-b-[30px] bg-[#0E54EC]">
+          <Image
+            source={{
+              uri: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop',
+            }}
+            className="h-full w-full opacity-20"
+            resizeMode="cover"
           />
-          <View
-            style={{
-              position: 'absolute',
-              top: 110,
-              left: 20,
-              flexDirection: 'row',
-              alignItems: 'center',
-              zIndex: 2,
-            }}>
-            <TouchableOpacity onPress={handleBack} style={{ marginRight: 10 }}>
-              <Ionicons name="arrow-back" size={22} color="#fff" />
+        </View>
+
+        {/* Top Bar with Location and Icons */}
+        <View className="absolute z-10 mt-16 w-full flex-row items-center justify-between bg-transparent px-8 pb-6 pt-2">
+          <View className="flex-row items-center">
+            <TouchableOpacity className="flex-row items-center">
+              <View className="mr-2 h-8 w-8 rounded-full bg-white/20" />
+              <Text className="mr-1 font-poppins text-base font-medium text-white">
+                {selectedLocation}
+              </Text>
+              <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M7 10l5 5 5-5"
+                  stroke="white"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
             </TouchableOpacity>
-            <Text
-              className="font-baloo"
-              style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>
-              Beach Fests
-            </Text>
+          </View>
+
+          <View className="flex-row items-center">
+            <TouchableOpacity className="mr-4">
+              <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
+                  fill="white"
+                />
+                <Path
+                  d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"
+                  fill="white"
+                />
+              </Svg>
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"
+                  fill="white"
+                />
+              </Svg>
+            </TouchableOpacity>
           </View>
         </View>
+
+        {/* Navigation and Title */}
+        <View
+          style={{
+            position: 'absolute',
+            top: 110,
+            left: 20,
+            flexDirection: 'row',
+            alignItems: 'center',
+            zIndex: 2,
+          }}>
+          <TouchableOpacity onPress={handleBack} style={{ marginRight: 10 }}>
+            <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M15 18l-6-6 6-6"
+                stroke="white"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </TouchableOpacity>
+          <Text className="font-baloo" style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>
+            Beach Fests
+          </Text>
+        </View>
       </View>
-      <ScrollView className="flex-1">
-        <View className="p-4">
-          {loading && (
-            <View className="flex items-center justify-center py-10">
-              <ActivityIndicator size="large" color="#2563eb" />
-              <Text className="mt-2 text-gray-500">Loading beach fests...</Text>
-            </View>
-          )}
-          {error && (
-            <View className="flex items-center justify-center py-10">
-              <Text className="font-bold text-red-500">Error: {error}</Text>
+
+      {/* Main Content */}
+      <ScrollView
+        className="flex-1 bg-white"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
+        {loading && (
+          <View className="flex items-center justify-center py-10">
+            <ActivityIndicator size="large" color="#2563eb" />
+            <Text className="mt-2 text-gray-500">Loading beach fests...</Text>
+          </View>
+        )}
+        {error && (
+          <View className="flex items-center justify-center py-10">
+            <Text className="font-bold text-red-500">Error: {error}</Text>
+            <TouchableOpacity
+              className="mt-4 rounded bg-blue-600 px-4 py-2"
+              onPress={() => {
+                setLoading(true);
+                setError(null);
+                setFests([]);
+                // re-fetch
+                (async () => {
+                  try {
+                    const res = await fetch(`${API_URL}/beach-fests`);
+                    if (!res.ok) throw new Error('Failed to fetch');
+                    const json: BeachFestResponse = await res.json();
+                    if (!json.success) throw new Error(json.message);
+                    setFests(json.data);
+                  } catch (err: any) {
+                    setError(err.message || 'Something went wrong');
+                  } finally {
+                    setLoading(false);
+                  }
+                })();
+              }}>
+              <Text className="font-semibold text-white">Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {!loading && !error && fests.length === 0 && (
+          <View className="flex items-center justify-center py-10">
+            <Text className="text-gray-500">No beach fests found.</Text>
+          </View>
+        )}
+        {!loading && !error && fests.length > 0 && (
+          <View className="flex-row flex-wrap justify-between">
+            {fests.map((fest) => (
               <TouchableOpacity
-                className="mt-4 rounded bg-blue-600 px-4 py-2"
-                onPress={() => {
-                  setLoading(true);
-                  setError(null);
-                  setFests([]);
-                  // re-fetch
-                  (async () => {
-                    try {
-                      const res = await fetch(`${API_URL}/beach-fests`);
-                      if (!res.ok) throw new Error('Failed to fetch');
-                      const json: BeachFestResponse = await res.json();
-                      if (!json.success) throw new Error(json.message);
-                      setFests(json.data);
-                    } catch (err: any) {
-                      setError(err.message || 'Something went wrong');
-                    } finally {
-                      setLoading(false);
-                    }
-                  })();
-                }}>
-                <Text className="font-semibold text-white">Retry</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          {!loading && !error && fests.length === 0 && (
-            <View className="flex items-center justify-center py-10">
-              <Text className="text-gray-500">No beach fests found.</Text>
-            </View>
-          )}
-          {!loading && !error && fests.length > 0 && (
-            <View className="flex-wrap gap-4 space-y-6 ">
-              {fests.map((fest) => (
-                <TouchableOpacity
-                  onPress={() => handleFestPress(fest)}
-                  key={fest.id}
-                  className="relative mb-4 aspect-auto w-[45%] overflow-hidden rounded-2xl bg-white">
-                  <View className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg">
-                    <Image
-                      source={{
-                        uri:
-                          fest.image_urls?.[0] ||
-                          'https://media.istockphoto.com/id/104731717/photo/luxury-resort.jpg?s=612x612&w=0&k=20&c=cODMSPbYyrn1FHake1xYz9M8r15iOfGz9Aosy9Db7mI=',
-                      }}
-                      className="h-40 w-full"
-                      resizeMode="cover"
-                    />
-                    <View
-                      style={{
-                        position: 'absolute',
-                        top: -40,
-                        right: -40,
-                        backgroundColor: '#0E54EC',
-                        borderRadius: 9999,
-                        paddingVertical: 16,
-                        paddingHorizontal: 16,
-                        zIndex: 3,
-                        width: 100,
-                        height: 100,
-                        minWidth: 60,
-                        alignItems: 'flex-start',
-                        justifyContent: 'flex-end',
-                      }}>
-                      <Text className="text-center text-xl font-bold leading-none text-white">
-                        {new Date(fest.event_start).toLocaleDateString('en-IN', { day: '2-digit' })}
-                      </Text>
-                      <Text className="text-md text-center font-semibold leading-none text-white">
-                        {new Date(fest.event_start)
-                          .toLocaleDateString('en-IN', { month: 'short' })
-                          .toUpperCase()}
-                      </Text>
-                    </View>
-                    <LinearGradient
-                      colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.9)']}
-                      style={{
-                        position: 'absolute',
-                        left: 0,
-                        right: 0,
-                        top: 0,
-                        bottom: 0,
-                        borderRadius: 12,
-                      }}
-                    />
-                    <View
-                      style={{
-                        position: 'absolute',
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        padding: 12,
-                        zIndex: 2,
-                      }}>
-                      <Text className="text-lg font-bold text-white">{fest.type}</Text>
-                      <Text className="text-sm text-gray-200">{fest.location}</Text>
-                      <Text className="mt-1 text-base font-semibold text-white">
+                onPress={() => handleFestPress(fest)}
+                key={fest.id}
+                className="mb-4 w-[48%]">
+                <View className="relative aspect-square overflow-hidden rounded-2xl bg-white shadow-sm">
+                  <Image
+                    source={{
+                      uri:
+                        fest.image_urls?.[0] ||
+                        'https://media.istockphoto.com/id/104731717/photo/luxury-resort.jpg?s=612x612&w=0&k=20&c=cODMSPbYyrn1FHake1xYz9M8r15iOfGz9Aosy9Db7mI=',
+                    }}
+                    className="h-full w-full"
+                    resizeMode="cover"
+                  />
+                  {/* Quarter Circle Date */}
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: -40,
+                      right: -40,
+                      backgroundColor: '#0E54EC',
+                      borderRadius: 9999,
+                      paddingVertical: 16,
+                      paddingHorizontal: 16,
+                      zIndex: 3,
+                      width: 100,
+                      height: 100,
+                      minWidth: 60,
+                      alignItems: 'flex-start',
+                      justifyContent: 'flex-end',
+                    }}>
+                    <Text className="text-center text-xl font-bold leading-none text-white">
+                      {new Date(fest.event_start).toLocaleDateString('en-IN', { day: '2-digit' })}
+                    </Text>
+                    <Text className="text-md text-center font-semibold leading-none text-white">
+                      {new Date(fest.event_start)
+                        .toLocaleDateString('en-IN', { month: 'short' })
+                        .toUpperCase()}
+                    </Text>
+                  </View>
+                  {/* Gradient Overlay */}
+                  <LinearGradient
+                    colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.9)']}
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                    }}
+                  />
+                  {/* Event Details Overlay */}
+                  <View
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      padding: 12,
+                      zIndex: 2,
+                    }}>
+                    <Text className="text-lg font-bold text-white">{fest.type}</Text>
+                    <Text className="text-sm text-gray-200">{fest.location}</Text>
+                    <View className="mt-1 flex-row items-center gap-2">
+                      <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                        <Path
+                          d="M4 9V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"
+                          stroke="#0E54EC"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <Path
+                          d="M8 12h.01M12 12h.01M16 12h.01"
+                          stroke="#0E54EC"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </Svg>
+                      <Text className="text-base font-semibold text-white">
                         ₹{fest.price_per_pass}
                       </Text>
                     </View>
                   </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-        {selectedFest && (
-          <Modal visible={showModal} animationType="slide" presentationStyle="fullScreen">
-            <BeachFestDetails
-              fest={selectedFest}
-              onClose={() => {
-                setSelectedFest(null);
-                setShowModal(false);
-              }}
-            />
-          </Modal>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
       </ScrollView>
+
+      {selectedFest && (
+        <Modal visible={showModal} animationType="slide" presentationStyle="fullScreen">
+          <BeachFestDetails
+            fest={selectedFest}
+            onClose={() => {
+              setSelectedFest(null);
+              setShowModal(false);
+            }}
+          />
+        </Modal>
+      )}
 
       <BottomMenu />
     </View>

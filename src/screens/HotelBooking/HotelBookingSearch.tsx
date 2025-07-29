@@ -145,6 +145,7 @@ const HotelBookingSearch: React.FC = () => {
     PROPERTY_TYPES[0].value
   );
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
   console.log('Search Results:', searchResults);
   console.log('Search Params:', searchParams);
   // Initialize hotels data
@@ -249,28 +250,65 @@ const HotelBookingSearch: React.FC = () => {
     );
   };
 
-  const formatSearchDisplay = (): { location: string; details: string } => {
+  const toggleBadge = (badge: string): void => {
+    setSelectedBadges((prev: string[]) =>
+      prev.includes(badge) ? prev.filter((v: string) => v !== badge) : [...prev, badge]
+    );
+  };
+
+  const formatSearchDisplay = (): { location: string; dateRange: string; guestsInfo: string } => {
     if (!bookingData || Object.keys(bookingData).length === 0) {
       return {
         location: 'Search Results',
-        details: 'No search details available',
+        dateRange: 'No dates selected',
+        guestsInfo: 'No guest info',
       };
     }
 
-    const { destination, checkIn, checkOut, guests, rooms } = bookingData;
+    const {
+      destination,
+      location,
+      checkIn,
+      checkOut,
+      todate,
+      enddate,
+      adults,
+      adult,
+      children,
+      child,
+      rooms,
+    } = bookingData;
 
     let checkInDate = '';
     let checkOutDate = '';
 
     try {
+      // Try different date formats
       if (checkIn) {
         checkInDate = new Date(checkIn).toLocaleDateString('en-GB', {
           day: '2-digit',
           month: 'short',
         });
+      } else if (todate) {
+        // Handle DD-MM-YYYY format
+        const [day, month, year] = todate.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        checkInDate = date.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+        });
       }
+
       if (checkOut) {
         checkOutDate = new Date(checkOut).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+        });
+      } else if (enddate) {
+        // Handle DD-MM-YYYY format
+        const [day, month, year] = enddate.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        checkOutDate = date.toLocaleDateString('en-GB', {
           day: '2-digit',
           month: 'short',
         });
@@ -279,9 +317,18 @@ const HotelBookingSearch: React.FC = () => {
       console.error('Error formatting dates:', error);
     }
 
+    const adultsCount = adults || adult || 2;
+    const childrenCount = children || child || 0;
+    const roomsCount = rooms || 1;
+
+    const dateRange =
+      checkInDate && checkOutDate ? `${checkInDate} - ${checkOutDate}` : 'Select dates';
+    const guestsInfo = `${adultsCount} Guest${Number(adultsCount) > 1 ? 's' : ''}${Number(childrenCount) > 0 ? `, ${childrenCount} Child${Number(childrenCount) > 1 ? 'ren' : ''}` : ''} · ${roomsCount} Room${Number(roomsCount) > 1 ? 's' : ''}`;
+
     return {
-      location: destination || 'Search Results',
-      details: `${checkInDate} - ${checkOutDate} · ${guests || 2} Guests · ${rooms || 1} Room`,
+      location: destination || location || 'Search Results',
+      dateRange,
+      guestsInfo,
     };
   };
 
@@ -341,44 +388,124 @@ const HotelBookingSearch: React.FC = () => {
     <View className="flex-1 bg-white">
       <View className="flex-row items-center justify-between bg-[#0E54EC] px-4 pb-4 pt-16"></View>
 
-      <View className="w-full flex-row items-center justify-between bg-white px-6 py-4">
-        <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <BackIcon width={24} height={24} />
-          </TouchableOpacity>
-          <View className="ml-3">
-            <Text className="font-poppins text-lg font-semibold text-black">
-              {searchDisplay.location}
-            </Text>
-            <Text className="mt-1 font-poppins text-xs text-black">{searchDisplay.details}</Text>
+      <View className="w-full bg-white px-6 py-4">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center">
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <BackIcon width={24} height={24} />
+            </TouchableOpacity>
+            <View className="ml-3">
+              <Text className="font-poppins text-lg font-semibold text-black">
+                {searchDisplay.location}
+              </Text>
+              <Text className="mt-1 font-poppins text-sm text-gray-600">
+                {searchDisplay.dateRange} • {searchDisplay.guestsInfo}
+              </Text>
+            </View>
           </View>
+          <TouchableOpacity onPress={() => setEditSearchModalVisible(true)}>
+            <EditIcon width={24} height={24} />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={() => setEditSearchModalVisible(true)}>
-          <EditIcon width={24} height={24} />
-        </TouchableOpacity>
-      </View>
 
-      <View className="mb-2 mt-2 flex-row justify-center bg-white px-4">
-        <TouchableOpacity
-          className="mr-2 flex-row items-center gap-2 rounded-full border border-[#02AFFF] bg-white px-4 py-2"
-          onPress={() => setSortModalVisible(true)}>
-          <SortIcon width={16} height={16} className="mx-auto mb-1" />
-          <Text className="text-center font-poppins font-medium text-[#02AFFF]">Sort</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="mx-1 flex-row items-center gap-2 rounded-full border border-[#02AFFF] bg-white px-4 py-2"
-          onPress={() => setFilterModalVisible(true)}>
-          <FilterIcon width={16} height={16} className="mx-auto mb-1" />
-          <Text className="text-center font-poppins font-medium text-[#02AFFF]">
-            Filters{selectedFilters.length > 0 && ` (${selectedFilters.length})`}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="ml-2 flex-row items-center gap-2 rounded-full border border-[#02AFFF] bg-white px-4 py-2"
-          onPress={() => setPropertyTypeModalVisible(true)}>
-          <PropertyTypeIcon width={16} height={16} className="mx-auto mb-1" />
-          <Text className="text-center font-poppins font-medium text-[#02AFFF]">Property type</Text>
-        </TouchableOpacity>
+        {/* Hotel Feature Badges */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="mt-3"
+          contentContainerStyle={{ paddingHorizontal: 0 }}>
+          <View className="flex-row gap-3 px-0">
+            <TouchableOpacity
+              onPress={() => toggleBadge('Couple Friendly')}
+              className={`flex-row items-center rounded-xl border px-4 py-3 ${
+                selectedBadges.includes('Couple Friendly')
+                  ? 'border-[#0E54EC] bg-[#0E54EC]/10'
+                  : 'border-gray-300 bg-white'
+              }`}>
+              <Text
+                className={`font-poppins text-sm font-medium ${
+                  selectedBadges.includes('Couple Friendly') ? 'text-[#0E54EC]' : 'text-gray-700'
+                }`}>
+                Couple Friendly
+              </Text>
+              {selectedBadges.includes('Couple Friendly') && (
+                <Text className="ml-2 font-poppins text-sm font-bold text-[#0E54EC]">×</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => toggleBadge('Book @ ₹0')}
+              className={`flex-row items-center rounded-xl border px-4 py-3 ${
+                selectedBadges.includes('Book @ ₹0')
+                  ? 'border-[#0E54EC] bg-[#0E54EC]/10'
+                  : 'border-gray-300 bg-white'
+              }`}>
+              <Text
+                className={`font-poppins text-sm font-medium ${
+                  selectedBadges.includes('Book @ ₹0') ? 'text-[#0E54EC]' : 'text-gray-700'
+                }`}>
+                Book @ ₹0
+              </Text>
+              {selectedBadges.includes('Book @ ₹0') && (
+                <Text className="ml-2 font-poppins text-sm font-bold text-[#0E54EC]">×</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => toggleBadge('Great Location')}
+              className={`flex-row items-center rounded-xl border px-4 py-3 ${
+                selectedBadges.includes('Great Location')
+                  ? 'border-[#0E54EC] bg-[#0E54EC]/10'
+                  : 'border-gray-300 bg-white'
+              }`}>
+              <Text
+                className={`font-poppins text-sm font-medium ${
+                  selectedBadges.includes('Great Location') ? 'text-[#0E54EC]' : 'text-gray-700'
+                }`}>
+                Great Location
+              </Text>
+              {selectedBadges.includes('Great Location') && (
+                <Text className="ml-2 font-poppins text-sm font-bold text-[#0E54EC]">×</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => toggleBadge('Flexible Check-in')}
+              className={`flex-row items-center rounded-xl border px-4 py-3 ${
+                selectedBadges.includes('Flexible Check-in')
+                  ? 'border-[#0E54EC] bg-[#0E54EC]/10'
+                  : 'border-gray-300 bg-white'
+              }`}>
+              <Text
+                className={`font-poppins text-sm font-medium ${
+                  selectedBadges.includes('Flexible Check-in') ? 'text-[#0E54EC]' : 'text-gray-700'
+                }`}>
+                Flexible Check-in
+              </Text>
+              {selectedBadges.includes('Flexible Check-in') && (
+                <Text className="ml-2 font-poppins text-sm font-bold text-[#0E54EC]">×</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => toggleBadge('Free Cancellation')}
+              className={`flex-row items-center rounded-xl border px-4 py-3 ${
+                selectedBadges.includes('Free Cancellation')
+                  ? 'border-[#0E54EC] bg-[#0E54EC]/10'
+                  : 'border-gray-300 bg-white'
+              }`}>
+              <Text
+                className={`font-poppins text-sm font-medium ${
+                  selectedBadges.includes('Free Cancellation') ? 'text-[#0E54EC]' : 'text-gray-700'
+                }`}>
+                Free Cancellation
+              </Text>
+              {selectedBadges.includes('Free Cancellation') && (
+                <Text className="ml-2 font-poppins text-sm font-bold text-[#0E54EC]">×</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </View>
 
       {/* Sort Modal */}
@@ -387,7 +514,7 @@ const HotelBookingSearch: React.FC = () => {
         animationType="fade"
         transparent
         onRequestClose={() => setSortModalVisible(false)}>
-        <View className="flex-row items-center justify-between bg-[#0E54EC] px-4 pb-4 pt-16"></View>
+        <View className="flex-row items-center justify-between bg-[#0E54EC] px-4 pb-4 pt-16" />
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)' }}>
           <Pressable style={{ flex: 1 }} onPress={() => setSortModalVisible(false)} />
           <View
@@ -589,7 +716,7 @@ const HotelBookingSearch: React.FC = () => {
       </Modal>
 
       {renderContent()}
-      
+
       {!loading && <HotelBookingBottomFiltersMenu />}
     </View>
   );

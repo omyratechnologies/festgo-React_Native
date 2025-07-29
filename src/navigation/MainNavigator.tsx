@@ -14,6 +14,7 @@ import SavedCards from '~/screens/Profile/SavedCards';
 import HotelBooking from '~/screens/HotelBooking/HotelBooking';
 import HotelBookingSingleDetail from '~/screens/HotelBooking/HotelBookingSingleDetail';
 import HotelBookingSearch from '~/screens/HotelBooking/HotelBookingSearch';
+import HotelBookingCheckout from '~/screens/HotelBooking/ConfirmScreen';
 import UpcomingScreen from '~/screens/HomePage/UpcomingScreen';
 import HelpScreen from '~/screens/Profile/HelpScreen';
 import EventsPage from '~/screens/Events/EventsPage';
@@ -67,6 +68,7 @@ export const MainNavigator = () => {
       <Stack.Screen name="HotelBooking" component={HotelBooking} />
       <Stack.Screen name="HotelBookingDetails" component={HotelBookingSingleDetail} />
       <Stack.Screen name="HotelBookingSearch" component={HotelBookingSearch} />
+      <Stack.Screen name="HotelBookingCheckout" component={HotelBookingCheckout} />
     </Stack.Navigator>
   );
 };

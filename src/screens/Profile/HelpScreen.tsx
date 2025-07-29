@@ -34,9 +34,9 @@ const AccordionItem = ({
   isActive: boolean;
   onPress: () => void;
 }) => (
-  <View className="mb-2 " >
+  <View className="mb-2 ">
     <TouchableOpacity
-      className="flex-row items-center rounded-2xl bg-white justify-between px-4 py-3"
+      className="flex-row items-center justify-between rounded-2xl bg-white px-4 py-3"
       onPress={onPress}
       activeOpacity={0.8}
       style={{
@@ -46,12 +46,12 @@ const AccordionItem = ({
         shadowRadius: 4,
         elevation: 9,
       }}>
-      <Text className="text-base font-poppins font-semibold text-gray-800">{question}</Text>
+      <Text className="font-poppins text-base font-semibold text-gray-800">{question}</Text>
       <Text className="text-xl text-gray-400">{isActive ? '-' : '+'}</Text>
     </TouchableOpacity>
     {isActive && (
-      <View className="px-4 mt-3 pb-4">
-        <Text className="text-gray-600 font-poppins">{answer}</Text>
+      <View className="mt-3 px-4 pb-4">
+        <Text className="font-poppins text-gray-600">{answer}</Text>
       </View>
     )}
   </View>
@@ -75,7 +75,7 @@ const HelpScreen = () => {
         <View className="p-4">
           {/* Contact Us Section */}
           <Text className="mb-2 p-4 font-poppins text-2xl font-bold text-gray-800">Contact Us</Text>
-          <View className="mb-6 flex-row gap-4 space-x-4 p-4">
+          <View className="mb-6 flex-row gap-4 gap-4 p-4">
             {/* Call Us Card */}
             <TouchableOpacity
               className="flex-1 items-center rounded-3xl border border-gray-200 bg-white p-4 shadow-sm"

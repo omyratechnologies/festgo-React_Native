@@ -34,7 +34,12 @@ const generateMonths = () => {
   return months;
 };
 
-const EditSearchModal: React.FC<{data: SearchParams, onSave: (SearchParams : SearchParams) => Promise<void>, onClose: () => void }> = ({data, onSave, onClose}) => {
+const EditSearchModal: React.FC<{
+  data: SearchParams;
+  onSave: (SearchParams: SearchParams) => Promise<void>;
+  onClose: () => void;
+}> = ({ data, onSave, onClose }) => {
+  console.log('EditSearchModal data:', data);
   const [activeTab, setActiveTab] = useState('Hotels');
   const [locationModalVisible, setLocationModalVisible] = useState(false);
   const [dateModalVisible, setDateModalVisible] = useState(false);
@@ -43,19 +48,39 @@ const EditSearchModal: React.FC<{data: SearchParams, onSave: (SearchParams : Sea
 
   // Location state
   const [locationSearch, setLocationSearch] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState(data?.destination || '');
+  const [selectedLocation, setSelectedLocation] = useState(
+    data?.destination || data?.location || ''
+  );
 
   // Date state
-  const [selectedStartDate, setSelectedStartDate] = useState<Date | null>(
-    data?.checkIn ? new Date(data.checkIn) : null
-  );
-  const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(
-    data?.checkOut ? new Date(data.checkOut) : null
-  );
+  const [selectedStartDate, setSelectedStartDate] = useState<Date | null>(() => {
+    if (data?.checkIn) return new Date(data.checkIn);
+    if (data?.todate) {
+      // Convert DD-MM-YYYY format to Date
+      const [day, month, year] = data.todate.split('-');
+      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }
+    return null;
+  });
+  const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(() => {
+    if (data?.checkOut) return new Date(data.checkOut);
+    if (data?.enddate) {
+      // Convert DD-MM-YYYY format to Date
+      const [day, month, year] = data.enddate.split('-');
+      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }
+    return null;
+  });
   const [dateRange, setDateRange] = useState(() => {
-    if (data?.checkIn && data?.checkOut) {
-      const start = new Date(data.checkIn).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-      const end = new Date(data.checkOut).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    if (selectedStartDate && selectedEndDate) {
+      const start = selectedStartDate.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+      });
+      const end = selectedEndDate.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+      });
       return `${start} - ${end}`;
     }
     return 'Select dates';
@@ -63,18 +88,33 @@ const EditSearchModal: React.FC<{data: SearchParams, onSave: (SearchParams : Sea
 
   // Guests state
   const [rooms, setRooms] = useState(data?.rooms || 1);
-  const [adults, setAdults] = useState(data?.adults || 2);
-  const [children, setChildren] = useState(data?.children || 0);
+  const [adults, setAdults] = useState(data?.adults || data?.adult || 2);
+  const [children, setChildren] = useState(data?.children || data?.child || 0);
   const [guestsText, setGuestsText] = useState(() => {
-    let text = `${data?.rooms || 1} Room${(Number(data?.rooms) || 1) > 1 ? 's' : ''}, ${data?.adults || 2} Adult${(Number(data?.adults) || 2) > 1 ? 's' : ''}`;
-    if ((Number(data?.children) || 0) > 0) {
-      text += `, ${data.children} Child${Number(data.children) > 1 ? 'ren' : ''}`;
+    const roomsCount = data?.rooms || 1;
+    const adultsCount = data?.adults || data?.adult || 2;
+    const childrenCount = data?.children || data?.child || 0;
+
+    let text = `${roomsCount} Room${Number(roomsCount) > 1 ? 's' : ''}, ${adultsCount} Adult${Number(adultsCount) > 1 ? 's' : ''}`;
+    if (Number(childrenCount) > 0) {
+      text += `, ${childrenCount} Child${Number(childrenCount) > 1 ? 'ren' : ''}`;
     }
     return text;
   });
 
   const navigation = useNavigation<MainTabNavigationProp>();
   const months = generateMonths();
+
+  // Calculate number of nights
+  const calculateNights = () => {
+    if (selectedStartDate && selectedEndDate) {
+      const nights = Math.ceil(
+        (selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      return `${nights} night${nights > 1 ? 's' : ''}`;
+    }
+    return '';
+  };
 
   // Update guests text when values change
   useEffect(() => {
@@ -84,6 +124,44 @@ const EditSearchModal: React.FC<{data: SearchParams, onSave: (SearchParams : Sea
     }
     setGuestsText(text);
   }, [rooms, adults, children]);
+
+  // Update date range when dates are initialized
+  useEffect(() => {
+    if (selectedStartDate && selectedEndDate) {
+      const start = selectedStartDate.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+      });
+      const end = selectedEndDate.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+      });
+      setDateRange(`${start} - ${end}`);
+    }
+  }, [selectedStartDate, selectedEndDate]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('EditSearchModal initialized with:', {
+      selectedLocation,
+      selectedStartDate,
+      selectedEndDate,
+      dateRange,
+      rooms,
+      adults,
+      children,
+      guestsText,
+    });
+  }, [
+    selectedLocation,
+    selectedStartDate,
+    selectedEndDate,
+    dateRange,
+    rooms,
+    adults,
+    children,
+    guestsText,
+  ]);
 
   // Location handlers
   const handleLocationSelect = (location: string) => {
@@ -136,13 +214,13 @@ const EditSearchModal: React.FC<{data: SearchParams, onSave: (SearchParams : Sea
   const handleDateModalClose = () => {
     if (selectedStartDate && selectedEndDate) {
       const startStr = selectedStartDate.toLocaleDateString('en-GB', {
-                        day: '2-digit',
-                        month: 'short'
-                      })
+        day: '2-digit',
+        month: 'short',
+      });
       const endStr = selectedEndDate.toLocaleDateString('en-GB', {
-                        day: '2-digit',
-                        month: 'short',
-                      })
+        day: '2-digit',
+        month: 'short',
+      });
       setDateRange(`${startStr} - ${endStr}`);
     }
     setDateModalVisible(false);
@@ -221,8 +299,14 @@ const EditSearchModal: React.FC<{data: SearchParams, onSave: (SearchParams : Sea
       const data = await response.json();
 
       if (response.ok) {
+        // Close modal first
+        onClose();
+
         // Navigate to search results with the data
-        navigation.navigate('HotelBookingSearch', { searchResults: data, searchParams: requestBody });
+        navigation.navigate('HotelBookingSearch', {
+          searchResults: data,
+          searchParams: requestBody,
+        });
         console.log('Search results:', data);
       } else {
         Alert.alert('Error', data.message || 'Search failed');
@@ -233,15 +317,27 @@ const EditSearchModal: React.FC<{data: SearchParams, onSave: (SearchParams : Sea
     } finally {
       setLoading(false);
     }
+
+    // Save the search data
     onSave({
       destination: selectedLocation,
+      location: selectedLocation,
       checkIn: selectedStartDate?.toISOString(),
       checkOut: selectedEndDate?.toISOString(),
+      todate: selectedStartDate
+        ? `${String(selectedStartDate.getDate()).padStart(2, '0')}-${String(selectedStartDate.getMonth() + 1).padStart(2, '0')}-${selectedStartDate.getFullYear()}`
+        : '',
+      enddate: selectedEndDate
+        ? `${String(selectedEndDate.getDate()).padStart(2, '0')}-${String(selectedEndDate.getMonth() + 1).padStart(2, '0')}-${selectedEndDate.getFullYear()}`
+        : '',
       rooms: rooms.toString(),
       adults: adults.toString(),
+      adult: adults.toString(),
       children: children.toString(),
+      child: children.toString(),
+      property_type:
+        activeTab === 'Hotels' ? 'Hotel' : activeTab === 'Resorts' ? 'Resort' : 'HourlyStay',
     });
-    onClose();
   };
 
   const renderCalendarDay = (day: number, monthData: any) => {
@@ -265,9 +361,9 @@ const EditSearchModal: React.FC<{data: SearchParams, onSave: (SearchParams : Sea
           backgroundColor: isDisabled
             ? 'transparent'
             : isStart || isEnd
-              ? '#02AFFF'
+              ? '#0E54EC'
               : inRange
-                ? '#02AFFF13'
+                ? '#0E54EC13'
                 : 'transparent',
           opacity: isDisabled ? 0.3 : 1,
         }}>
@@ -359,7 +455,7 @@ const EditSearchModal: React.FC<{data: SearchParams, onSave: (SearchParams : Sea
 
   return (
     <>
-      <View className=" mx-4 py-4 bg-white ">
+      <View className=" mx-4 bg-white py-4 ">
         {/* Tabs */}
         <View className="mx-1 mb-4 flex-row justify-between overflow-hidden rounded-full bg-blue-100">
           {TABS.map((tab) => (
@@ -382,18 +478,18 @@ const EditSearchModal: React.FC<{data: SearchParams, onSave: (SearchParams : Sea
         </TouchableOpacity>
 
         {/* Date and Guests */}
-        <View className="flex-row space-x-4">
+        <View className="flex-row gap-4">
           <TouchableOpacity
             onPress={() => setDateModalVisible(true)}
             className="flex-1 rounded-l-2xl border-y border-l border-[#00000024] p-3">
-            <Text className="text-sm text-gray-500">Date</Text>
             <Text className="text-gray-700">{dateRange}</Text>
+            <Text className="text-sm text-gray-500">{calculateNights()}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setGuestsModalVisible(true)}
             className="flex-1 rounded-r-2xl border border-[#00000024] p-3">
-            <Text className="text-sm text-gray-500">Guests</Text>
-            <Text className="text-gray-700">{guestsText}</Text>
+            <Text className="text-gray-700">{`${rooms} Room${Number(rooms) > 1 ? 's' : ''}`}</Text>
+            <Text className="text-sm text-gray-500">{`${adults} Guest${Number(adults) > 1 ? 's' : ''}${Number(children) > 0 ? `, ${children} Child${Number(children) > 1 ? 'ren' : ''}` : ''}`}</Text>
           </TouchableOpacity>
         </View>
 
@@ -506,7 +602,7 @@ const EditSearchModal: React.FC<{data: SearchParams, onSave: (SearchParams : Sea
           {/* Date Info */}
           <View className=" px-6 py-4">
             <View className="flex-row rounded-lg  border border-[#00000024] bg-white">
-              <View className="w-1/2 border-r border-[#00000020] pl-5 flex-col items-start justify-between px-4 py-4">
+              <View className="w-1/2 flex-col items-start justify-between border-r border-[#00000020] px-4 py-4 pl-5">
                 <Text className="font-poppins  text-lg font-semibold">Check-in</Text>
                 <Text className="font-poppins text-xl text-[#02AFFF]">
                   {selectedStartDate
@@ -518,7 +614,7 @@ const EditSearchModal: React.FC<{data: SearchParams, onSave: (SearchParams : Sea
                     : 'Select date'}
                 </Text>
               </View>
-              <View className="w-1/2 flex-col pl-5 items-start justify-between px-4 py-4">
+              <View className="w-1/2 flex-col items-start justify-between px-4 py-4 pl-5">
                 <Text className="font-poppins text-lg font-semibold">Check-out</Text>
                 <Text className="font-poppins text-xl text-[#02AFFF]">
                   {selectedEndDate

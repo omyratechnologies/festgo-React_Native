@@ -17,7 +17,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '~/utils/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-
 const referrals = [
   { id: '1', name: 'John Doe' },
   { id: '2', name: 'Jane Smith' },
@@ -117,11 +116,11 @@ const ReferAndEarn = () => {
               <View className={'px-6'}>
                 <View className="w-full">
                   <View className={'mb-6 flex w-full items-center justify-between'}>
-                  <Image
-                    source={require('~/assets/images/profile/moneybag.png')}
-                    className={'w-44 rounded-2xl'}
-                    resizeMode="cover"
-                  />
+                    <Image
+                      source={require('~/assets/images/profile/moneybag.png')}
+                      className={'w-44 rounded-2xl'}
+                      resizeMode="cover"
+                    />
                   </View>
                   <Text
                     className={'mb-6  px-16 text-center font-baloo text-3xl font-bold text-white'}>
@@ -146,7 +145,7 @@ const ReferAndEarn = () => {
                   </View>
                 </View>
                 {/* Share Buttons */}
-                <View className={'-mb-10  flex-row justify-center gap-2 space-x-6'}>
+                <View className={'-mb-10  flex-row justify-center gap-2 gap-6'}>
                   <TouchableOpacity
                     className={'flex-row items-center overflow-hidden rounded-full p-0'}>
                     <LinearGradient
