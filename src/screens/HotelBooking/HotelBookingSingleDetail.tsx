@@ -119,7 +119,7 @@ export default function HotelBookingSingleDetail() {
     if (propertyId) {
       fetchHotelDetails();
     }
-    console.log('--------------------------------')
+    console.log('--------------------------------');
     console.log('Fetching hotel details for propertyId:', propertyId);
     console.log('Hotel data:', hotelData);
   }, [propertyId]);
@@ -226,7 +226,7 @@ export default function HotelBookingSingleDetail() {
                     <StarIcon width={12} height={12} className="mx-1" />
                     <Text className="ml-1 font-poppins text-xs text-gray-500">Hotel</Text>
                   </View>
-                  <View className="flex-row items-center space-x-2">
+                  <View className="flex-row items-center gap-2">
                     <Text className="font-poppins text-lg font-semibold">
                       {hotelName || 'Hotel Name'}
                     </Text>
@@ -355,7 +355,9 @@ export default function HotelBookingSingleDetail() {
                   {price?.perNight ? 'Per night' : 'Total'}
                 </Text>
               </View>
-              <Pressable className="rounded-full bg-blue-600 px-5 py-3" onPress={() => setshowRoomSelectModal(true)}>
+              <Pressable
+                className="rounded-full bg-blue-600 px-5 py-3"
+                onPress={() => setshowRoomSelectModal(true)}>
                 <Text className="text-lg font-semibold text-white">Select Room</Text>
               </Pressable>
             </View>
@@ -375,9 +377,7 @@ export default function HotelBookingSingleDetail() {
                 </View>
                 <ScrollView className="flex-1 p-4">
                   <View className="flex-row flex-wrap gap-4">
-                    {rooms?.map((room, index) => (
-                     <RoomsDetail key={index} room={room}/>
-                    ))}
+                    {rooms?.map((room, index) => <RoomsDetail key={index} room={room} />)}
                   </View>
                 </ScrollView>
               </View>

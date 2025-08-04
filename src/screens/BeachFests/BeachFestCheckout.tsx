@@ -115,7 +115,8 @@ const BeachFestCheckout = () => {
         Alert.alert('Error', 'You must be logged in to book a fest.');
         return;
       }
-      console.log(JSON.stringify({
+      console.log(
+        JSON.stringify({
           passes: Number(form.passes),
           name: form.name,
           phone: form.phone,
@@ -123,8 +124,9 @@ const BeachFestCheckout = () => {
           payment_method: form.payment_method,
           fest_type: fest?.name,
           id: festId,
-        }))
-        console.log('auth token:', jwtToken);
+        })
+      );
+      console.log('auth token:', jwtToken);
 
       const res = await fetch('https://server.festgo.in/api/beachfest-booking', {
         method: 'POST',
@@ -179,7 +181,7 @@ const BeachFestCheckout = () => {
                   />
                 </Svg>
               </TouchableOpacity>
-              <Text className="text-2xl mt-2 font-baloo font-bold">Check out</Text>
+              <Text className="mt-2 font-baloo text-2xl font-bold">Check out</Text>
             </View>
 
             {/* Fest Image Placeholder */}
@@ -187,14 +189,24 @@ const BeachFestCheckout = () => {
               {loadingFest ? (
                 <ActivityIndicator size="large" color="#888" />
               ) : fest?.image_urls ? (
-                <Image source={{ uri: fest.image_url?.[0] }} className="h-full w-full" resizeMode="cover" />
+                <Image
+                  source={{ uri: fest.image_url?.[0] }}
+                  className="h-full w-full"
+                  resizeMode="cover"
+                />
               ) : (
-                <Image source={{uri: 'https://festgo.blr1.digitaloceanspaces.com/festgo/public/1753272751709-dd0009ac8f8325258b38268cf5026b7bae72c4ba.png'}} className="h-full w-full" resizeMode="cover" />
+                <Image
+                  source={{
+                    uri: 'https://festgo.blr1.digitaloceanspaces.com/festgo/public/1753272751709-dd0009ac8f8325258b38268cf5026b7bae72c4ba.png',
+                  }}
+                  className="h-full w-full"
+                  resizeMode="cover"
+                />
               )}
             </View>
 
             {/* Input Fields */}
-            <View className="space-y-4 gap-4">
+            <View className="gap-4 gap-4">
               {/* Passes */}
               <View>
                 <Text className="mb-1 font-poppins text-sm font-semibold">Number of Passes</Text>
@@ -278,7 +290,7 @@ const BeachFestCheckout = () => {
                       <View className="h-2.5 w-2.5 rounded-full bg-white" />
                     )}
                   </View>
-                  <Text className="text-base font-poppins">{method.label}</Text>
+                  <Text className="font-poppins text-base">{method.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -292,7 +304,9 @@ const BeachFestCheckout = () => {
               {submitting ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text className="text-center font-poppins text-lg font-semibold text-white">Continue</Text>
+                <Text className="text-center font-poppins text-lg font-semibold text-white">
+                  Continue
+                </Text>
               )}
             </TouchableOpacity>
           </ScrollView>

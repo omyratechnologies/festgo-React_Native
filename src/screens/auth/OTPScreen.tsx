@@ -140,7 +140,7 @@ const OTPScreen = () => {
 
               {/* OTP Inputs */}
               <View className="mb-6 items-center">
-                <View className="mb-4 mt-2 flex-row justify-between gap-4 space-x-3">
+                <View className="mb-4 mt-2 flex-row justify-between gap-3 gap-4">
                   {otp.map((digit, index) => (
                     <TextInput
                       key={index}

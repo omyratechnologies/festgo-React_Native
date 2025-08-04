@@ -76,7 +76,7 @@ const Onboarding = () => {
 
   const Indicator = () => {
     return (
-      <View className="mb-4 mt-6 flex-row items-center justify-center gap-2 space-x-2">
+      <View className="mb-4 mt-6 flex-row items-center justify-center gap-2 gap-2">
         {slides.map((_, i) => {
           const isActive = i === currentIndex;
           return (
