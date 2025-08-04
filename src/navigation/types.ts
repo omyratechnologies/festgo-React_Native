@@ -69,7 +69,11 @@ export type MainStackParamList = {
 
   // hotel bookings
   HotelBooking: undefined;
-  HotelBookingDetails: { hotelId: string };
+  HotelBookingDetails: {
+    hotelId: string;
+    propertyType?: string;
+    searchParams?: any;
+  };
   HotelBookingSearch: {
     searchResults: any;
     searchParams: SearchParams;

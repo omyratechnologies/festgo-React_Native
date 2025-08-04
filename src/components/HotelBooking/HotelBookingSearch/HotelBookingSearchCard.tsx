@@ -18,6 +18,9 @@ type HotelBookingSearchCardProps = {
   amenities: Amenity[];
   numberOfReviews: number;
   features: string[];
+  propertyType?: string;
+  hotelId?: string;
+  searchParams?: any;
   onHeartPress?: () => void;
   isFavorite?: boolean;
 };
@@ -26,19 +29,32 @@ const HotelBookingSearchCard: React.FC<HotelBookingSearchCardProps> = ({
   hotelName,
   image,
   location,
-  price,
   discount,
   pricePerNight,
   amenities,
   numberOfReviews,
   features,
+  propertyType = 'hotel',
+  hotelId,
+  searchParams,
   onHeartPress,
   isFavorite,
 }) => {
   const navigation = useNavigation<MainTabNavigationProp>();
   return (
     <TouchableOpacity
-      onPress={() => navigation.navigate('HotelBookingDetails', { hotelId: 'something' })}
+      onPress={() => {
+        console.log('Card pressed - hotelId:', hotelId, 'propertyType:', propertyType);
+        if (!hotelId) {
+          console.error('No hotel ID provided');
+          return;
+        }
+        navigation.navigate('HotelBookingDetails', {
+          hotelId: hotelId,
+          propertyType: propertyType,
+          searchParams: searchParams,
+        });
+      }}
       className="mb-4 overflow-hidden rounded-xl bg-white shadow-md">
       <View className="relative">
         <Image source={{ uri: image }} className="h-60 w-full" resizeMode="cover" />
