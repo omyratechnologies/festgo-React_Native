@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, Pressable, ScrollView, Modal, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  Pressable,
+  ScrollView,
+  Modal,
+  ActivityIndicator,
+  FlatList,
+  Dimensions,
+  TouchableOpacity,
+} from 'react-native';
+
 import ArrowRightIcon from '~/assets/icons/rightIcon.svg';
 import PencilIcon from '~/assets/icons/EditIcon.svg';
 import BottomMenu from '~/components/common/BottomMenu';
@@ -12,13 +24,32 @@ import BackIconModal from '~/assets/icons/hotelBooking/BackIcon.svg';
 import TickIcon from '~/assets/icons/Tick.svg';
 import WineglassIcon from '~/assets/icons/hotelBooking/Wineglass.svg';
 import RecommendationHotels from '~/components/HotelBooking/HotelBookingHome/RecommendationHotels';
-import { API_URL } from '~/utils/api';
-import { FlatList } from 'react-native';
-import RoomsDetail from './RoomsDetail';
+import { fetchPropertyDetails, PropertyDetailsParams } from '~/utils/api';
+import EditSearchModal from './EditSearchModal';
+import { useRoute, RouteProp } from '@react-navigation/native';
+
+type RootStackParamList = {
+  HotelBookingDetails: {
+    hotelId: string;
+    propertyType?: string;
+    searchParams?: {
+      todate?: string;
+      enddate?: string;
+      adult?: string;
+      child?: string;
+      rooms?: string;
+      staynight?: string;
+      location?: string;
+    };
+  };
+};
+
+type HotelBookingDetailsRouteProp = RouteProp<RootStackParamList, 'HotelBookingDetails'>;
 
 export default function HotelBookingSingleDetail() {
-  // const { propertyId } = route.params;
-  const propertyId = '6a4c110b-e3bd-4e53-895b-2d185153db10';
+  const route = useRoute<HotelBookingDetailsRouteProp>();
+  console.log('Route params:', route.params);
+  const propertyId = route.params?.hotelId;
   type RoomAmenity = {
     name: string;
     iconRes?: string;
@@ -65,17 +96,23 @@ export default function HotelBookingSingleDetail() {
   };
 
   type HotelData = {
+    success?: boolean;
+    status?: number;
     hotelName?: string;
+    description?: string;
+    cuisines?: { food: string }[];
     rating?: number;
     latitude?: number;
     longitude?: number;
-    price?: { amount?: number; currency?: string; perNight?: boolean };
-    description?: string;
-    commonFacilities?: { iconRes?: string; name?: string }[];
+    amenities?: {
+      category: string;
+      items: { name: string; selected: boolean }[];
+    }[];
     totalReviewRate?: number;
-    review?: { user?: string; comment?: string; rating?: number }[];
+    review?: any[];
     propertyRules?: { rulesData: string }[];
-    rooms?: Room[];
+    photos?: string[];
+    videos?: string[];
   };
 
   const [hotelData, setHotelData] = useState<HotelData | null>(null);
@@ -83,29 +120,37 @@ export default function HotelBookingSingleDetail() {
   const [error, setError] = useState<string | null>(null);
   const [showFacilities, setShowFacilities] = useState(false);
   const [showRoomSelectModal, setshowRoomSelectModal] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [editSearchModalVisible, setEditSearchModalVisible] = useState(false);
+  const [searchParams, setSearchParams] = useState(route.params?.searchParams || {});
 
   // Fetch hotel details
   const fetchHotelDetails = async () => {
+    if (!propertyId) {
+      setError('No property ID provided');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       console.log('Fetching hotel details for propertyId:', propertyId);
-      const response = await fetch(`${API_URL}/properties/p/property-details`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          propertyId: propertyId,
-        }),
-      });
 
-      const data = await response.json();
+      const params: PropertyDetailsParams = {
+        propertyId: propertyId,
+      };
+
+      const data = await fetchPropertyDetails(params);
 
       if (data.success) {
+        // The API response contains the hotel data directly
         setHotelData(data);
+        console.log('Hotel details fetched successfully:', data);
+        console.log('Photos array:', (data as any).photos);
+        console.log('Photos length:', (data as any).photos?.length);
       } else {
-        setError('Failed to fetch hotel details');
+        setError(data.message || 'Failed to fetch hotel details');
       }
     } catch (err) {
       setError('Network error. Please check your connection.');
@@ -119,10 +164,14 @@ export default function HotelBookingSingleDetail() {
     if (propertyId) {
       fetchHotelDetails();
     }
-    console.log('--------------------------------');
-    console.log('Fetching hotel details for propertyId:', propertyId);
-    console.log('Hotel data:', hotelData);
   }, [propertyId]);
+
+  // Add retry functionality
+  const handleRetry = () => {
+    if (propertyId) {
+      fetchHotelDetails();
+    }
+  };
 
   // Loading state
   if (loading) {
@@ -147,7 +196,7 @@ export default function HotelBookingSingleDetail() {
           <Text className="mb-4 text-center font-poppins text-lg text-red-600">
             {error || 'Failed to load hotel details'}
           </Text>
-          <Pressable className="rounded-full bg-[#0E54EC] px-6 py-3" onPress={fetchHotelDetails}>
+          <Pressable className="rounded-full bg-[#0E54EC] px-6 py-3" onPress={handleRetry}>
             <Text className="font-poppins font-semibold text-white">Retry</Text>
           </Pressable>
         </View>
@@ -159,12 +208,11 @@ export default function HotelBookingSingleDetail() {
   const {
     hotelName,
     rating,
-    price,
     description,
-    commonFacilities,
+    amenities,
     review,
     propertyRules,
-    rooms,
+    photos,
     totalReviewRate,
   } = hotelData;
 
@@ -192,26 +240,75 @@ export default function HotelBookingSingleDetail() {
               <View className="absolute right-4 top-4 z-50 rounded-full bg-white p-2">
                 <HeartIcon width={20} height={20} />
               </View>
-              <Image
-                source={{
-                  uri:
-                    rooms?.[0]?.photos?.[0]?.url ||
-                    'https://media.istockphoto.com/id/104731717/photo/luxury-resort.jpg?s=612x612&w=0&k=20&c=cODMSPbYyrn1FHake1xYz9M8r15iOfGz9Aosy9Db7mI=',
-                }}
-                className="h-64 w-full"
-                resizeMode="cover"
-              />
-              <View className="absolute bottom-0 w-full flex-row items-center justify-center gap-2 py-2">
-                <View className="flex-row items-center justify-center rounded-full bg-[#00000091] p-1 px-3">
-                  <CameraIcon width={10} height={10} color="#ffffff" />
-                  <Text className="ml-1 text-sm font-semibold text-white">
-                    Hotel Photos {rooms?.[0]?.photos?.length || 0}
-                  </Text>
-                </View>
-                <View className="flex-row items-center justify-center rounded-full bg-[#00000091] p-1 px-3">
-                  <CameraIcon width={10} height={10} color="#ffffff" />
-                  <Text className="ml-1 text-sm font-semibold text-white">Guest Photos 0</Text>
-                </View>
+
+              {/* Image Carousel */}
+              <View className="h-64 w-full">
+                {(() => {
+                  console.log('Rendering carousel - photos:', photos, 'length:', photos?.length);
+                  return null;
+                })()}
+
+                {photos && photos.length > 0 ? (
+                  <>
+                    <FlatList
+                      data={photos}
+                      horizontal
+                      pagingEnabled
+                      showsHorizontalScrollIndicator={false}
+                      keyExtractor={(item, index) => index.toString()}
+                      onMomentumScrollEnd={(event) => {
+                        const index = Math.round(
+                          event.nativeEvent.contentOffset.x /
+                            event.nativeEvent.layoutMeasurement.width
+                        );
+                        setCurrentImageIndex(index);
+                      }}
+                      renderItem={({ item, index }) => {
+                        console.log('Rendering image:', index, item);
+                        return (
+                          <View style={{ width: Dimensions.get('window').width, height: 256 }}>
+                            <Image
+                              source={{ uri: item }}
+                              style={{ width: '100%', height: '100%' }}
+                              resizeMode="cover"
+                              onError={() => console.log('Image failed to load:', index)}
+                              onLoad={() => console.log('Image loaded:', index)}
+                            />
+                          </View>
+                        );
+                      }}
+                    />
+
+                    {/* Pagination Dots */}
+                    {photos.length > 1 && (
+                      <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
+                        {photos.map((_, index) => (
+                          <View
+                            key={index}
+                            className={`mx-1 h-2 w-2 rounded-full ${
+                              index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                            }`}
+                          />
+                        ))}
+                      </View>
+                    )}
+
+                    {/* Image counter overlay */}
+                    <View className="absolute bottom-2 right-2 rounded-full bg-black/50 px-2 py-1">
+                      <Text className="text-xs font-semibold text-white">
+                        {currentImageIndex + 1} / {photos.length}
+                      </Text>
+                    </View>
+                  </>
+                ) : (
+                  <Image
+                    source={{
+                      uri: 'https://media.istockphoto.com/id/104731717/photo/luxury-resort.jpg?s=612x612&w=0&k=20&c=cODMSPbYyrn1FHake1xYz9M8r15iOfGz9Aosy9Db7mI=',
+                    }}
+                    className="h-full w-full"
+                    resizeMode="cover"
+                  />
+                )}
               </View>
             </View>
 
@@ -260,11 +357,24 @@ export default function HotelBookingSingleDetail() {
             {/* Dates, Rooms, Adults, Edit */}
             <View className="mx-4 mb-3 flex-row items-center justify-between overflow-hidden rounded-xl border border-[#00000024]">
               <View className="p-4">
-                <Text className="font-poppins text-gray-700">12 Jun - 14 Jun</Text>
-                <Text className="font-poppins text-xs text-gray-500">Sun · Tue</Text>
+                <Text className="font-poppins text-gray-700">
+                  {searchParams?.todate && searchParams?.enddate
+                    ? `${searchParams.todate} - ${searchParams.enddate}`
+                    : 'Select dates'}
+                </Text>
+                <Text className="font-poppins text-xs text-gray-500">
+                  {searchParams?.staynight ? `${searchParams.staynight} night(s)` : 'Select stay'}
+                </Text>
               </View>
-              <Text className="font-poppins text-xs text-gray-500">2 Rooms · 4 Adults</Text>
-              <Pressable className="rounded-r-xl bg-[#0E54EC] px-4 py-4" onPress={() => {}}>
+              <Text className="font-poppins text-xs text-gray-500">
+                {searchParams?.rooms || '1'} Room · {searchParams?.adult || '1'} Adult
+                {searchParams?.child && Number(searchParams.child) > 0
+                  ? `, ${searchParams.child} Child`
+                  : ''}
+              </Text>
+              <Pressable
+                className="rounded-r-xl bg-[#0E54EC] px-4 py-4"
+                onPress={() => setEditSearchModalVisible(true)}>
                 <PencilIcon width={24} color="#2563eb" />
               </Pressable>
             </View>
@@ -281,7 +391,7 @@ export default function HotelBookingSingleDetail() {
               <Text className="mb-2 text-xl font-bold">Common Facilities</Text>
               <View className="mb-4 flex-row items-end justify-between">
                 <View className="mt-4 flex-row flex-wrap gap-3">
-                  {commonFacilities?.slice(0, 4).map((facility, index) => {
+                  {amenities?.[0]?.items?.slice(0, 4).map((item, index) => {
                     const bgColors = ['#FFBC99', '#CABDFF', '#B1E5FC', '#FFE4E1'];
                     const bgColor = bgColors[index % bgColors.length];
                     return (
@@ -289,20 +399,12 @@ export default function HotelBookingSingleDetail() {
                         key={index}
                         className="mr-1 h-[60px] w-[60px] flex-row items-center justify-center rounded-full p-4"
                         style={{ backgroundColor: bgColor }}>
-                        {facility.iconRes ? (
-                          <Image
-                            source={{ uri: facility.iconRes }}
-                            className="h-7 w-7"
-                            resizeMode="contain"
-                          />
-                        ) : (
-                          <WineglassIcon width={28} height={28} />
-                        )}
+                        <WineglassIcon width={28} height={28} />
                       </View>
                     );
                   })}
                 </View>
-                {commonFacilities && commonFacilities?.length > 1 && (
+                {amenities?.[0]?.items && amenities[0].items.length > 4 && (
                   <Pressable
                     className="mx-4 h-[60px] w-[60px] flex-row items-center justify-center rounded-full border border-[#ECECEC] p-4"
                     onPress={() => setShowFacilities(true)}>
@@ -328,18 +430,10 @@ export default function HotelBookingSingleDetail() {
                 </View>
                 <ScrollView className="flex-1 p-4">
                   <View className="flex-row flex-wrap gap-4">
-                    {commonFacilities?.map((facility, index) => (
+                    {amenities?.[0]?.items?.map((item, index) => (
                       <View key={index} className="w-full flex-row items-center py-3">
-                        {facility.iconRes ? (
-                          <Image
-                            source={{ uri: facility.iconRes }}
-                            className="mr-3 h-6 w-6"
-                            resizeMode="contain"
-                          />
-                        ) : (
-                          <WineglassIcon width={24} height={24} className="mr-3" />
-                        )}
-                        <Text className="font-poppins text-gray-700">{facility.name}</Text>
+                        <WineglassIcon width={24} height={24} className="mr-3" />
+                        <Text className="font-poppins text-gray-700">{item.name}</Text>
                       </View>
                     ))}
                   </View>
@@ -350,10 +444,8 @@ export default function HotelBookingSingleDetail() {
             {/* Price & Select Room */}
             <View className="flex-row items-center justify-between px-4 py-3">
               <View className="flex-col items-start">
-                <Text className="text-3xl font-bold text-[#00AEEF]">₹{price?.amount || 0}</Text>
-                <Text className="text-md font-normal text-gray-500">
-                  {price?.perNight ? 'Per night' : 'Total'}
-                </Text>
+                <Text className="text-3xl font-bold text-[#00AEEF]">₹0</Text>
+                <Text className="text-md font-normal text-gray-500">Per night</Text>
               </View>
               <Pressable
                 className="rounded-full bg-blue-600 px-5 py-3"
@@ -377,7 +469,7 @@ export default function HotelBookingSingleDetail() {
                 </View>
                 <ScrollView className="flex-1 p-4">
                   <View className="flex-row flex-wrap gap-4">
-                    {rooms?.map((room, index) => <RoomsDetail key={index} room={room} />)}
+                    <Text className="font-poppins text-gray-700">No room details available</Text>
                   </View>
                 </ScrollView>
               </View>
@@ -446,6 +538,33 @@ export default function HotelBookingSingleDetail() {
         showsVerticalScrollIndicator={false}
       />
       <BottomMenu />
+
+      {/* Edit Search Modal */}
+      <Modal
+        visible={editSearchModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setEditSearchModalVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: 'white', paddingTop: 40 }}>
+          <View className="flex-row items-center justify-between border-b border-gray-200 px-6 py-4">
+            <TouchableOpacity onPress={() => setEditSearchModalVisible(false)}>
+              <BackIcon width={24} height={24} />
+            </TouchableOpacity>
+            <Text className="font-poppins text-lg font-semibold">Edit Search</Text>
+            <TouchableOpacity onPress={() => setEditSearchModalVisible(false)}>
+              <Text className="font-poppins text-base font-medium text-[#0E54EC]">Done</Text>
+            </TouchableOpacity>
+          </View>
+          <EditSearchModal
+            data={searchParams}
+            onSave={async (newParams) => {
+              setSearchParams(newParams);
+              setEditSearchModalVisible(false);
+            }}
+            onClose={() => setEditSearchModalVisible(false)}
+          />
+        </View>
+      </Modal>
     </View>
   );
 }

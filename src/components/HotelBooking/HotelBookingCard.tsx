@@ -88,6 +88,12 @@ const HotelBookingCard: React.FC = () => {
     setLocationModalVisible(false);
   };
 
+  const handleCustomLocation = () => {
+    if (locationSearch.trim()) {
+      handleLocationSelect(locationSearch.trim());
+    }
+  };
+
   const handleNearMeLocation = async () => {
     // Mock location for demo - in real app, use geolocation
     console.log('Requesting location permissions');
@@ -418,24 +424,26 @@ const HotelBookingCard: React.FC = () => {
 
         {/* Location */}
         <TouchableOpacity onPress={() => setLocationModalVisible(true)}>
-          <View className="mb-4 rounded-2xl border border-[#00000024] p-3 py-4">
-            <Text className="text-gray-700">{selectedLocation || 'Select Location'}</Text>
+          <View className="mb-4 rounded-2xl border border-gray-200 bg-white p-4">
+            <Text className="font-poppins text-gray-700">
+              {selectedLocation || 'Select Location'}
+            </Text>
           </View>
         </TouchableOpacity>
 
         {/* Date and Guests */}
-        <View className="flex-row gap-4">
+        <View className="flex-row gap-3">
           <TouchableOpacity
             onPress={() => setDateModalVisible(true)}
-            className="flex-1 rounded-l-2xl border-y border-l border-[#00000024] p-3">
-            <Text className="text-gray-700">{dateRange}</Text>
-            <Text className="text-sm text-gray-500">{calculateNights()}</Text>
+            className="flex-1 rounded-2xl border border-gray-200 bg-white p-4">
+            <Text className="font-poppins tracking-tight text-gray-700">{dateRange}</Text>
+            <Text className="font-poppins text-sm text-gray-500">{calculateNights()}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setGuestsModalVisible(true)}
-            className="flex-1 rounded-r-2xl border border-[#00000024] p-3">
-            <Text className="text-gray-700">{`${rooms} Room${rooms > 1 ? 's' : ''}`}</Text>
-            <Text className="text-sm text-gray-500">{`${adults} Guest${adults > 1 ? 's' : ''}${children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}`}</Text>
+            className="flex-1 rounded-2xl border border-gray-200 bg-white p-4">
+            <Text className="font-poppins text-gray-700">{`${rooms} Room${rooms > 1 ? 's' : ''}`}</Text>
+            <Text className="font-poppins text-sm text-gray-500">{`${adults} Guest${adults > 1 ? 's' : ''}${children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}`}</Text>
           </TouchableOpacity>
         </View>
 
@@ -481,6 +489,17 @@ const HotelBookingCard: React.FC = () => {
             />
             <SearchIcon width={20} height={20} color="#666" />
           </View>
+
+          {/* Custom Location Button */}
+          {locationSearch.trim() && (
+            <TouchableOpacity
+              onPress={handleCustomLocation}
+              className="mx-6 mb-4 rounded-lg bg-[#0E54EC] px-4 py-3">
+              <Text className="text-center font-poppins font-semibold text-white">
+                Search for "{locationSearch.trim()}"
+              </Text>
+            </TouchableOpacity>
+          )}
 
           <ScrollView className="flex-1">
             {/* Near Me */}

@@ -8,6 +8,7 @@ import {
   Pressable,
   Dimensions,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import HotelBookingSearchCard from '~/components/HotelBooking/HotelBookingSearch/HotelBookingSearchCard';
 import BackIcon from '~/assets/icons/hotelBooking/BackIcon.svg';
@@ -19,7 +20,7 @@ import FilterOptionsModal from './FilterOptionsModal';
 import EditSearchModal from './EditSearchModal';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { API_URL } from '~/utils/api';
+import { API_URL, fetchFilteredHotels, FilterParams } from '~/utils/api';
 import HotelBookingBottomFiltersMenu from './HotelBookingBottomFiltersMenu';
 
 // Type definitions
@@ -256,6 +257,32 @@ const HotelBookingSearch: React.FC = () => {
     );
   };
 
+  const handleApplyFilters = async (filters: any) => {
+    setLoading(true);
+    setFilterModalVisible(false);
+
+    try {
+      const filterParams: FilterParams = {
+        ...bookingData,
+        ...filters,
+      };
+
+      const data = await fetchFilteredHotels(filterParams);
+
+      if (data.success && data.properties) {
+        const hotelArray = Array.isArray(data.properties) ? data.properties : [];
+        setHotels(hotelArray);
+      } else {
+        setHotels([]);
+      }
+    } catch (error) {
+      console.error('Error applying filters:', error);
+      Alert.alert('Error', 'Failed to apply filters. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatSearchDisplay = (): { location: string; dateRange: string; guestsInfo: string } => {
     if (!bookingData || Object.keys(bookingData).length === 0) {
       return {
@@ -368,18 +395,26 @@ const HotelBookingSearch: React.FC = () => {
 
     return (
       <ScrollView className="mt-2 bg-gray-50 p-4">
-        {filteredHotels.map((hotel: Hotel, idx: number) => (
-          <HotelBookingSearchCard
-            image={hotel.imageList?.[1] || ''}
-            hotelName={hotel.name}
-            location={hotel.location?.city || ''}
-            price={hotel.originalPrice ? Number(hotel.originalPrice) : 0}
-            pricePerNight={hotel.pricePerNight ? Number(hotel.pricePerNight) : 0}
-            amenities={hotel.facilities || []}
-            numberOfReviews={hotel.review_count || 0}
-            features={hotel.facilities?.map((f) => f.amenity_name) || []}
-          />
-        ))}
+        {filteredHotels.map((hotel: Hotel, idx: number) => {
+          console.log('Hotel data:', hotel.id, hotel.name, hotel.property_type);
+          console.log('Full hotel object:', JSON.stringify(hotel, null, 2));
+          return (
+            <HotelBookingSearchCard
+              key={hotel.id || `hotel-${idx}`}
+              image={hotel.imageList?.[1] || ''}
+              hotelName={hotel.name}
+              location={hotel.location?.city || ''}
+              price={hotel.originalPrice ? Number(hotel.originalPrice) : 0}
+              pricePerNight={hotel.pricePerNight ? Number(hotel.pricePerNight) : 0}
+              amenities={hotel.facilities || []}
+              numberOfReviews={hotel.review_count || 0}
+              features={hotel.facilities?.map((f) => f.amenity_name) || []}
+              propertyType={hotel.property_type}
+              hotelId={hotel.id}
+              searchParams={bookingData}
+            />
+          );
+        })}
       </ScrollView>
     );
   };
@@ -664,19 +699,9 @@ const HotelBookingSearch: React.FC = () => {
             </TouchableOpacity>
           </View>
           <FilterOptionsModal
-          // selectedFilters={selectedFilters}
-          // toggleFilter={toggleFilter}
+            onApplyFilters={handleApplyFilters}
+            initialFilters={selectedFilters}
           />
-          <View className="flex-row justify-between border-t border-gray-200 bg-white px-6 py-8">
-            <TouchableOpacity onPress={() => setSelectedFilters([])} className="rounded px-4 py-2">
-              <Text className="font-poppins text-[#0E54EC]">Reset All</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setFilterModalVisible(false)}
-              className="rounded-full bg-[#0E54EC] px-5 py-2">
-              <Text className="font-poppins text-white">Apply</Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </Modal>
 

@@ -33,7 +33,7 @@ const ServiceDetails = () => {
       <View className="mb-8 items-center justify-center">
         <HomePageLogoIcon width={250} height={180} />
       </View>
-      <View className="mb-5 flex-row justify-center gap-4">
+      <View className="mb-5 flex-row justify-center gap-1">
         {topServices.map(({ icon: Icon, label, page }) => (
           <TouchableOpacity
             key={label}
