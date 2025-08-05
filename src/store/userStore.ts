@@ -48,19 +48,14 @@ const useUserStore = create<UserStore>((set, get) => ({
       });
 
       if (!response.ok) {
-        if (response.status === 401) {
-          // Token is invalid or expired
-          await AsyncStorage.removeItem('jwtToken');
-          set({ 
-            isLoading: false, 
-            error: 'Authentication failed',
-            userData: null 
-          });
-          return;
-        }
-        
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch user profile');
+        // For any error response, clear the token and set authentication error
+        await AsyncStorage.removeItem('jwtToken');
+        set({ 
+          isLoading: false, 
+          error: 'Authentication failed',
+          userData: null 
+        });
+        return;
       }
 
       const data = await response.json();
@@ -72,13 +67,21 @@ const useUserStore = create<UserStore>((set, get) => ({
           error: null 
         });
       } else {
-        throw new Error('Invalid response format');
+        // Invalid response format - treat as authentication error
+        await AsyncStorage.removeItem('jwtToken');
+        set({ 
+          isLoading: false, 
+          error: 'Authentication failed',
+          userData: null 
+        });
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      // For any network or other errors, clear the token and set authentication error
+      await AsyncStorage.removeItem('jwtToken');
       set({ 
         isLoading: false, 
-        error: error instanceof Error ? error.message : 'An error occurred',
+        error: 'Authentication failed',
         userData: null 
       });
     }

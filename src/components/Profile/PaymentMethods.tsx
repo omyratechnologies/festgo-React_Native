@@ -9,7 +9,7 @@ import { MainTabNavigationProp } from '~/navigation/types';
 const icons = [
   { label: 'Wallet', Source: WalletIcon, page: 'Wallet' },
   { label: 'Saved Cards', Source: SavedCardsIcon, page: 'SavedCards' },
-  { label: 'GST Details', Source: GSTDetailsIcon, page: 'Wallet' },
+  { label: 'GST Details', Source: GSTDetailsIcon, page: 'GSTDetails' },
 ];
 
 const PaymentMethods = () => {

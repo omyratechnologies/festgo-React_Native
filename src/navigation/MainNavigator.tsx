@@ -29,6 +29,8 @@ import BeachFest from '~/screens/BeachFests/BeachFest';
 import FestBite from '~/screens/FestBite/FestBite';
 import RecommendAndEarn from '~/screens/Profile/RecommendAndEarn';
 import OffersPage from '~/screens/Profile/OffersPage';
+import GSTDetails from '~/screens/Profile/GSTDetails';
+import DeviceActivityScreen from '~/screens/Profile/DeviceActivityScreen';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -54,7 +56,8 @@ export const MainNavigator = () => {
         <Stack.Screen name="UpcomingScreen" component={UpcomingScreen} />
         <Stack.Screen name="SavedCards" component={SavedCards} />
         <Stack.Screen name="HelpScreen" component={HelpScreen} />
-
+        <Stack.Screen name="GSTDetails" component={GSTDetails} />
+        <Stack.Screen name="DeviceActivityScreen" component={DeviceActivityScreen} />
         <Stack.Screen name="EventsPage" component={EventsPage} />
         <Stack.Screen name="EventsInfoPage" component={EventInfoPage} />
 

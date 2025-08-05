@@ -62,6 +62,7 @@ const ProfileOptions = () => {
       icon: <DesktopIcon width={24} height={24} color="#0601B4" />,
       title: 'Device Activity',
       subtitle: 'Manage your logged-in devices',
+      onPress: () => navigation.navigate('Main', {screen: 'DeviceActivityScreen'}),
     },
     {
       icon: <LogoutIcon width={24} height={24} color="#0601B4" />,

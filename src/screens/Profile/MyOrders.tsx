@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const TABS = [
   { key: 'upcoming', label: 'Upcoming' },
   { key: 'completed', label: 'Completed' },
+  { key: 'cancelled', label: 'Cancelled' },
 ];
 
 const MyOrders = () => {
@@ -183,7 +184,7 @@ const MyOrders = () => {
       {/* Tabs */}
       <View className="w-full flex-row items-center justify-center px-12 pb-2 pt-4 ">
         {TABS.map((tab) => (
-          <TouchableOpacity key={tab.key} className="w-1/2" onPress={() => setActiveTab(tab.key)}>
+          <TouchableOpacity key={tab.key} className="w-1/3" onPress={() => setActiveTab(tab.key)}>
             <Text
               style={{
                 color: activeTab === tab.key ? '#F15A29' : '#888',

@@ -66,6 +66,8 @@ export type MainStackParamList = {
   Wishlist: undefined;
   Offers: undefined;
   SavedCards: undefined;
+  GSTDetails: undefined;
+  DeviceActivityScreen: undefined;
   HelpScreen: undefined;
 
   // hotel bookings
