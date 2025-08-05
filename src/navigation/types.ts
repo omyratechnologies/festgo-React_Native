@@ -64,6 +64,7 @@ export type MainStackParamList = {
   Wallet: undefined;
   Notifications: undefined;
   Wishlist: undefined;
+  Offers: undefined;
   SavedCards: undefined;
   HelpScreen: undefined;
 

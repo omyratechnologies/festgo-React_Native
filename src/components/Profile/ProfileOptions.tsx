@@ -1,8 +1,7 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
-import HeartIcon from '~/assets/icons/profile/HeartIcon.svg';
-import ShieldDoneIcon from '~/assets/icons/profile/ShieldDone.svg';
+import DesktopIcon from '~/assets/icons/profile/desktopIcon.svg';
 import LogoutIcon from '~/assets/icons/profile/Logout.svg';
 import Notification from '~/assets/icons/profile/Notification.svg';
 import ProfileIcon from '~/assets/icons/profile/Profile.svg';
@@ -60,9 +59,9 @@ const ProfileOptions = () => {
       onPress: () => navigation.navigate('Main', {screen: 'RecommendAndEarn'}),
     },
     {
-      icon: <ShieldDoneIcon width={24} height={24} color="#0601B4" />,
-      title: 'Delete my account',
-      subtitle: 'Permanently remove your account',
+      icon: <DesktopIcon width={24} height={24} color="#0601B4" />,
+      title: 'Device Activity',
+      subtitle: 'Manage your logged-in devices',
     },
     {
       icon: <LogoutIcon width={24} height={24} color="#0601B4" />,
@@ -70,20 +69,15 @@ const ProfileOptions = () => {
       subtitle: 'Sign out from your account',
       onPress: handleLogout,
     },
-  ];
-
-  const optionsBottom = [
     {
       icon: <Notification width={24} height={24} color="#0601B4" />,
       title: 'Help & support',
       subtitle: 'Get assistance and support',
+      onPress: () => navigation.navigate('Main', {screen: 'HelpScreen'}),
     },
-    {
-      icon: <HeartIcon width={24} height={24} color="#0601B4" />,
-      title: 'About App',
-      subtitle: 'Learn more about the app',
-    },
+     
   ];
+
 
   return (
     <View className={`mb-32 mt-2 p-4`}>
@@ -97,19 +91,6 @@ const ProfileOptions = () => {
           elevation: 9,
         }}>
         {optionsTop.map((opt, idx) => (
-          <OptionRow key={idx} {...opt} />
-        ))}
-      </View>
-      <View
-        className="rounded-3xl bg-white px-2 py-4"
-        style={{
-          shadowColor: '#000',
-          shadowOffset: { width: 1, height: 2 },
-          shadowOpacity: 0.07,
-          shadowRadius: 4,
-          elevation: 9,
-        }}>
-        {optionsBottom.map((opt, idx) => (
           <OptionRow key={idx} {...opt} />
         ))}
       </View>

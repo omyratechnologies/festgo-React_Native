@@ -1,6 +1,7 @@
 import { MainStackParamList } from './types';
 import HomePage from '~/screens/HomePage/HomePage';
 import ProfileScreen from '~/screens/Profile/ProfileScreen';
+import { AuthGuard } from '~/components/providers/AuthGuard';
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ReferAndEarn from '~/screens/Profile/ReferAndEarn';
@@ -27,48 +28,52 @@ import BeachFestCheckout from '~/screens/BeachFests/BeachFestCheckout';
 import BeachFest from '~/screens/BeachFests/BeachFest';
 import FestBite from '~/screens/FestBite/FestBite';
 import RecommendAndEarn from '~/screens/Profile/RecommendAndEarn';
+import OffersPage from '~/screens/Profile/OffersPage';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
 export const MainNavigator = () => {
   return (
-    <Stack.Navigator
-      screenOptions={{ headerShown: false, animation: 'simple_push' }}
-      initialRouteName="HomePage">
-      <Stack.Screen name="HomePage" component={HomePage} />
+    <AuthGuard>
+      <Stack.Navigator
+        screenOptions={{ headerShown: false, animation: 'simple_push' }}
+        initialRouteName="HomePage">
+        <Stack.Screen name="HomePage" component={HomePage} />
 
-      {/* Profile pages */}
-      <Stack.Screen name="Profile" component={ProfileScreen} />
-      <Stack.Screen name="ReferAndEarn" component={ReferAndEarn} />
-      <Stack.Screen name="RecommendAndEarn" component={RecommendAndEarn} />
-      <Stack.Screen name="EditProfile" component={EditProfile} />
-      <Stack.Screen name="MyOrders" component={MyOrders} />
-      <Stack.Screen name="MyOrderDetails" component={OrderDetails} />
-      <Stack.Screen name="Wallet" component={WalletScreen} />
-      <Stack.Screen name="Notifications" component={NotificationsScreen} />
-      <Stack.Screen name="Wishlist" component={WishlistPage} />
-      <Stack.Screen name="UpcomingScreen" component={UpcomingScreen} />
-      <Stack.Screen name="SavedCards" component={SavedCards} />
-      <Stack.Screen name="HelpScreen" component={HelpScreen} />
+        {/* Profile pages */}
+        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="ReferAndEarn" component={ReferAndEarn} />
+        <Stack.Screen name="RecommendAndEarn" component={RecommendAndEarn} />
+        <Stack.Screen name="EditProfile" component={EditProfile} />
+        <Stack.Screen name="MyOrders" component={MyOrders} />
+        <Stack.Screen name="MyOrderDetails" component={OrderDetails} />
+        <Stack.Screen name="Wallet" component={WalletScreen} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="Wishlist" component={WishlistPage} />
+        <Stack.Screen name="Offers" component={OffersPage} />
+        <Stack.Screen name="UpcomingScreen" component={UpcomingScreen} />
+        <Stack.Screen name="SavedCards" component={SavedCards} />
+        <Stack.Screen name="HelpScreen" component={HelpScreen} />
 
-      <Stack.Screen name="EventsPage" component={EventsPage} />
-      <Stack.Screen name="EventsInfoPage" component={EventInfoPage} />
+        <Stack.Screen name="EventsPage" component={EventsPage} />
+        <Stack.Screen name="EventsInfoPage" component={EventInfoPage} />
 
-      <Stack.Screen name="CityFestsPage" component={CityFests} />
-      <Stack.Screen name="CityFestCategory" component={CityFestCategories} />
-      <Stack.Screen name="CityFestDetails" component={CityFestDetails} />
-      <Stack.Screen name="CityFestCheckout" component={CityFestCheckout} />
+        <Stack.Screen name="CityFestsPage" component={CityFests} />
+        <Stack.Screen name="CityFestCategory" component={CityFestCategories} />
+        <Stack.Screen name="CityFestDetails" component={CityFestDetails} />
+        <Stack.Screen name="CityFestCheckout" component={CityFestCheckout} />
 
-      <Stack.Screen name="BeachFestsPage" component={BeachFest} />
-      <Stack.Screen name="BeachFestCheckout" component={BeachFestCheckout} />
+        <Stack.Screen name="BeachFestsPage" component={BeachFest} />
+        <Stack.Screen name="BeachFestCheckout" component={BeachFestCheckout} />
 
-      <Stack.Screen name="FestBite" component={FestBite} />
+        <Stack.Screen name="FestBite" component={FestBite} />
 
-      {/* Hotel Booking Screens */}
-      <Stack.Screen name="HotelBooking" component={HotelBooking} />
-      <Stack.Screen name="HotelBookingDetails" component={HotelBookingSingleDetail} />
-      <Stack.Screen name="HotelBookingSearch" component={HotelBookingSearch} />
-      <Stack.Screen name="HotelBookingCheckout" component={HotelBookingCheckout} />
-    </Stack.Navigator>
+        {/* Hotel Booking Screens */}
+        <Stack.Screen name="HotelBooking" component={HotelBooking} />
+        <Stack.Screen name="HotelBookingDetails" component={HotelBookingSingleDetail} />
+        <Stack.Screen name="HotelBookingSearch" component={HotelBookingSearch} />
+        <Stack.Screen name="HotelBookingCheckout" component={HotelBookingCheckout} />
+      </Stack.Navigator>
+    </AuthGuard>
   );
 };

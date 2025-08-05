@@ -3,6 +3,8 @@ import React from 'react';
 import HamburngerMenuIcon from '~/assets/images/common/Navbar/HamburgerMenu.svg';
 import WalletIcon from '~/assets/images/common/Navbar/WalletIcon.svg';
 import NotificationIcon from '~/assets/images/common/Navbar/NotificationIcon.svg';
+import WalletIconLight from '~/assets/images/common/Navbar/walletLight.svg';
+import NotificationIconLight from '~/assets/images/common/Navbar/NotificationLight.svg';
 import BackIcon from '~/assets/icons/ArrowLeft.svg';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
@@ -34,7 +36,7 @@ const ProfileHeaderMenu: React.FC<ProfileHeaderMenuProps> = ({
 
   return (
     <View
-      className={`w-full flex-row items-center justify-between px-8 pb-6 ${isDifferentPage ? 'pt-16' : 'pt-2'}`}
+      className={`w-full flex-row items-center justify-between rounded-b-[45px] px-8 pb-6 ${isDifferentPage ? 'pt-16' : 'pt-2'}`}
       style={{ backgroundColor: bgColor }}>
       {/* Left Section */}
       <View className="flex-row items-center">
@@ -58,11 +60,11 @@ const ProfileHeaderMenu: React.FC<ProfileHeaderMenuProps> = ({
       </View>
       {/* Right Section */}
       <View className="flex-row items-center">
-        <TouchableOpacity className="mr-4">
-          <WalletIcon width={28} height={28} />
+        <TouchableOpacity onPress={() => navigation.navigate('Wallet')} className="mr-4">
+          {isDifferentPage ? <WalletIconLight width={28} height={28} /> : <WalletIcon width={28} height={28} />}
         </TouchableOpacity>
-        <TouchableOpacity>
-          <NotificationIcon width={28} height={28} />
+        <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
+          {isDifferentPage ? <NotificationIconLight width={28} height={28} /> : <NotificationIcon width={28} height={28} />}
         </TouchableOpacity>
       </View>
     </View>

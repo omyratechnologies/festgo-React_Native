@@ -1,5 +1,5 @@
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
-import React from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image, RefreshControl, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
 import ProfileHeaderMenu from '~/components/Profile/ProfileHeaderMenu';
 import BottomMenu from '~/components/common/BottomMenu';
 import WalletBackground from '~/assets/images/WalletBackground.svg';
@@ -8,35 +8,68 @@ import LocationIcon from '~/assets/icons/location.svg';
 import CoinIcon from '~/assets/icons/coinIcon.svg';
 import { useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
+import useUserStore from '~/store/userStore';
 
-const walletBalance = 4321;
-
-const recentTransactions = [
-  {
-    id: 1,
-    image: require('~/assets/images/events/Marraige.png'),
-    heading: 'Concert Night',
-    location: 'Hyderabad',
-    date: '2024-06-10',
-    amount: -200,
-  },
-  {
-    id: 2,
-    image: require('~/assets/images/events/Marraige.png'),
-    heading: 'DJ Party',
-    location: 'Bangalore',
-    date: '2024-06-08',
-    amount: -150,
-  },
-];
+type Transaction = {
+  id: string;
+  image: any;
+  heading: string;
+  location: string;
+  date: string;
+  amount: number;
+};
 
 const WalletScreen = () => {
   const navigation = useNavigation<MainTabNavigationProp>();
 
+  const [refreshing, setRefreshing] = useState(false);
+  const { userData, fetchUserProfile } = useUserStore();
+
+  const [walletBalance, setWalletBalance] = useState(userData?.festgo_coins);
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [txnLoading, setTxnLoading] = useState<boolean>(false);
+  const [txnError, setTxnError] = useState<string | null>(null);
+
+
+  const fetchRecentTransactions = useCallback(async () => {
+    setTxnLoading(true);
+    setTxnError(null);
+    try {
+
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      setRecentTransactions([]);
+    } catch (error) {
+      setTxnError(
+        error instanceof Error
+          ? error.message
+          : 'An error occurred while fetching transactions'
+      );
+      setRecentTransactions([]);
+    } finally {
+      setTxnLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRecentTransactions();
+  }, [fetchRecentTransactions]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchUserProfile();
+    await fetchRecentTransactions();
+    setRefreshing(false);
+  };
+
   return (
     <View className="flex-1 bg-white">
       <ProfileHeaderMenu isDifferentPage pageTitle="Wallet" />
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      >
         <View className="mx-4 mt-4 overflow-hidden rounded-2xl">
           <View className="relative">
             <WalletBackground width="100%" />
@@ -76,7 +109,23 @@ const WalletScreen = () => {
           <Text className="mb-4 w-full text-center font-baloo text-2xl font-bold text-gray-800">
             Recent Transactions
           </Text>
-          {recentTransactions.length === 0 ? (
+          {txnLoading ? (
+            <View className="items-center justify-center py-8">
+              <ActivityIndicator size="large" color="#F15A29" />
+            </View>
+          ) : txnError ? (
+            <View className="items-center justify-center py-8">
+              <Text className="font-poppins text-base text-red-500">
+                {txnError}
+              </Text>
+              <TouchableOpacity
+                className="mt-3 rounded-full bg-orange-500 px-4 py-2"
+                onPress={fetchRecentTransactions}
+              >
+                <Text className="font-semibold text-white">Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : recentTransactions.length === 0 ? (
             <View className="items-center justify-center py-8">
               <Text className="font-poppins text-base text-gray-500">No transactions yet.</Text>
             </View>

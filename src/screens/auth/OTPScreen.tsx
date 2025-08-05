@@ -100,7 +100,7 @@ const OTPScreen = () => {
         await AsyncStorage.setItem('isLoggedIn', 'true');
 
         Alert.alert('Success', 'Login successful');
-        navigation.navigate('Main', { screen: 'HomePage' });
+        navigation.replace('Main', { screen: 'HomePage' });
       } else {
         Alert.alert('Error', data.message || 'Invalid OTP');
       }

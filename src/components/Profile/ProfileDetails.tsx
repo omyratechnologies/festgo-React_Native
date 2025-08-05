@@ -14,7 +14,7 @@ const user = {
   stats: [
     { icon: LuggageBagIcon, number: 20, label: 'My Orders', page: 'MyOrders' },
     { icon: HeartIcon, number: 18, label: 'Wishlist', page: 'Wishlist' },
-    { icon: DiscountIcon, number: 18, label: 'Offers', page: 'Wishlist' },
+    { icon: DiscountIcon, number: 18, label: 'Offers', page: 'Offers' },
   ],
 };
 
@@ -50,11 +50,11 @@ const ProfileDetails = ({ data }: { data: any }) => {
         <View className="h-3 overflow-hidden rounded-full bg-white">
           <View
             className="h-3 rounded-full"
-            style={{ width: `${data.profileCompletion ? data.profileCompletion : 0}%`, backgroundColor: '#08F67C' }}
+            style={{ width: `${data.profileCompletion && data.profileCompletion ? data.profileCompletion : 0}%`, backgroundColor: '#08F67C' }}
           />
         </View>
         <Text className="mt-2 font-baloo text-sm text-white">
-          Your profile is {data.profileCompletion ? data.profileCompletion : 0}% completed.
+          Your profile is {data.profileCompletion && data.profileCompletion > 0 ? data.profileCompletion : 0}% completed.
         </Text>
       </View> 
 

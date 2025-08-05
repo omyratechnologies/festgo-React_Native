@@ -7,31 +7,31 @@ import BellIcon from '~/assets/icons/hotelBooking/Wineglass.svg';
 import TicketIcon from '~/assets/icons/hotelBooking/Wineglass.svg';
 import StarIcon from '~/assets/icons/hotelBooking/Wineglass.svg';
 
-const notifications = [
-  {
-    id: '1',
-    icon: <BellIcon width={32} height={32} />,
-    head: 'Event Reminder',
-    time: '2 hours ago',
-    description: "Don't forget your event starts at 7 PM today!",
-  },
-  {
-    id: '2',
-    icon: <TicketIcon width={32} height={32} />,
-    head: 'Ticket Booked',
-    time: 'Yesterday',
-    description: 'Your ticket for "Music Fest 2024" has been confirmed.',
-  },
-  {
-    id: '3',
-    icon: <StarIcon width={32} height={32} />,
-    head: 'New Achievement',
-    time: '3 days ago',
-    description: 'You have unlocked the "Early Bird" badge!',
-  },
-];
+// const notifications = [
+//   {
+//     id: '1',
+//     icon: <BellIcon width={32} height={32} />,
+//     head: 'Event Reminder',
+//     time: '2 hours ago',
+//     description: "Don't forget your event starts at 7 PM today!",
+//   },
+//   {
+//     id: '2',
+//     icon: <TicketIcon width={32} height={32} />,
+//     head: 'Ticket Booked',
+//     time: 'Yesterday',
+//     description: 'Your ticket for "Music Fest 2024" has been confirmed.',
+//   },
+//   {
+//     id: '3',
+//     icon: <StarIcon width={32} height={32} />,
+//     head: 'New Achievement',
+//     time: '3 days ago',
+//     description: 'You have unlocked the "Early Bird" badge!',
+//   },
+// ];
 
-// const notifications: any[] = [];
+const notifications: any[] = [];
 
 const NotificationsScreen = () => {
   return (

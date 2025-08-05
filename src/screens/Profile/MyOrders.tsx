@@ -3,8 +3,6 @@ import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import ProfileHeaderMenu from '~/components/Profile/ProfileHeaderMenu';
 import BottomMenu from '~/components/common/BottomMenu';
 import dayjs from 'dayjs';
-// import { useNavigation } from '@react-navigation/native';
-// import { MainTabNavigationProp } from '~/navigation/types';
 import { API_URL } from '~/utils/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -15,7 +13,6 @@ const TABS = [
 
 const MyOrders = () => {
   const [activeTab, setActiveTab] = useState('upcoming');
-  // const navigation = useNavigation<MainTabNavigationProp>();
   const [propertyBookings, setPropertyBookings] = useState<any[]>([]);
   const [eventBookings, setEventBookings] = useState<any[]>([]);
   const [beachfestBookings, setBeachfestBookings] = useState<any[]>([]);
