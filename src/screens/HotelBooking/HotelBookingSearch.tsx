@@ -13,9 +13,6 @@ import {
 import HotelBookingSearchCard from '~/components/HotelBooking/HotelBookingSearch/HotelBookingSearchCard';
 import BackIcon from '~/assets/icons/hotelBooking/BackIcon.svg';
 import EditIcon from '~/assets/icons/hotelBooking/EditIcon.svg';
-import FilterIcon from '~/assets/icons/hotelBooking/Filter.svg';
-import SortIcon from '~/assets/icons/hotelBooking/Sort.svg';
-import PropertyTypeIcon from '~/assets/icons/hotelBooking/PropertyType.svg';
 import FilterOptionsModal from './FilterOptionsModal';
 import EditSearchModal from './EditSearchModal';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';

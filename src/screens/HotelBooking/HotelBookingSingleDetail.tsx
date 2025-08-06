@@ -12,21 +12,20 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-import ArrowRightIcon from '~/assets/icons/rightIcon.svg';
 import PencilIcon from '~/assets/icons/EditIcon.svg';
 import BottomMenu from '~/components/common/BottomMenu';
 import BackIcon from '~/assets/icons/ArrowLeft.svg';
 import HeartIcon from '~/assets/icons/BlueHeart.svg';
-import CameraIcon from '~/assets/icons/CameraIcon.svg';
 import StarIcon from '~/assets/icons/star.svg';
 import LocationIcon from '~/assets/icons/location-pin.svg';
 import BackIconModal from '~/assets/icons/hotelBooking/BackIcon.svg';
 import TickIcon from '~/assets/icons/Tick.svg';
-import WineglassIcon from '~/assets/icons/hotelBooking/Wineglass.svg';
 import RecommendationHotels from '~/components/HotelBooking/HotelBookingHome/RecommendationHotels';
-import { fetchPropertyDetails, PropertyDetailsParams } from '~/utils/api';
+import { fetchPropertyDetails, PropertyDetailsParams, Room } from '~/utils/api';
 import EditSearchModal from './EditSearchModal';
+import RoomSelectionModal from '~/components/HotelBooking/RoomSelectionModal';
 import { useRoute, RouteProp } from '@react-navigation/native';
+import HotelBookingCheckout from './HotelBookingCheckout';
 
 type RootStackParamList = {
   HotelBookingDetails: {
@@ -50,50 +49,6 @@ export default function HotelBookingSingleDetail() {
   const route = useRoute<HotelBookingDetailsRouteProp>();
   console.log('Route params:', route.params);
   const propertyId = route.params?.hotelId;
-  type RoomAmenity = {
-    name: string;
-    iconRes?: string;
-  };
-
-  type RoomPhoto = {
-    tag?: string;
-    url: string;
-  };
-
-  type RoomVideo = {
-    tag?: string;
-    url: string;
-  };
-
-  type Room = {
-    id?: string;
-    propertyId?: string;
-    room_type?: string;
-    view?: string;
-    area?: string;
-    room_name?: string;
-    number_of_rooms?: number;
-    description?: string;
-    max_people?: number;
-    sleeping_arrangement?: string;
-    bathroom_details?: string;
-    original_price?: number;
-    discounted_price?: number;
-    max_adults?: number;
-    max_children?: number;
-    discount?: string;
-    free_cancellation?: string;
-    additional_info?: string;
-    free_breakfast?: string;
-    meal_plans?: string[];
-    inventory_details?: string;
-    room_amenities?: { value: boolean; roomAmenityId: string }[];
-    photos?: RoomPhoto[];
-    videos?: RoomVideo[];
-    createdAt?: string;
-    updatedAt?: string;
-    roomAmenities?: RoomAmenity[];
-  };
 
   type HotelData = {
     success?: boolean;
@@ -123,6 +78,11 @@ export default function HotelBookingSingleDetail() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [editSearchModalVisible, setEditSearchModalVisible] = useState(false);
   const [searchParams, setSearchParams] = useState(route.params?.searchParams || {});
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [showAllRulesModal, setShowAllRulesModal] = useState(false);
+
+  // Checkout modal state
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   // Fetch hotel details
   const fetchHotelDetails = async () => {
@@ -388,30 +348,46 @@ export default function HotelBookingSingleDetail() {
 
             {/* Common Facilities */}
             <View className="my-4 px-4">
-              <Text className="mb-2 text-xl font-bold">Common Facilities</Text>
+              <Text className="mb-2 text-xl font-poppins font-semibold">Amenities</Text>
               <View className="mb-4 flex-row items-end justify-between">
-                <View className="mt-4 flex-row flex-wrap gap-3">
-                  {amenities?.[0]?.items?.slice(0, 4).map((item, index) => {
-                    const bgColors = ['#FFBC99', '#CABDFF', '#B1E5FC', '#FFE4E1'];
-                    const bgColor = bgColors[index % bgColors.length];
-                    return (
-                      <View
-                        key={index}
-                        className="mr-1 h-[60px] w-[60px] flex-row items-center justify-center rounded-full p-4"
-                        style={{ backgroundColor: bgColor }}>
-                        <WineglassIcon width={28} height={28} />
+                {/* 6 main amenities, 3 left, 3 right */}
+                <View className="flex-1 flex-row">
+                  {/* Left column */}
+                  <View className="flex-1">
+                    {amenities?.[0]?.items?.slice(0, 3).map((item, idx) => (
+                      <View key={idx} className="flex-row items-center mb-3">
+                        <TickIcon width={18} height={18} color="#22C55E" />
+                        <Text className="ml-2 font-poppins text-sm font-semibold text-gray-700">
+                          {item.name}
+                        </Text>
                       </View>
-                    );
-                  })}
+                    ))}
+                  </View>
+                  {/* Right column */}
+                  <View className="flex-1">
+                    {amenities?.[0]?.items?.slice(3, 6).map((item, idx) => (
+                      <View key={idx} className="flex-row items-center mb-3">
+                        <TickIcon width={18} height={18} color="#22C55E" />
+                        <Text className="ml-2 font-poppins text-sm font-semibold text-gray-700">
+                          {item.name}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
                 </View>
-                {amenities?.[0]?.items && amenities[0].items.length > 4 && (
-                  <Pressable
-                    className="mx-4 h-[60px] w-[60px] flex-row items-center justify-center rounded-full border border-[#ECECEC] p-4"
-                    onPress={() => setShowFacilities(true)}>
-                    <ArrowRightIcon width={36} color="#2563eb" />
-                  </Pressable>
-                )}
               </View>
+              {/* View all amenities link */}
+              {amenities?.[0]?.items && amenities[0].items.length > 6 && (
+                <Pressable
+                  className="mt-2 self-start"
+                  onPress={() => setShowFacilities(true)}
+                  hitSlop={10}
+                >
+                  <Text className="font-poppins text-sm font-semibold text-[#0E54EC] underline">
+                    View all amenities
+                  </Text>
+                </Pressable>
+              )}
             </View>
 
             {/* Facilities Modal */}
@@ -432,7 +408,6 @@ export default function HotelBookingSingleDetail() {
                   <View className="flex-row flex-wrap gap-4">
                     {amenities?.[0]?.items?.map((item, index) => (
                       <View key={index} className="w-full flex-row items-center py-3">
-                        <WineglassIcon width={24} height={24} className="mr-3" />
                         <Text className="font-poppins text-gray-700">{item.name}</Text>
                       </View>
                     ))}
@@ -444,34 +419,208 @@ export default function HotelBookingSingleDetail() {
             {/* Price & Select Room */}
             <View className="flex-row items-center justify-between px-4 py-3">
               <View className="flex-col items-start">
-                <Text className="text-3xl font-bold text-[#00AEEF]">₹0</Text>
-                <Text className="text-md font-normal text-gray-500">Per night</Text>
+                {selectedRoom ? (
+                  <>
+                    <Text className="text-3xl font-bold text-[#00AEEF]">
+                      ₹{selectedRoom.pricing?.pricePerNight?.toLocaleString() || '0'}
+                    </Text>
+                    <Text className="text-md font-normal text-gray-500">Per night</Text>
+                    <Text className="text-sm text-gray-600">{selectedRoom.room_name}</Text>
+                  </>
+                ) : (
+                  <>
+                    <Text className="text-3xl font-bold text-[#00AEEF]">₹0</Text>
+                    <Text className="text-md font-normal text-gray-500">Per night</Text>
+                  </>
+                )}
               </View>
               <Pressable
                 className="rounded-full bg-blue-600 px-5 py-3"
                 onPress={() => setshowRoomSelectModal(true)}>
-                <Text className="text-lg font-semibold text-white">Select Room</Text>
+                <Text className="text-lg font-semibold text-white">
+                  {selectedRoom ? 'Change Room' : 'Select Room'}
+                </Text>
               </Pressable>
             </View>
 
-            <Modal visible={showRoomSelectModal} animationType="slide">
-              <View className="flex-row items-center justify-between bg-[#0E54EC] px-4 pb-4 pt-16" />
-              <View className="w-full flex-1 bg-white">
-                <View className="relative w-full flex-row items-center border-b border-gray-200 px-4 py-3">
+            <RoomSelectionModal
+              visible={showRoomSelectModal}
+              onClose={() => setshowRoomSelectModal(false)}
+              propertyId={propertyId || ''}
+              searchParams={searchParams}
+              onRoomSelect={(room) => {
+                setSelectedRoom(room);
+                setshowRoomSelectModal(false);
+              }}
+            />
+
+            {/* Checkout Button */}
+            <View className="px-4 mb-4">
+              <Pressable
+                className={`w-full rounded-full py-4 ${selectedRoom ? 'bg-[#0E54EC]' : 'bg-gray-300'}`}
+                onPress={() => {
+                  if (selectedRoom) setShowCheckoutModal(true);
+                }}
+                disabled={!selectedRoom}
+              >
+                <Text className="text-center font-poppins text-lg font-semibold text-white">
+                  Proceed to Checkout
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Checkout Modal */}
+            <Modal
+              visible={showCheckoutModal}
+              animationType="slide"
+              transparent={false}
+              onRequestClose={() => setShowCheckoutModal(false)}
+              statusBarTranslucent
+            >
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: '#fff',
+                }}
+              >
+                {/* Header */}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingTop: 48,
+                    paddingBottom: 16,
+                    paddingHorizontal: 20,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#F1F1F1',
+                    backgroundColor: '#fff',
+                    elevation: 2,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: 'Poppins-Bold',
+                      fontSize: 20,
+                      color: '#222',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    Checkout
+                  </Text>
                   <Pressable
-                    onPress={() => setshowRoomSelectModal(false)}
-                    className="absolute left-4 z-10">
-                    <BackIconModal width={24} color="#2563eb" />
+                    onPress={() => setShowCheckoutModal(false)}
+                    style={{
+                      paddingVertical: 6,
+                      paddingHorizontal: 12,
+                      borderRadius: 20,
+                      backgroundColor: '#F3F6FA',
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: 'Poppins-SemiBold',
+                        fontSize: 16,
+                        color: '#0E54EC',
+                        fontWeight: '600',
+                      }}
+                    >
+                      Close
+                    </Text>
                   </Pressable>
-                  <View className="flex-1 items-center py-3">
-                    <Text className="text-center text-lg font-semibold">Select Rooms</Text>
-                  </View>
                 </View>
-                <ScrollView className="flex-1 p-4">
-                  <View className="flex-row flex-wrap gap-4">
-                    <Text className="font-poppins text-gray-700">No room details available</Text>
+                {/* Content */}
+                <View style={{ flex: 1 }}>
+                  <HotelBookingCheckout
+                    bookingData={searchParams}
+                    hotelData={hotelData}
+                    roomData={selectedRoom}
+                    onClose={() => setShowCheckoutModal(false)}
+                  />
+                </View>
+              </View>
+            </Modal>
+
+            {/* Reviews */}
+            <View className="mb-3 px-4">
+              <View className="mb-2 flex-row items-center justify-between">
+                <Text className="text-lg font-bold">Reviews</Text>
+                <Pressable onPress={() => {}}>
+                  <Text className="font-semibold text-blue-600">View All</Text>
+                </Pressable>
+              </View>
+              {review && review.length > 0 ? (
+                review.slice(0, 2).map((r, i) => (
+                  <View key={i} className="mb-2">
+                    <Text className="font-semibold">{r.user || 'Anonymous'}</Text>
+                    <Text className="text-gray-600">{r.comment}</Text>
+                    <Text className="text-yellow-500">★ {r.rating}</Text>
                   </View>
-                </ScrollView>
+                ))
+              ) : (
+                <Text className="text-gray-500">No reviews available</Text>
+              )}
+            </View>
+
+            {/* Property Rules */}
+            {/* Property Rules (show only 4, each with info icon, and "View All Rules" button opens modal) */}
+            <View className="mb-3 mt-4 px-4">
+              <Text className="mb-2 font-poppins text-xl font-bold">Property Rules</Text>
+              {(propertyRules?.slice(0, 4) || []).map((rule, i) => (
+                <View key={i} className="mb-2 flex-row items-center">
+                  {/* Info Icon */}
+                  <View className="mt-0.5 mr-2">
+                    <Text>
+                      {/* Unicode info icon, or replace with an SVG if you have one */}
+                      <Text style={{ color: '#2563eb', fontSize: 18 }}>ℹ️</Text>
+                    </Text>
+                  </View>
+                  <Text className="flex-1 font-poppins text-gray-700">{rule.rulesData}</Text>
+                </View>
+              ))}
+              {propertyRules && propertyRules.length > 4 && (
+                <Pressable
+                  className="flex items-center rounded-full bg-[#0E54EC] py-3 mt-2"
+                  onPress={() => setShowAllRulesModal(true)}>
+                  <Text className="font-poppins font-semibold text-white">View All Rules</Text>
+                </Pressable>
+              )}
+            </View>
+
+            {/* Modal for all property rules */}
+            <Modal
+              visible={!!showAllRulesModal}
+              animationType="slide"
+              transparent
+              onRequestClose={() => setShowAllRulesModal(false)}
+            >
+              <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'center', alignItems: 'center' }}>
+                <View style={{ backgroundColor: 'white', borderRadius: 16, width: '90%', maxHeight: '80%', padding: 20 }}>
+                  <View className="flex-row items-center justify-between mb-4">
+                    <Text className="font-poppins text-xl font-bold">All Property Rules</Text>
+                    <Pressable onPress={() => setShowAllRulesModal(false)}>
+                      <Text className="font-poppins text-base font-semibold text-blue-600">Close</Text>
+                    </Pressable>
+                  </View>
+                  <ScrollView>
+                    {(propertyRules || []).map((rule, i) => (
+                      <View key={i} className="mb-3 flex-row items-center">
+                        <View className="mr-2">
+                          <Text>
+                            <Text style={{ color: '#2563eb', fontSize: 18 }}>ℹ️</Text>
+                          </Text>
+                        </View>
+                        <Text className="flex-1 font-poppins text-gray-700">{rule.rulesData}</Text>
+                      </View>
+                    ))}
+                  </ScrollView>
+                  <Pressable
+                    className="mt-4 items-center"
+                    onPress={() => setShowAllRulesModal(false)}
+                  >
+                    <Text className="font-poppins font-semibold text-blue-600">Close</Text>
+                  </Pressable>
+                </View>
               </View>
             </Modal>
 
@@ -495,44 +644,8 @@ export default function HotelBookingSingleDetail() {
               </View>
             </View>
 
-            {/* Reviews */}
-            <View className="mb-3 px-4">
-              <View className="mb-2 flex-row items-center justify-between">
-                <Text className="text-lg font-bold">Reviews</Text>
-                <Pressable onPress={() => {}}>
-                  <Text className="font-semibold text-blue-600">View All</Text>
-                </Pressable>
-              </View>
-              {review && review.length > 0 ? (
-                review.slice(0, 2).map((r, i) => (
-                  <View key={i} className="mb-2">
-                    <Text className="font-semibold">{r.user || 'Anonymous'}</Text>
-                    <Text className="text-gray-600">{r.comment}</Text>
-                    <Text className="text-yellow-500">★ {r.rating}</Text>
-                  </View>
-                ))
-              ) : (
-                <Text className="text-gray-500">No reviews available</Text>
-              )}
-            </View>
-
             <RecommendationHotels />
 
-            {/* Property Rules */}
-            <View className="mb-3 mt-4 px-4">
-              <Text className="mb-2 font-poppins text-xl font-bold">Property Rules</Text>
-              {propertyRules?.map((rule, i) => (
-                <View key={i} className="mb-2 flex-row items-start">
-                  <TickIcon width={20} height={20} color="#2563eb" className="mt-1" />
-                  <Text className="ml-2 flex-1 font-poppins text-gray-700">{rule.rulesData}</Text>
-                </View>
-              ))}
-              <Pressable
-                className="flex items-center rounded-full bg-[#0E54EC] py-3"
-                onPress={() => {}}>
-                <Text className="font-poppins font-semibold text-white">View All Rules</Text>
-              </Pressable>
-            </View>
           </>
         )}
         showsVerticalScrollIndicator={false}
