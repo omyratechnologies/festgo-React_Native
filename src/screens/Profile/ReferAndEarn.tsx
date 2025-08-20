@@ -102,12 +102,16 @@ const ReferAndEarn = () => {
 
   return (
     <View className="flex-1">
+      <View style={{
+                backgroundColor: '#F15A29',
+              }}>
       <ProfileHeaderMenu isDifferentPage pageTitle="Refer" />
+      </View>
       <FlatList
         ListHeaderComponent={
           <>
             <View
-              className={'pb-6 pt-10'}
+              className={'pb-6 pt-10 '}
               style={{
                 backgroundColor: '#F15A29',
                 borderBottomLeftRadius: 60,
@@ -145,7 +149,7 @@ const ReferAndEarn = () => {
                   </View>
                 </View>
                 {/* Share Buttons */}
-                <View className={'-mb-10  flex-row justify-center gap-2 gap-6'}>
+                <View className={'-mb-10  flex-row justify-center gap-6'}>
                   <TouchableOpacity
                     className={'flex-row items-center overflow-hidden rounded-full p-0'}>
                     <LinearGradient

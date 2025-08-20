@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image, RefreshControl } from 'react-native';
 import ProfileHeaderMenu from '~/components/Profile/ProfileHeaderMenu';
 import BottomMenu from '~/components/common/BottomMenu';
 import dayjs from 'dayjs';
@@ -18,30 +18,37 @@ const MyOrders = () => {
   const [eventBookings, setEventBookings] = useState<any[]>([]);
   const [beachfestBookings, setBeachfestBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      const jwtToken = await AsyncStorage.getItem('jwtToken');
+      const res = await fetch(`${API_URL}/property-booking/my-bookings`, {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      });
+      const data = await res.json();
+      setPropertyBookings(data.propertyBookings || []);
+      setEventBookings(data.events || []);
+      setBeachfestBookings(data.beachfestBookings || []);
+    } catch (e) {
+      // handle error
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        const jwtToken = await AsyncStorage.getItem('jwtToken');
-        const res = await fetch(`${API_URL}/property-booking/my-bookings`, {
-          headers: {
-            Authorization: `Bearer ${jwtToken}`,
-          },
-        });
-        const data = await res.json();
-        // console.log('data', data);
-        setPropertyBookings(data.propertyBookings || []);
-        setEventBookings(data.events || []);
-        setBeachfestBookings(data.beachfestBookings || []);
-      } catch (e) {
-        // handle error
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchOrders();
+  }, [fetchOrders]);
 
   // Helper to determine if an event is upcoming or completed
   const isUpcoming = (date: string) => {
@@ -200,7 +207,11 @@ const MyOrders = () => {
           </TouchableOpacity>
         ))}
       </View>
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F15A29" />
+        }
+      >
         <View className="p-4">
           {loading && (
             <Text className="text-center text-gray-500 mt-8">Loading your bookings...</Text>

@@ -16,15 +16,15 @@ const topServices = [
   { icon: HotelIcon, label: 'Hotels', page: 'HotelBooking' },
   { icon: ResortsIcon, label: 'Resorts', page: 'HotelBooking' },
   { icon: EventsIcon, label: 'Events', page: 'EventsPage' },
-  { icon: BanquetsIcon, label: 'Banquets', page: 'HotelBooking' },
+  { icon: BeachFestIcon, label: 'Beach Fest', page: 'BeachFestsPage' },
 ];
 
-const bottomServices = [
-  { icon: BeachFestIcon, label: 'Beach Fest', page: 'BeachFestsPage' },
-  { icon: CityFestsIcon, label: 'City Fests', page: 'CityFestsPage' },
-  { icon: TripsIcon, label: 'Trips', page: 'HotelBooking' },
-  { icon: FestBiteIcon, label: 'Fest Bite', page: 'FestBite' },
-];
+// const bottomServices = [
+//   { icon: BanquetsIcon, label: 'Banquets', page: 'HotelBooking' },
+//   { icon: CityFestsIcon, label: 'City Fests', page: 'CityFestsPage' },
+//   { icon: TripsIcon, label: 'Trips', page: 'HotelBooking' },
+//   { icon: FestBiteIcon, label: 'Fest Bite', page: 'FestBite' },
+// ];
 
 const ServiceDetails = () => {
   const navigation = useNavigation<MainTabNavigationProp>();
@@ -51,7 +51,7 @@ const ServiceDetails = () => {
           </TouchableOpacity>
         ))}
       </View>
-      <View className="mb-5 flex-row justify-center gap-3">
+      {/* <View className="mb-5 flex-row justify-center gap-3">
         {bottomServices.map(({ icon: Icon, label, page }) => (
           <TouchableOpacity
             key={label}
@@ -70,7 +70,7 @@ const ServiceDetails = () => {
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </View> */}
     </View>
   );
 };

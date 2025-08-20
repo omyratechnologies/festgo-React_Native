@@ -144,6 +144,7 @@ const BeachFestCheckout = () => {
           id: festId,
         }),
       });
+      console.log(res)
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message || 'Booking failed');

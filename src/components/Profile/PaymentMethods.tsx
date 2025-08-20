@@ -1,13 +1,13 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import React from 'react';
-import WalletIcon from '~/assets/images/profile/paymentMethods/Wallet.svg';
+// import WalletIcon from '~/assets/images/profile/paymentMethods/Wallet.svg';
 import SavedCardsIcon from '~/assets/images/profile/paymentMethods/SavedCards.svg';
 import GSTDetailsIcon from '~/assets/images/profile/paymentMethods/GSTDetails.svg';
 import { useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
 
 const icons = [
-  { label: 'Wallet', Source: WalletIcon, page: 'Wallet' },
+  // { label: 'Wallet', Source: WalletIcon, page: 'Wallet' },
   { label: 'Saved Cards', Source: SavedCardsIcon, page: 'SavedCards' },
   { label: 'GST Details', Source: GSTDetailsIcon, page: 'GSTDetails' },
 ];

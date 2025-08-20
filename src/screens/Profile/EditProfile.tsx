@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,8 @@ import useUserStore from '~/store/userStore';
 import ProfileHeaderMenu from '~/components/Profile/ProfileHeaderMenu';
 import BottomMenu from '~/components/common/BottomMenu';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { MainTabNavigationProp } from '~/navigation/types';
 
 // --- Consistent TextInput Styles ---
 const inputBaseClass =
@@ -41,7 +43,8 @@ interface EditProfileForm {
 }
 
 const EditProfile = () => {
-  const { userData, setUserData } = useUserStore();
+  const navigation = useNavigation<MainTabNavigationProp>();
+  const { userData } = useUserStore();
   const [formData, setFormData] = useState<EditProfileForm>({
     firstname: '',
     lastname: '',
@@ -79,30 +82,30 @@ const EditProfile = () => {
         state: userData.state || '',
         _activeField: '',
       });
-      setEmailVerified(userData.email_verified || false);
-      setPhoneVerified(userData.mobile_verified || false);
+      setEmailVerified(!!userData.email_verified);
+      setPhoneVerified(!!userData.mobile_verified);
     }
   }, [userData]);
 
-  const pickImage = async () => {
+  const pickImage = useCallback(async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets[0]) {
+      if (!result.canceled && result.assets && result.assets[0]) {
         await uploadImage(result.assets[0].uri);
       }
     } catch (error) {
       console.error('Error picking image:', error);
       Alert.alert('Error', 'Failed to pick image');
     }
-  };
+  }, []);
 
-  const uploadImage = async (uri: string) => {
+  const uploadImage = useCallback(async (uri: string) => {
     try {
       setIsUploading(true);
       const jwtToken = await AsyncStorage.getItem('jwtToken');
@@ -112,8 +115,8 @@ const EditProfile = () => {
         return;
       }
 
-      const formData = new FormData();
-      formData.append('file', {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', {
         uri,
         type: 'image/jpeg',
         name: 'profile-image.jpg',
@@ -125,7 +128,7 @@ const EditProfile = () => {
           Authorization: `Bearer ${jwtToken}`,
           'Content-Type': 'multipart/form-data',
         },
-        body: formData,
+        body: formDataUpload,
       });
 
       if (!response.ok) {
@@ -145,13 +148,13 @@ const EditProfile = () => {
     } finally {
       setIsUploading(false);
     }
-  };
+  }, []);
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
+  const handleDateChange = (_event: any, selected?: Date) => {
     setShowDatePicker(false);
-    if (selectedDate) {
-      setSelectedDate(selectedDate);
-      const formattedDate = selectedDate.toISOString().split('T')[0];
+    if (selected) {
+      setSelectedDate(selected);
+      const formattedDate = selected.toISOString().split('T')[0];
       setFormData((prev) => ({ ...prev, date_of_birth: formattedDate }));
     }
   };
@@ -175,19 +178,12 @@ const EditProfile = () => {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
-      }
-
       const data = await response.json();
-      if (data.success) {
-        // Update the user store with new data
-        if (userData) {
-          setUserData({ ...userData, ...formData });
-        }
+      if (data.status === 200) {
         Alert.alert('Success', 'Profile updated successfully');
+        navigation.goBack();
       } else {
-        throw new Error(data.message || 'Update failed');
+        Alert.alert('Error', data.message || 'Update failed');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -198,12 +194,10 @@ const EditProfile = () => {
   };
 
   const handleVerifyEmail = () => {
-    // Implement email verification logic
     Alert.alert('Info', 'Email verification feature will be implemented');
   };
 
   const handleVerifyPhone = () => {
-    // Implement phone verification logic
     Alert.alert('Info', 'Phone verification feature will be implemented');
   };
 
@@ -274,25 +268,25 @@ const EditProfile = () => {
 
   return (
     <View className="flex-1 bg-white">
-      <ProfileHeaderMenu isDifferentPage pageTitle="Edit Profile" />
-      {/* Orange banner on top of profile photo */}
-      <ScrollView className="mb-32 flex-1 px-4">
 
+      <ProfileHeaderMenu isDifferentPage pageTitle="Edit Profile" />
+      <ScrollView className="mb-32 flex-1 px-4">
+        {/* Profile Completion Banner */}
         <View className="mt-6">
           <View className="mx-4 rounded-xl bg-[#F15A29] p-4">
             <View className="h-3 overflow-hidden rounded-full bg-white">
               <View
                 className="h-3 rounded-full"
                 style={{
-                  width: `${userData?.profileCompletion && userData?.profileCompletion ? userData?.profileCompletion : 0}%`,
+                  width: `${userData?.profileCompletion ? userData.profileCompletion : 0}%`,
                   backgroundColor: '#08F67C',
                 }}
               />
             </View>
             <Text className="mt-2 font-baloo text-sm text-white">
               Your profile is{' '}
-              {userData?.profileCompletion && userData?.profileCompletion > 0
-                ? userData?.profileCompletion
+              {userData?.profileCompletion && userData.profileCompletion > 0
+                ? userData.profileCompletion
                 : 0}
               % completed.
             </Text>
@@ -324,45 +318,57 @@ const EditProfile = () => {
           <Text className="mt-2 font-poppins text-sm text-gray-600">Tap to change photo</Text>
         </View>
 
+        {/* Personal Information */}
         <View className="mb-6 px-4">
           <Text className="mb-4 font-baloo text-xl font-semibold text-[#F15A29]">
             Personal Information
           </Text>
 
-          <View className="mb-6">
+          {/* Gender */}
+          {/* <View className="mb-6">
             <Text className="mb-2 font-poppins text-sm font-medium text-gray-700">Gender</Text>
             <View className="flex-row space-x-4">
-              {['Male', 'Female', 'Other'].map((gender) => (
+              {['Male', 'Female', 'Other'].map((genderOption) => (
                 <TouchableOpacity
-                  key={gender}
-                  onPress={() => setFormData((prev) => ({ ...prev, gender }))}
+                  key={genderOption}
+                  onPress={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      gender: genderOption,
+                    }));
+                  }}
                   className={`flex-row items-center rounded-lg py-2 ${
-                    formData.gender === gender
+                    formData?.gender === genderOption
                       ? 'border-[#F15A29] bg-[#F15A29] shadow-sm'
                       : 'border-gray-300'
                   }`}
                   style={{ minWidth: 90, justifyContent: 'center', marginRight: 8 }}
-                  activeOpacity={0.8}>
+                  activeOpacity={0.8}
+                >
                   <View
                     className={`mr-2 h-4 w-4 items-center justify-center rounded-full border-2 ${
-                      formData.gender === gender
+                      formData?.gender === genderOption
                         ? 'border-white bg-white'
                         : 'border-[#F15A29] bg-transparent'
-                    }`}>
-                    {formData.gender === gender && (
+                    }`}
+                  >
+                    {formData?.gender === genderOption && (
                       <View className="h-2 w-2 rounded-full bg-[#F15A29]" />
                     )}
                   </View>
                   <Text
                     className={`font-poppins text-sm ${
-                      formData.gender === gender ? 'font-semibold text-white' : 'text-gray-700'
-                    }`}>
-                    {gender}
+                      formData?.gender === genderOption
+                        ? 'font-semibold text-white'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    {genderOption}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
-          </View>
+          </View> */}
 
           {renderInput({
             label: 'First Name',
@@ -380,6 +386,7 @@ const EditProfile = () => {
             field: 'lastname',
           })}
 
+          {/* Date of Birth */}
           <View className="mb-4 flex-1 items-start w-full">
             <Text className="-mb-2 mx-2 z-10 px-2 bg-white font-poppins text-sm font-medium text-gray-700">
               Date of Birth
@@ -409,7 +416,6 @@ const EditProfile = () => {
             Contact Information
           </Text>
 
-          {/* Email */}
           {/* Email */}
           <View className="mb-4 flex-1 items-start w-full">
             <Text className="-mb-2 mx-2 z-10 px-2 bg-white font-poppins text-sm font-medium text-gray-700">
@@ -495,14 +501,14 @@ const EditProfile = () => {
               </TouchableOpacity>
             </View>
           </View>
-</View>
+        </View>
+
         {/* Billing Information */}
         <View className="mb-6 px-4">
           <Text className="mb-4 font-baloo text-xl font-semibold text-[#F15A29]">
             Billing Information
           </Text>
 
-          {/* Billing Address */}
           {renderInput({
             label: 'Billing Address',
             value: formData.billing_address,
@@ -513,7 +519,6 @@ const EditProfile = () => {
             numberOfLines: 3,
           })}
 
-          {/* Pincode */}
           {renderInput({
             label: 'Pincode',
             value: formData.pincode,
@@ -523,7 +528,6 @@ const EditProfile = () => {
             keyboardType: 'numeric',
           })}
 
-          {/* State */}
           {renderInput({
             label: 'State',
             value: formData.state,

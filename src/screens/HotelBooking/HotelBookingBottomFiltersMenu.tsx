@@ -40,6 +40,9 @@ const PROPERTY_TYPES = [
   { value: 'apartment', label: 'Apartment' },
   { value: 'resort', label: 'Resort' },
   { value: 'villa', label: 'Villa' },
+  { value: 'homestay', label: 'Homestay' },
+  { value: 'beachhut', label: 'Beach Hut' },
+  { value: 'farmhouse', label: 'Farmhouse' },
 ];
 
 const FILTER_OPTIONS = [
@@ -175,7 +178,9 @@ const HotelBookingBottomFiltersMenu = () => {
                 SORT_OPTIONS.map((option) => (
                   <TouchableOpacity
                     key={option.value}
-                    className="flex-row items-center py-3"
+                    className={`flex-row items-center py-3 w-full border p-3 mb-2 rounded-lg ${
+                      selectedSort === option.value ? 'border-[#0E54EC] bg-[#0E54EC2B]/20' : 'border-gray-300'
+                    }`}
                     onPress={() => setSelectedSort(option.value)}
                     activeOpacity={0.7}
                   >
@@ -184,7 +189,7 @@ const HotelBookingBottomFiltersMenu = () => {
                       style={{
                         width: 20,
                         height: 20,
-                        borderRadius: 4,
+                        borderRadius: 40,
                         borderWidth: 2,
                         borderColor: '#0E54EC',
                         backgroundColor: selectedSort === option.value ? '#0E54EC' : 'white',
@@ -195,7 +200,7 @@ const HotelBookingBottomFiltersMenu = () => {
                           style={{
                             width: 12,
                             height: 12,
-                            borderRadius: 2,
+                            borderRadius: 40,
                             backgroundColor: 'white',
                           }}
                         />
@@ -210,41 +215,53 @@ const HotelBookingBottomFiltersMenu = () => {
                 ))}
 
               {openSheet === 'property' &&
-                PROPERTY_TYPES.map((type) => (
-                  <TouchableOpacity
-                    key={type.value}
-                    className="flex-row items-center py-3"
-                    onPress={() => setSelectedPropertyType(type.value)}
-                    activeOpacity={0.7}
-                  >
-                    <View
-                      className="mr-3 items-center justify-center"
-                      style={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: 10,
-                        borderWidth: 2,
-                        borderColor: '#0E54EC',
-                        backgroundColor: selectedPropertyType === type.value ? '#0E54EC' : 'white',
-                      }}
+                PROPERTY_TYPES.map((type, idx) => (
+                  <React.Fragment key={type.value}>
+                    <TouchableOpacity
+                      className={`flex-row items-center py-3 w-full border p-3 mb-2 rounded-lg ${
+                        selectedPropertyType === type.value ? 'border-[#0E54EC] bg-[#0E54EC2B]/20' : 'border-gray-300'
+                      }`}
+                      onPress={() => setSelectedPropertyType(type.value)}
+                      activeOpacity={0.7}
                     >
-                      {selectedPropertyType === type.value && (
-                        <View
-                          style={{
-                            width: 10,
-                            height: 10,
-                            borderRadius: 5,
-                            backgroundColor: 'white',
-                          }}
-                        />
-                      )}
-                    </View>
-                    <Text
-                      className={`text-base font-poppins ml-2 ${selectedPropertyType === type.value ? 'font-bold text-[#0E54EC]' : 'text-[#222]'}`}
-                    >
-                      {type.label}
-                    </Text>
-                  </TouchableOpacity>
+                      <View
+                        className="mr-3 items-center justify-center"
+                        style={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: 40,
+                          borderWidth: 2,
+                          borderColor: '#0E54EC',
+                          backgroundColor: selectedPropertyType === type.value ? '#0E54EC' : 'white',
+                        }}
+                      >
+                        {selectedPropertyType === type.value && (
+                          <View
+                            style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: 40,
+                              backgroundColor: 'white',
+                            }}
+                          />
+                        )}
+                      </View>
+                      <Text
+                        className={`text-base font-poppins ml-2 ${selectedPropertyType === type.value ? 'font-bold text-[#0E54EC]' : 'text-[#222]'}`}
+                      >
+                        {type.label}
+                      </Text>
+                    </TouchableOpacity>
+                    {idx === PROPERTY_TYPES.length - 1 && (
+                      <TouchableOpacity
+                        onPress={closeBottomSheet}
+                        className="mt-2 mb-2 py-2 px-4 rounded bg-[#0E54EC] items-center"
+                        activeOpacity={0.8}
+                      >
+                        <Text className="text-white font-semibold text-base">Confirm</Text>
+                      </TouchableOpacity>
+                    )}
+                  </React.Fragment>
                 ))}
 
               {openSheet === 'filter' &&
@@ -289,7 +306,7 @@ const HotelBookingBottomFiltersMenu = () => {
             </ScrollView>
             {/* Footer for filter sheet */}
             {openSheet === 'filter' && (
-              <View className="flex-row justify-between items-center border-t border-gray-200 pt-4 pb-2 px-1 bg-white">
+              <View className="flex-row justify-between mb-8 items-center border-t border-gray-200 pt-4 pb-2 px-1 bg-white">
                 <TouchableOpacity
                   onPress={() => setSelectedFilters([])}
                   className="py-2 px-4 rounded bg-[#F2F7FF]"

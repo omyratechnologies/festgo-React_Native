@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import DesktopIcon from '~/assets/icons/profile/desktopIcon.svg';
@@ -34,10 +34,10 @@ const OptionRow = ({
   </TouchableOpacity>
 );
 
-
 const ProfileOptions = () => {
   const navigation = useNavigation<NavigationProp>();
-    const handleLogout = async () => {
+
+  const handleLogout = async () => {
     await AsyncStorage.multiRemove(['jwtToken', 'userId', 'isLoggedIn']);
     navigation.reset({
       index: 0,
@@ -45,24 +45,83 @@ const ProfileOptions = () => {
     });
   };
 
+  const handleDeleteAccount = async () => {
+    try {
+      const jwtToken = await AsyncStorage.getItem('jwtToken');
+      if (!jwtToken) {
+        Alert.alert('Error', 'You are not logged in.');
+        return;
+      }
+
+      // Confirm with user before deleting
+      Alert.alert(
+        'Delete Account',
+        'Are you sure you want to delete your account? This action cannot be undone.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                const response = await fetch('https://server.festgo.in/api/user/delete', {
+                  method: 'DELETE',
+                  headers: {
+                    'Authorization': `Bearer ${jwtToken}`,
+                    'Content-Type': 'application/json',
+                  },
+                });
+
+                if (response.ok) {
+                  await AsyncStorage.multiRemove(['jwtToken', 'userId', 'isLoggedIn']);
+                  Alert.alert('Account Deleted', 'Your account has been deleted successfully.');
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Auth' }],
+                  });
+                } else {
+                  const errorData = await response.json().catch(() => ({}));
+                  Alert.alert(
+                    'Error',
+                    errorData?.message || 'Failed to delete account. Please try again.'
+                  );
+                }
+              } catch (err) {
+                Alert.alert('Error', 'Something went wrong. Please try again.');
+              }
+            },
+          },
+        ]
+      );
+    } catch (err) {
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    }
+  };
+
   const optionsTop = [
     {
       icon: <ProfileIcon width={24} height={24} color="#0601B4" />,
       title: 'Refer & Earn 5000',
       subtitle: 'Invite friends and earn rewards',
-      onPress: () => navigation.navigate('Main', {screen: 'ReferAndEarn'}),
+      onPress: () => navigation.navigate('Main', { screen: 'ReferAndEarn' }),
     },
     {
       icon: <ProfileIcon width={24} height={24} color="#0601B4" />,
       title: 'Recommend and Earn',
       subtitle: 'Recommend us and get benefits',
-      onPress: () => navigation.navigate('Main', {screen: 'RecommendAndEarn'}),
+      onPress: () => navigation.navigate('Main', { screen: 'RecommendAndEarn' }),
+    },
+    {
+      icon: <ProfileIcon width={24} height={24} color="#0601B4" />,
+      title: 'Delete Account',
+      subtitle: 'Delete my Account',
+      onPress: handleDeleteAccount,
     },
     {
       icon: <DesktopIcon width={24} height={24} color="#0601B4" />,
       title: 'Device Activity',
       subtitle: 'Manage your logged-in devices',
-      onPress: () => navigation.navigate('Main', {screen: 'DeviceActivityScreen'}),
+      onPress: () => navigation.navigate('Main', { screen: 'DeviceActivityScreen' }),
     },
     {
       icon: <LogoutIcon width={24} height={24} color="#0601B4" />,
@@ -74,11 +133,9 @@ const ProfileOptions = () => {
       icon: <Notification width={24} height={24} color="#0601B4" />,
       title: 'Help & support',
       subtitle: 'Get assistance and support',
-      onPress: () => navigation.navigate('Main', {screen: 'HelpScreen'}),
+      onPress: () => navigation.navigate('Main', { screen: 'HelpScreen' }),
     },
-     
   ];
-
 
   return (
     <View className={`mb-32 mt-2 p-4`}>

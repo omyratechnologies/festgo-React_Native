@@ -3,21 +3,21 @@ import React from 'react';
 import HotelIcon from '~/assets/images/homepage/details/Hotels.svg';
 import ResortsIcon from '~/assets/images/homepage/details/Resorts.svg';
 import EventsIcon from '~/assets/images/homepage/details/Events.svg';
-import BanquetsIcon from '~/assets/images/homepage/details/Banquets.svg';
 import BeachFestIcon from '~/assets/images/homepage/details/BeachFest.svg';
-import CityFestsIcon from '~/assets/images/homepage/details/CityFests.svg';
-import TripsIcon from '~/assets/images/homepage/details/Trips.svg';
-import FestBiteIcon from '~/assets/images/homepage/details/FestBite.svg';
+// import BanquetsIcon from '~/assets/images/homepage/details/Banquets.svg';
+// import CityFestsIcon from '~/assets/images/homepage/details/CityFests.svg';
+// import TripsIcon from '~/assets/images/homepage/details/Trips.svg';
+// import FestBiteIcon from '~/assets/images/homepage/details/FestBite.svg';
 
 const services = [
   { icon: HotelIcon, label: 'Hotels' },
   { icon: ResortsIcon, label: 'Resorts' },
   { icon: EventsIcon, label: 'Events' },
-  { icon: BanquetsIcon, label: 'Banquets' },
   { icon: BeachFestIcon, label: 'Beach Fest' },
-  { icon: CityFestsIcon, label: 'City Fests' },
-  { icon: TripsIcon, label: 'Trips' },
-  { icon: FestBiteIcon, label: 'Fest Bite' },
+  // { icon: BanquetsIcon, label: 'Banquets' },
+  // { icon: CityFestsIcon, label: 'City Fests' },
+  // { icon: TripsIcon, label: 'Trips' },
+  // { icon: FestBiteIcon, label: 'Fest Bite' },
 ];
 
 const MyBookings = () => {
