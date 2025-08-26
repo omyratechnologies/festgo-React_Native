@@ -31,6 +31,7 @@ import RecommendAndEarn from '~/screens/Profile/RecommendAndEarn';
 import OffersPage from '~/screens/Profile/OffersPage';
 import GSTDetails from '~/screens/Profile/GSTDetails';
 import DeviceActivityScreen from '~/screens/Profile/DeviceActivityScreen';
+import BookingSuccessScreen from '~/screens/common/BookingSuccessScreen';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -76,6 +77,9 @@ export const MainNavigator = () => {
         <Stack.Screen name="HotelBookingDetails" component={HotelBookingSingleDetail} />
         <Stack.Screen name="HotelBookingSearch" component={HotelBookingSearch} />
         <Stack.Screen name="HotelBookingCheckout" component={HotelBookingCheckout} />
+
+        {/* Booking Success Screen */}
+        <Stack.Screen name="BookingSuccess" component={BookingSuccessScreen} />
       </Stack.Navigator>
     </AuthGuard>
   );

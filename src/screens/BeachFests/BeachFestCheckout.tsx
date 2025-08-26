@@ -15,8 +15,10 @@ import HeaderMenu from '../HomePage/HeaderMenu';
 import { ScrollView } from 'react-native-gesture-handler';
 import BottomMenu from '~/components/common/BottomMenu';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path } from 'react-native-svg';
+import { processBeachFestBooking } from '~/utils/payment';
+import { MainTabNavigationProp } from '~/navigation/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ICON_SIZE = 22;
 
@@ -63,7 +65,7 @@ const paymentMethods = [
 ];
 
 const BeachFestCheckout = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<MainTabNavigationProp>();
   const route = useRoute<any>();
   const { festId } = route.params || {};
 
@@ -77,7 +79,7 @@ const BeachFestCheckout = () => {
     payment_method: 'CARD',
   });
   const [submitting, setSubmitting] = useState(false);
-
+  // console.log(fest)
   useEffect(() => {
     const fetchFest = async () => {
       try {
@@ -115,17 +117,17 @@ const BeachFestCheckout = () => {
         Alert.alert('Error', 'You must be logged in to book a fest.');
         return;
       }
-      console.log(
+      const bookingData = 
         JSON.stringify({
           passes: Number(form.passes),
           name: form.name,
           phone: form.phone,
           email: form.email,
           payment_method: form.payment_method,
-          fest_type: fest?.name,
+          fest_type: fest?.data.type,
           id: festId,
         })
-      );
+      
       console.log('auth token:', jwtToken);
 
       const res = await fetch('https://server.festgo.in/api/beachfest-booking', {
@@ -134,29 +136,34 @@ const BeachFestCheckout = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${jwtToken}`,
         },
-        body: JSON.stringify({
-          passes: Number(form.passes),
-          name: form.name,
-          phone: form.phone,
-          email: form.email,
-          payment_method: form.payment_method,
-          fest_type: fest?.name,
-          id: festId,
-        }),
+        body: bookingData,
       });
       console.log(res)
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message || 'Booking failed');
       }
-      Alert.alert('Success', 'Booking successful!');
-      navigation.goBack();
+      const response = await res.json();
+      console.log("response", response.data)
+      const result = await processBeachFestBooking(response.data);
+
+      if (result.success) {
+        // Navigate to success screen
+        navigation.navigate('BookingSuccess', {
+          bookingData: result.bookingData,
+          paymentId: result.paymentId!,
+          bookingType: 'beachfest',
+        });
+      } else {
+        Alert.alert('Error', result.message);
+      }
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert('Error', e.message || 'Booking failed. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
+
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
@@ -207,7 +214,7 @@ const BeachFestCheckout = () => {
             </View>
 
             {/* Input Fields */}
-            <View className="gap-4 gap-4">
+            <View className="gap-4">
               {/* Passes */}
               <View>
                 <Text className="mb-1 font-poppins text-sm font-semibold">Number of Passes</Text>

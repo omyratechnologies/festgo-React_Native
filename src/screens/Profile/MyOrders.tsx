@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, RefreshControl, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { MainTabNavigationProp } from '~/navigation/types';
 import ProfileHeaderMenu from '~/components/Profile/ProfileHeaderMenu';
 import BottomMenu from '~/components/common/BottomMenu';
 import dayjs from 'dayjs';
 import { API_URL } from '~/utils/api';
+import { cancelBooking, getBookingDetails } from '~/utils/payment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TABS = [
@@ -13,6 +16,7 @@ const TABS = [
 ];
 
 const MyOrders = () => {
+  const navigation = useNavigation<MainTabNavigationProp>();
   const [activeTab, setActiveTab] = useState('upcoming');
   const [propertyBookings, setPropertyBookings] = useState<any[]>([]);
   const [eventBookings, setEventBookings] = useState<any[]>([]);
@@ -34,7 +38,7 @@ const MyOrders = () => {
       setEventBookings(data.events || []);
       setBeachfestBookings(data.beachfestBookings || []);
     } catch (e) {
-      // handle error
+      console.error('Error fetching orders:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -80,9 +84,55 @@ const MyOrders = () => {
     return diff > 0 ? `${diff} days left` : 'Completed';
   };
 
+  // Handle booking card press
+  const handleBookingPress = async (booking: any, type: 'event' | 'hotel' | 'beachfest') => {
+    try {
+      const bookingDetails = await getBookingDetails(booking.id, type);
+      // Navigate to booking details screen or show details modal
+      Alert.alert(
+        'Booking Details',
+        `Booking ID: ${booking.id}\nType: ${type}\nStatus: ${booking.status || 'Confirmed'}`,
+        [
+          { text: 'OK', style: 'default' },
+          { text: 'Cancel Booking', style: 'destructive', onPress: () => handleCancelBooking(booking.id, type) },
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to load booking details');
+    }
+  };
+
+  // Handle booking cancellation
+  const handleCancelBooking = async (bookingId: string, type: 'event' | 'hotel' | 'beachfest') => {
+    Alert.alert(
+      'Cancel Booking',
+      'Are you sure you want to cancel this booking?',
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Yes',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const success = await cancelBooking(bookingId, type);
+              if (success) {
+                Alert.alert('Success', 'Booking cancelled successfully');
+                fetchOrders(); // Refresh the list
+              } else {
+                Alert.alert('Error', 'Failed to cancel booking');
+              }
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Failed to cancel booking');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   // Render a single event booking card
   const renderEventBooking = (event: any) => (
-    <View
+    <TouchableOpacity
       key={event.id}
       className="mb-4 flex-row rounded-xl bg-white p-3"
       style={{
@@ -92,6 +142,8 @@ const MyOrders = () => {
         shadowRadius: 4,
         elevation: 3,
       }}
+      onPress={() => handleBookingPress(event, 'event')}
+      activeOpacity={0.7}
     >
       <Image
         source={{ uri: event.eventTypeImage }}
@@ -114,12 +166,12 @@ const MyOrders = () => {
           {getDaysLeft(event.eventDate)}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   // Render a single property booking card
   const renderPropertyBooking = (booking: any) => (
-    <View
+    <TouchableOpacity
       key={booking.id}
       className="mb-4 flex-row rounded-xl bg-white p-3"
       style={{
@@ -129,6 +181,8 @@ const MyOrders = () => {
         shadowRadius: 4,
         elevation: 3,
       }}
+      onPress={() => handleBookingPress(booking, 'hotel')}
+      activeOpacity={0.7}
     >
       <Image
         source={{ uri: booking.propertyImage || 'https://festgo.blr1.digitaloceanspaces.com/festgo/public/1753272751709-dd0009ac8f8325258b38268cf5026b7bae72c4ba.png' }}
@@ -148,12 +202,12 @@ const MyOrders = () => {
           {getDaysLeft(booking.checkInDate || booking.bookedDate)}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   // Render a single beachfest booking card
   const renderBeachfestBooking = (booking: any) => (
-    <View
+    <TouchableOpacity
       key={booking.id}
       className="mb-4 flex-row rounded-xl bg-white p-3"
       style={{
@@ -163,6 +217,8 @@ const MyOrders = () => {
         shadowRadius: 4,
         elevation: 3,
       }}
+      onPress={() => handleBookingPress(booking, 'beachfest')}
+      activeOpacity={0.7}
     >
       <Image
         source={{ uri: booking.image_url || 'https://festgo.blr1.digitaloceanspaces.com/festgo/public/1753272751709-dd0009ac8f8325258b38268cf5026b7bae72c4ba.png' }}
@@ -182,7 +238,7 @@ const MyOrders = () => {
           {getDaysLeft(booking.eventDate || booking.bookedDate)}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (

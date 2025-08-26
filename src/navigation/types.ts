@@ -58,6 +58,7 @@ export type MainStackParamList = {
   // profile
   EditProfile: undefined;
   MyOrders: undefined;
+  PaymentHistory: undefined;
   Services: undefined;
   Rewards: undefined;
   MyOrderDetails: { orderId: string };
@@ -92,6 +93,13 @@ export type MainStackParamList = {
       enddate: string;
       staynight: string;
     };
+  };
+
+  // booking success
+  BookingSuccess: {
+    bookingData: any;
+    paymentId: string;
+    bookingType: 'beachfest' | 'hotel' | 'event';
   };
 };
 

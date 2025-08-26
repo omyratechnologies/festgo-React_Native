@@ -3,6 +3,7 @@
     "name": "FestGo",
     "slug": "festgo",
     "version": "1.0.0",
+    "scheme": "festgo",
     "fonts": {
       "BlackerShield-Regular": "./assets/fonts/blackerShield.ttf"
     },
@@ -29,9 +30,29 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.festgo.app",
+      "buildNumber": "1",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "This app needs access to location to find nearby hotels and provide location-based services."
-      }
+        "NSLocationWhenInUseUsageDescription": "This app needs access to location to find nearby hotels and provide location-based services.",
+        "NSCameraUsageDescription": "This app needs access to camera to take profile pictures and upload images.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select profile pictures and upload images.",
+        "NSMicrophoneUsageDescription": "This app needs access to microphone for voice features.",
+        "NSFaceIDUsageDescription": "This app uses Face ID for secure authentication.",
+        "UIBackgroundModes": ["location", "fetch"],
+        "CFBundleDisplayName": "FestGo",
+        "CFBundleName": "FestGo",
+        "CFBundleShortVersionString": "1.0.0",
+        "CFBundleVersion": "1",
+        "LSApplicationQueriesSchemes": ["tel", "mailto", "https"],
+        "UIRequiresFullScreen": false,
+        "UIStatusBarStyle": "light-content",
+        "UIViewControllerBasedStatusBarAppearance": false
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "appStoreUrl": "https://apps.apple.com/app/festgo/id[YOUR_APP_ID]",
+      "privacyPolicyUrl": "https://festgo.in/privacy-policy",
+      "marketingUrl": "https://festgo.in"
     },
     "android": {
       "adaptiveIcon": {
@@ -39,7 +60,116 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.festgo.app",
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
-    }
+      "versionCode": 1,
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "CAMERA", "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"],
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.festgo.app"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "[YOUR_EAS_PROJECT_ID]"
+      }
+    },
+    "owner": "festgo",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/[YOUR_EAS_PROJECT_ID]"
+    },
+    "hooks": {
+      "postPublish": [
+        {
+          "file": "sentry-expo/upload-sourcemaps",
+          "config": {
+            "organization": "[YOUR_SENTRY_ORG]",
+            "project": "[YOUR_SENTRY_PROJECT]"
+          }
+        }
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-location",
+      "expo-camera",
+      "expo-image-picker",
+      "expo-file-system",
+      "expo-web-browser",
+      "expo-secure-store",
+      "expo-notifications",
+      "expo-device",
+      "expo-constants",
+      "expo-apple-authentication",
+      "expo-auth-session",
+      "expo-crypto",
+      "expo-random",
+      "expo-splash-screen",
+      "expo-status-bar",
+      "expo-updates",
+      "expo-font",
+      "expo-asset",
+      "expo-av",
+      "expo-blur",
+      "expo-haptics",
+      "expo-linear-gradient",
+      "expo-modules-core",
+      "expo-sqlite",
+      "expo-network",
+      "expo-battery",
+      "expo-brightness",
+      "expo-calendar",
+      "expo-contacts",
+      "expo-document-picker",
+      "expo-image-manipulator",
+      "expo-keep-awake",
+      "expo-media-library",
+      "expo-print",
+      "expo-screen-capture",
+      "expo-sharing",
+      "expo-speech",
+      "expo-video-thumbnails",
+      "expo-webbrowser",
+      "expo-barcode-scanner",
+      "expo-sensors",
+      "expo-task-manager",
+      "expo-background-fetch",
+      "expo-location",
+      "expo-notifications",
+      "expo-device",
+      "expo-constants",
+      "expo-apple-authentication",
+      "expo-auth-session",
+      "expo-crypto",
+      "expo-random",
+      "expo-splash-screen",
+      "expo-status-bar",
+      "expo-updates",
+      "expo-font",
+      "expo-asset",
+      "expo-av",
+      "expo-blur",
+      "expo-haptics",
+      "expo-linear-gradient",
+      "expo-modules-core",
+      "expo-sqlite",
+      "expo-network",
+      "expo-battery",
+      "expo-brightness",
+      "expo-calendar",
+      "expo-contacts",
+      "expo-document-picker",
+      "expo-image-manipulator",
+      "expo-keep-awake",
+      "expo-media-library",
+      "expo-print",
+      "expo-screen-capture",
+      "expo-sharing",
+      "expo-speech",
+      "expo-video-thumbnails",
+      "expo-webbrowser",
+      "expo-barcode-scanner",
+      "expo-sensors",
+      "expo-task-manager",
+      "expo-background-fetch"
+    ]
   }
 }

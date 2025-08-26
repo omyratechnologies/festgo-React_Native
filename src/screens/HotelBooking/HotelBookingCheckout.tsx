@@ -9,8 +9,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Alert,
 } from 'react-native';
 import { MaterialIcons, FontAwesome5, Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { MainTabNavigationProp } from '~/navigation/types';
+import { processDirectPayment } from '~/utils/payment';
 
 type HotelBookingCheckoutProps = {
   bookingData: any;
@@ -25,6 +29,8 @@ const HotelBookingCheckout: React.FC<HotelBookingCheckoutProps> = ({
   roomData,
   onClose,
 }) => {
+  const navigation = useNavigation<MainTabNavigationProp>();
+  const [loading, setLoading] = useState(false);
   const [coupon, setCoupon] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
   const [gstChecked, setGstChecked] = useState(false);
@@ -221,14 +227,45 @@ const HotelBookingCheckout: React.FC<HotelBookingCheckoutProps> = ({
             shadowRadius: 4,
             elevation: 2,
           }}
-          onPress={() => {
-            // Payment logic here
-            // For now, just close modal
-            onClose && onClose();
+          onPress={async () => {
+            setLoading(true);
+            try {
+              const hotelBookingData = {
+                ...bookingData,
+                hotel_id: hotelData?.id,
+                room_id: roomData?.id,
+                hotel_name: hotelData?.hotelName,
+                room_name: roomData?.room_name,
+                price_per_night: roomData?.pricing?.pricePerNight,
+                total_amount: total,
+                coupon_code: couponApplied ? coupon : null,
+                coupon_discount: discount,
+                gst_details: gstChecked ? gstDetails : null,
+              };
+
+              const result = await processDirectPayment(hotelBookingData, 'hotel');
+
+              if (result.success) {
+                // Navigate to success screen
+                navigation.navigate('BookingSuccess', {
+                  bookingData: result.bookingData,
+                  paymentId: result.paymentId!,
+                  bookingType: 'hotel',
+                });
+                onClose && onClose();
+              } else {
+                Alert.alert('Error', result.message);
+              }
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Booking failed. Please try again.');
+            } finally {
+              setLoading(false);
+            }
           }}
+          disabled={loading}
         >
           <Text className="text-white font-bold text-[18px] font-poppins">
-            Continue to Payment
+            {loading ? 'Processing...' : 'Continue to Payment'}
           </Text>
         </Pressable>
       </ScrollView>
