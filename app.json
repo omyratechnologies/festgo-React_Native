@@ -4,21 +4,14 @@
     "slug": "festgo",
     "version": "1.0.0",
     "scheme": "festgo",
-    "fonts": {
-      "BlackerShield-Regular": "./assets/fonts/blackerShield.ttf"
-    },
-
     "web": {
       "favicon": "./assets/favicon.png"
     },
-
     "experiments": {
       "tsconfigPaths": true
     },
-
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -26,7 +19,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.festgo.app",
@@ -37,139 +32,54 @@
         "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select profile pictures and upload images.",
         "NSMicrophoneUsageDescription": "This app needs access to microphone for voice features.",
         "NSFaceIDUsageDescription": "This app uses Face ID for secure authentication.",
-        "UIBackgroundModes": ["location", "fetch"],
+        "UIBackgroundModes": [
+          "location",
+          "fetch"
+        ],
         "CFBundleDisplayName": "FestGo",
         "CFBundleName": "FestGo",
         "CFBundleShortVersionString": "1.0.0",
         "CFBundleVersion": "1",
-        "LSApplicationQueriesSchemes": ["tel", "mailto", "https"],
+        "LSApplicationQueriesSchemes": [
+          "tel",
+          "mailto",
+          "https"
+        ],
         "UIRequiresFullScreen": false,
         "UIStatusBarStyle": "light-content",
         "UIViewControllerBasedStatusBarAppearance": false
       },
       "config": {
         "usesNonExemptEncryption": false
-      },
-      "appStoreUrl": "https://apps.apple.com/app/festgo/id[YOUR_APP_ID]",
-      "privacyPolicyUrl": "https://festgo.in/privacy-policy",
-      "marketingUrl": "https://festgo.in"
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.festgo.app",
       "versionCode": 1,
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "CAMERA", "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"],
+      "permissions": [
+        "ACCESS_FINE_LOCATIN",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
       "playStoreUrl": "https://play.google.com/store/apps/details?id=com.festgo.app"
     },
-    "extra": {
-      "eas": {
-        "projectId": "[YOUR_EAS_PROJECT_ID]"
-      }
-    },
-    "owner": "festgo",
+    "owner": "festgo-app",
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/[YOUR_EAS_PROJECT_ID]"
+      "url": "https://u.expo.dev/b738104d-9d56-449f-8afa-d2e3fa22f365"
     },
-    "hooks": {
-      "postPublish": [
-        {
-          "file": "sentry-expo/upload-sourcemaps",
-          "config": {
-            "organization": "[YOUR_SENTRY_ORG]",
-            "project": "[YOUR_SENTRY_PROJECT]"
-          }
-        }
-      ]
-    },
-    "plugins": [
-      "expo-router",
-      "expo-location",
-      "expo-camera",
-      "expo-image-picker",
-      "expo-file-system",
-      "expo-web-browser",
-      "expo-secure-store",
-      "expo-notifications",
-      "expo-device",
-      "expo-constants",
-      "expo-apple-authentication",
-      "expo-auth-session",
-      "expo-crypto",
-      "expo-random",
-      "expo-splash-screen",
-      "expo-status-bar",
-      "expo-updates",
-      "expo-font",
-      "expo-asset",
-      "expo-av",
-      "expo-blur",
-      "expo-haptics",
-      "expo-linear-gradient",
-      "expo-modules-core",
-      "expo-sqlite",
-      "expo-network",
-      "expo-battery",
-      "expo-brightness",
-      "expo-calendar",
-      "expo-contacts",
-      "expo-document-picker",
-      "expo-image-manipulator",
-      "expo-keep-awake",
-      "expo-media-library",
-      "expo-print",
-      "expo-screen-capture",
-      "expo-sharing",
-      "expo-speech",
-      "expo-video-thumbnails",
-      "expo-webbrowser",
-      "expo-barcode-scanner",
-      "expo-sensors",
-      "expo-task-manager",
-      "expo-background-fetch",
-      "expo-location",
-      "expo-notifications",
-      "expo-device",
-      "expo-constants",
-      "expo-apple-authentication",
-      "expo-auth-session",
-      "expo-crypto",
-      "expo-random",
-      "expo-splash-screen",
-      "expo-status-bar",
-      "expo-updates",
-      "expo-font",
-      "expo-asset",
-      "expo-av",
-      "expo-blur",
-      "expo-haptics",
-      "expo-linear-gradient",
-      "expo-modules-core",
-      "expo-sqlite",
-      "expo-network",
-      "expo-battery",
-      "expo-brightness",
-      "expo-calendar",
-      "expo-contacts",
-      "expo-document-picker",
-      "expo-image-manipulator",
-      "expo-keep-awake",
-      "expo-media-library",
-      "expo-print",
-      "expo-screen-capture",
-      "expo-sharing",
-      "expo-speech",
-      "expo-video-thumbnails",
-      "expo-webbrowser",
-      "expo-barcode-scanner",
-      "expo-sensors",
-      "expo-task-manager",
-      "expo-background-fetch"
-    ]
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "b738104d-9d56-449f-8afa-d2e3fa22f365"
+      }
+    }
   }
 }

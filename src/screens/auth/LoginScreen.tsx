@@ -23,7 +23,7 @@ import { NavigationProp } from '~/navigation/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from '@gorhom/bottom-sheet';
 import { API_URL } from '~/utils/api';
-import { signInWithGoogle, signInWithFacebook } from '~/utils/socialAuth';
+// import { signInWithGoogle, signInWithFacebook } from '~/utils/socialAuth';
 
 const LoginScreen = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -127,42 +127,42 @@ const LoginScreen = () => {
   };
 
   // Handle Google Sign In
-  const handleGoogleSignIn = async () => {
-    setSocialLoading('google');
-    try {
-      const result = await signInWithGoogle();
-      if (result.success) {
-        Alert.alert('Success', result.message);
-        navigation.navigate('Main', { screen: 'HomePage' });
-      } else {
-        Alert.alert('Error', result.message);
-      }
-    } catch (error) {
-      console.error('Google sign in error:', error);
-      Alert.alert('Error', 'Google sign in failed. Please try again.');
-    } finally {
-      setSocialLoading(null);
-    }
-  };
+  // const handleGoogleSignIn = async () => {
+  //   setSocialLoading('google');
+  //   try {
+  //     const result = await signInWithGoogle();
+  //     if (result.success) {
+  //       Alert.alert('Success', result.message);
+  //       navigation.navigate('Main', { screen: 'HomePage' });
+  //     } else {
+  //       Alert.alert('Error', result.message);
+  //     }
+  //   } catch (error) {
+  //     console.error('Google sign in error:', error);
+  //     Alert.alert('Error', 'Google sign in failed. Please try again.');
+  //   } finally {
+  //     setSocialLoading(null);
+  //   }
+  // };
 
-  // Handle Facebook Sign In
-  const handleFacebookSignIn = async () => {
-    setSocialLoading('facebook');
-    try {
-      const result = await signInWithFacebook();
-      if (result.success) {
-        Alert.alert('Success', result.message);
-        navigation.navigate('Main', { screen: 'HomePage' });
-      } else {
-        Alert.alert('Error', result.message);
-      }
-    } catch (error) {
-      console.error('Facebook sign in error:', error);
-      Alert.alert('Error', 'Facebook sign in failed. Please try again.');
-    } finally {
-      setSocialLoading(null);
-    }
-  };
+  // // Handle Facebook Sign In
+  // const handleFacebookSignIn = async () => {
+  //   setSocialLoading('facebook');
+  //   try {
+  //     const result = await signInWithFacebook();
+  //     if (result.success) {
+  //       Alert.alert('Success', result.message);
+  //       navigation.navigate('Main', { screen: 'HomePage' });
+  //     } else {
+  //       Alert.alert('Error', result.message);
+  //     }
+  //   } catch (error) {
+  //     console.error('Facebook sign in error:', error);
+  //     Alert.alert('Error', 'Facebook sign in failed. Please try again.');
+  //   } finally {
+  //     setSocialLoading(null);
+  //   }
+  // };
 
   return (
     <BottomSheetModalProvider>
@@ -228,7 +228,7 @@ const LoginScreen = () => {
             {/* Social Buttons */}
             <TouchableOpacity 
               className="mb-3 h-14 flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] p-3"
-              onPress={handleFacebookSignIn}
+              // onPress={handleFacebookSignIn}
               disabled={socialLoading !== null}
             >
               <FacebookIcon width={20} height={20} />
@@ -239,7 +239,7 @@ const LoginScreen = () => {
 
             <TouchableOpacity 
               className="h-14 flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] p-3"
-              onPress={handleGoogleSignIn}
+              // onPress={handleGoogleSignIn}
               disabled={socialLoading !== null}
             >
               <GoogleIcon width={20} height={20} />
