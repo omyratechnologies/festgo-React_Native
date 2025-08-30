@@ -2,7 +2,7 @@
   "expo": {
     "name": "FestGo",
     "slug": "festgo",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "scheme": "festgo",
     "web": {
       "favicon": "./assets/favicon.png"
@@ -25,9 +25,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.festgo.app",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app needs access to location to find nearby hotels and provide location-based services.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs access to location to find nearby hotels and provide location-based services even when the app is in the background.",
         "NSCameraUsageDescription": "This app needs access to camera to take profile pictures and upload images.",
         "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select profile pictures and upload images.",
         "NSMicrophoneUsageDescription": "This app needs access to microphone for voice features.",
@@ -38,8 +39,8 @@
         ],
         "CFBundleDisplayName": "FestGo",
         "CFBundleName": "FestGo",
-        "CFBundleShortVersionString": "1.0.0",
-        "CFBundleVersion": "1",
+        "CFBundleShortVersionString": "1.1.0",
+        "CFBundleVersion": "2",
         "LSApplicationQueriesSchemes": [
           "tel",
           "mailto",
@@ -58,9 +59,9 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.festgo.app",
-      "versionCode": 1,
+      "versionCode": 2,
       "permissions": [
-        "ACCESS_FINE_LOCATIN",
+        "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
