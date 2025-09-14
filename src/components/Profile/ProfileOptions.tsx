@@ -1,14 +1,13 @@
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import React from 'react';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import DesktopIcon from '~/assets/icons/profile/desktopIcon.svg';
 import LogoutIcon from '~/assets/icons/profile/Logout.svg';
 import Notification from '~/assets/icons/profile/Notification.svg';
 import ProfileIcon from '~/assets/icons/profile/Profile.svg';
 import ChevronRightIcon from '~/assets/icons/profile/ChevronRight.svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MainStackParamList } from '~/navigation/types';
+import { NavigationProp } from '~/navigation/types';
 
 const OptionRow = ({
   icon,
@@ -36,10 +35,16 @@ const OptionRow = ({
 );
 
 const ProfileOptions = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const navigation = useNavigation<NavigationProp>();
 
   const handleLogout = async () => {
     await AsyncStorage.multiRemove(['jwtToken', 'userId', 'isLoggedIn']);
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "Auth", params: { screen: "Login" } }],
+      })
+    );
     // Navigate to auth screen - this might need adjustment based on your navigation structure
     // For now, we'll just clear the storage
   };
@@ -99,13 +104,13 @@ const ProfileOptions = () => {
       icon: <ProfileIcon width={24} height={24} color="#0601B4" />,
       title: 'Refer & Earn 5000',
       subtitle: 'Invite friends and earn rewards',
-      onPress: () => navigation.navigate('ReferAndEarn'),
+      onPress: () => navigation.navigate('Main', { screen: 'ReferAndEarn' }),
     },
     {
       icon: <ProfileIcon width={24} height={24} color="#0601B4" />,
       title: 'Recommend and Earn',
       subtitle: 'Recommend us and get benefits',
-      onPress: () => navigation.navigate('RecommendAndEarn'),
+      onPress: () => navigation.navigate('Main', { screen: 'RecommendAndEarn' }),
     },
     {
       icon: <ProfileIcon width={24} height={24} color="#0601B4" />,
@@ -117,7 +122,7 @@ const ProfileOptions = () => {
       icon: <DesktopIcon width={24} height={24} color="#0601B4" />,
       title: 'Device Activity',
       subtitle: 'Manage your logged-in devices',
-      onPress: () => navigation.navigate('DeviceActivityScreen'),
+      onPress: () => navigation.navigate('Main', { screen: 'DeviceActivityScreen' }),
     },
     {
       icon: <LogoutIcon width={24} height={24} color="#0601B4" />,
@@ -129,7 +134,7 @@ const ProfileOptions = () => {
       icon: <Notification width={24} height={24} color="#0601B4" />,
       title: 'Help & support',
       subtitle: 'Get assistance and support',
-      onPress: () => navigation.navigate('HelpScreen'),
+      onPress: () => navigation.navigate('Main', { screen: 'HelpScreen' }),
     },
   ];
 

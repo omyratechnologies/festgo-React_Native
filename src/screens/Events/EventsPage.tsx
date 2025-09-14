@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -13,8 +14,9 @@ import BottomMenu from '~/components/common/BottomMenu';
 import HotelBookingHeaderMenu from '~/components/HotelBooking/HotelBookingHeaderMenu';
 import EventsBackgroundImage from '~/assets/images/events/EventsBackground.svg';
 import { Ionicons } from '@expo/vector-icons';
-import { MainTabNavigationProp } from '~/navigation/types';
+import { NavigationProp } from '~/navigation/types';
 import { API_URL } from '~/utils/api';
+import { useAuth } from '~/hooks/useAuth';
 
 const eventColors = [
   '#FF6565',
@@ -34,7 +36,8 @@ type EventType = {
 };
 
 const EventsPage = () => {
-  const navigation = useNavigation<MainTabNavigationProp>();
+  const navigation = useNavigation<NavigationProp>();
+  const { isAuthenticated } = useAuth();
   const [events, setEvents] = useState<EventType[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,7 +57,24 @@ const EventsPage = () => {
   }, []);
 
   const handleEventPress = (event: EventType) => {
-    navigation.navigate('EventsInfoPage', { eventId: event.id });
+    if (!isAuthenticated) {
+      Alert.alert(
+        'Login Required',
+        'Please login to view event details and book tickets.',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Login',
+            onPress: () => navigation.navigate('Auth', { screen: 'Login' }),
+          },
+        ]
+      );
+      return;
+    }
+    navigation.navigate('Main', { screen: 'EventsInfoPage', params: { eventId: event.id } });
   };
 
   const handleBack = () => {

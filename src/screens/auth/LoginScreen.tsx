@@ -8,6 +8,9 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Image,
+  ScrollView,
+  Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import React, { useState } from 'react';
 import LoginLogo from '~/assets/images/auth/Group.svg';
@@ -62,9 +65,7 @@ const LoginScreen = () => {
         loginType === 'email'
           ? {
               email: inputValue,
-              loginType: 'gmail',
-              firstname: '',
-              lastname: '',
+              loginType: 'email',
             }
           : {
               email: inputValue,
@@ -82,14 +83,22 @@ const LoginScreen = () => {
       const data = await response.json();
       // console.log('Login response:', data);
       if (data.status === 200) {
-        // Save JWT token and user ID to AsyncStorage
+        console.log("userdata", data)
         if (loginType === 'email') {
-          await AsyncStorage.setItem('jwtToken', data.jwtToken);
-          await AsyncStorage.setItem('userId', data.user.id);
-          await AsyncStorage.setItem('isLoggedIn', 'true');
-          Alert.alert('Success', 'Login successful');
-          console.log('User ID:', data.user.id);
-          bottomSheetModalRef.current?.present();
+          // For email login, we get a message that email link was sent
+          // User needs to click the link in their email to complete login
+          Alert.alert(
+            'Check Your Email',
+            'We\'ve sent you a login link. Please check your email and click the link to complete your login.',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  bottomSheetModalRef.current?.present();
+                },
+              },
+            ]
+          );
         } else {
           console.log('Navigating to OTP screen with phone number:', inputValue);
           navigation.navigate('Auth', {
@@ -117,16 +126,24 @@ const LoginScreen = () => {
   };
 
   const openEmailApp = () => {
-    Linking.openURL('mailto:');
+    // Linking.openURL('mailto:');
     bottomSheetModalRef.current?.dismiss();
-    navigation.navigate('Main', { screen: 'HomePage' });
+    // Don't navigate to main app yet - user needs to verify email first
+    // The deep link handler will take care of navigation after email verification
   };
 
 
   return (
     <BottomSheetModalProvider>
       <SafeAreaView edges={['top']} className="flex-1 bg-white">
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between' }}
+            keyboardShouldPersistTaps="handled">
           <View className="flex-1 justify-between bg-white px-6">
             {/* SVG Graphic */}
             <View className="mb-6 items-center">
@@ -184,7 +201,6 @@ const LoginScreen = () => {
               <View className="flex-1 rounded-r-md bg-[#F15A29]" />
             </View>
           </View>
-        </TouchableWithoutFeedback>
 
         {/* Email Verification Bottom Sheet */}
         <BottomSheetModal
@@ -202,12 +218,12 @@ const LoginScreen = () => {
 
             {/* Title */}
             <Text className="font-blackshield text-3xl font-bold leading-[140%] text-gray-800">
-                Verify your <Text className="text-[#00A651]">email address</Text>
+                Check your <Text className="text-[#00A651]">email</Text>
               </Text>
             {/* Description */}
             <Text className="mb-8 px-4 mt-4 text-center font-baloo leading-6 text-gray-600">
-              A verification email has been sent to your email {inputValue}. Please check your email
-              and click the link provided in the email to complete your account registration.
+              A login link has been sent to your email {inputValue}. Please check your email
+              and click the link provided to complete your login.
             </Text>
 
             {/* Open Email Button */}
@@ -220,6 +236,10 @@ const LoginScreen = () => {
             </TouchableOpacity>
           </BottomSheetView>
         </BottomSheetModal>
+        </ScrollView>
+        </TouchableWithoutFeedback>
+
+      </KeyboardAvoidingView>
       </SafeAreaView>
     </BottomSheetModalProvider>
   );

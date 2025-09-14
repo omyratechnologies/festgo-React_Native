@@ -21,21 +21,14 @@ export const useAuth = () => {
         
         if (!jwtToken) {
           clearUserData();
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Auth' }],
-          });
-          return;
+          return; // Don't navigate automatically, let individual screens handle this
         }
 
         await fetchUserProfile();
       } catch (error) {
         console.error('Error in auth check:', error);
         clearUserData();
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Auth' }],
-        });
+        // Don't navigate automatically, let individual screens handle this
       }
     };
 
@@ -45,10 +38,7 @@ export const useAuth = () => {
   useEffect(() => {
     if (error && (error.includes('Authentication failed') || error.includes('No authentication token found'))) {
       clearUserData();
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Auth' }],
-      });
+      // Don't navigate automatically, let individual screens handle this
     }
   }, [error, navigation]);
 

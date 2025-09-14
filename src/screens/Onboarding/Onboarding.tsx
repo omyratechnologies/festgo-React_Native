@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { View, Text, FlatList, Dimensions, TouchableOpacity, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp } from '~/navigation/types';
 
 import Onboard1 from '~/assets/images/onboarding/1.svg';
@@ -54,7 +55,14 @@ const Onboarding = () => {
     flatListRef.current?.scrollToIndex({ index: slides.length - 1 });
   };
 
-  const handleGetStarted = () => {
+  const handleLogin = () => {
+    // Navigate to Login screen
+    navigation.navigate('Login');
+  };
+
+  const handleLoginLater = async () => {
+    // Mark that user has seen onboarding
+    await AsyncStorage.setItem('hasSeenOnboarding', 'true');
     // Navigate to Main stack - this will switch from Auth flow to Main flow
     navigation.navigate('Main', {
       screen: 'HomePage',
@@ -76,7 +84,7 @@ const Onboarding = () => {
 
   const Indicator = () => {
     return (
-      <View className="mb-4 mt-6 flex-row items-center justify-center gap-2 gap-2">
+      <View className="mb-4 mt-6 flex-row items-center justify-center gap-2">
         {slides.map((_, i) => {
           const isActive = i === currentIndex;
           return (
@@ -126,11 +134,16 @@ const Onboarding = () => {
               </TouchableOpacity>
             </>
           ) : (
-            <View className="w-full items-center">
+            <View className="w-full items-center gap-4">
               <TouchableOpacity
-                onPress={handleGetStarted}
-                className="items-center justify-center rounded-full bg-[#F15A29] px-7 py-3">
-                <Text className="text-base font-bold text-white">Get Started</Text>
+                onPress={handleLogin}
+                className="w-full items-center justify-center rounded-full bg-[#F15A29] px-7 py-3">
+                <Text className="text-base font-bold text-white">Login</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleLoginLater}
+                className="w-full items-center justify-center rounded-full border-2 border-[#F15A29] px-7 py-3">
+                <Text className="text-base font-bold text-[#F15A29]">Login Later</Text>
               </TouchableOpacity>
             </View>
           )}

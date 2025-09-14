@@ -27,6 +27,9 @@ export type AuthStackParamList = {
   };
   SignupScreen: undefined;
   Onboarding: undefined;
+  EmailVerification: {
+    token: string;
+  };
 };
 
 // Main Tab - for main app navigation with tabs

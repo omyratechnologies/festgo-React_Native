@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import React, { useRef, useState, useEffect } from 'react';
 import LoginLogo from '~/assets/images/auth/Group.svg';
@@ -17,7 +18,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { AuthRouteProp, NavigationProp } from '~/navigation/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '~/utils/api';
-import { ScrollView } from 'react-native-gesture-handler';
 
 const OTPScreen = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -30,7 +30,8 @@ const OTPScreen = () => {
   const [isResendEnabled, setIsResendEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const inputRefs = useRef<TextInput[]>([]);
+  // Use array of refs, one for each input
+  const inputRefs = useRef<(TextInput | null)[]>(Array(6).fill(null));
 
   useEffect(() => {
     if (timer > 0) {
@@ -41,21 +42,25 @@ const OTPScreen = () => {
     }
   }, [timer]);
 
+
   const handleOtpChange = (text: string, index: number) => {
+    // Only allow digits
     if (!/^\d*$/.test(text)) return;
 
     const newOtp = [...otp];
     newOtp[index] = text;
     setOtp(newOtp);
 
-    if (text && index < inputRefs.current.length - 1) {
-      inputRefs.current[index + 1].focus();
+    // Auto-focus next input when digit is entered
+    if (text && index < 5) {
+      inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyPress = (e: any, index: number) => {
+    // Handle backspace - move to previous input when current is empty
     if (e.nativeEvent.key === 'Backspace' && otp[index] === '' && index > 0) {
-      inputRefs.current[index - 1].focus();
+      inputRefs.current[index - 1]?.focus();
     }
   };
 
@@ -69,6 +74,10 @@ const OTPScreen = () => {
 
     // TODO: Trigger resend OTP API here if needed
     Alert.alert('OTP Resent', `A new OTP has been sent to ${phoneNumber}`);
+    // Focus first input after resend
+    setTimeout(() => {
+      inputRefs.current[0]?.focus();
+    }, 300);
   };
 
   const handleLogin = async () => {
@@ -95,8 +104,12 @@ const OTPScreen = () => {
       console.log('OTP Verify Response:', data);
 
       if (data.success) {
-        await AsyncStorage.setItem('jwtToken', data.jwtToken);
-        await AsyncStorage.setItem('userId', data.user.id);
+        if (data.jwtToken && data.jwtToken !== null && data.jwtToken !== undefined) {
+          await AsyncStorage.setItem('jwtToken', data.jwtToken);
+        }
+        if (data.user && data.user.id) {
+          await AsyncStorage.setItem('userId', data.user.id);
+        }
         await AsyncStorage.setItem('isLoggedIn', 'true');
 
         Alert.alert('Success', 'Login successful');
@@ -140,19 +153,22 @@ const OTPScreen = () => {
 
               {/* OTP Inputs */}
               <View className="mb-6 items-center">
-                <View className="mb-4 mt-2 flex-row justify-between gap-3 gap-4">
-                  {otp.map((digit, index) => (
+                <View className="mb-4 mt-2 flex-row justify-between gap-4">
+                  {[0, 1, 2, 3, 4, 5].map((index) => (
                     <TextInput
                       key={index}
-                      ref={(el) => {
-                        inputRefs.current[index] = el!;
+                      ref={ref => {
+                        inputRefs.current[index] = ref;
                       }}
                       className="h-16 w-12 rounded-xl border border-gray-300 text-center text-2xl text-gray-800"
                       keyboardType="number-pad"
                       maxLength={1}
-                      value={digit}
-                      onChangeText={(text) => handleOtpChange(text, index)}
-                      onKeyPress={(e) => handleKeyPress(e, index)}
+                      value={otp[index]}
+                      onChangeText={text => handleOtpChange(text, index)}
+                      onKeyPress={e => handleKeyPress(e, index)}
+                      autoFocus={index === 0}
+                      selectTextOnFocus
+                      textContentType="oneTimeCode"
                     />
                   ))}
                 </View>

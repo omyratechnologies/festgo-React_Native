@@ -11,6 +11,9 @@ import {
   Dimensions,
   TouchableOpacity,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NavigationProp } from '~/navigation/types';
+import { useAuth } from '~/hooks/useAuth';
 
 import PencilIcon from '~/assets/icons/EditIcon.svg';
 import BottomMenu from '~/components/common/BottomMenu';
@@ -47,6 +50,8 @@ type HotelBookingDetailsRouteProp = RouteProp<RootStackParamList, 'HotelBookingD
 
 export default function HotelBookingSingleDetail() {
   const route = useRoute<HotelBookingDetailsRouteProp>();
+  const navigation = useNavigation<NavigationProp>();
+  const { isAuthenticated } = useAuth();
   console.log('Route params:', route.params);
   const propertyId = route.params?.hotelId;
 
@@ -416,58 +421,85 @@ export default function HotelBookingSingleDetail() {
               </View>
             </Modal>
 
-            {/* Price & Select Room */}
-            <View className="flex-row items-center justify-between px-4 py-3">
-              <View className="flex-col items-start">
-                {selectedRoom ? (
-                  <>
-                    <Text className="text-3xl font-bold text-[#00AEEF]">
-                      ₹{selectedRoom.pricing?.pricePerNight?.toLocaleString() || '0'}
+            {/* Price & Booking Section */}
+            {isAuthenticated ? (
+              <>
+                {/* Logged in - Show room selection and checkout */}
+                <View className="flex-row items-center justify-between px-4 py-3">
+                  <View className="flex-col items-start">
+                    {selectedRoom ? (
+                      <>
+                        <Text className="text-3xl font-bold text-[#00AEEF]">
+                          ₹{selectedRoom.pricing?.pricePerNight?.toLocaleString() || '0'}
+                        </Text>
+                        <Text className="text-md font-normal text-gray-500">Per night</Text>
+                        <Text className="text-sm text-gray-600">{selectedRoom.room_name}</Text>
+                      </>
+                    ) : (
+                      <>
+                        <Text className="text-3xl font-bold text-[#00AEEF]">₹0</Text>
+                        <Text className="text-md font-normal text-gray-500">Per night</Text>
+                      </>
+                    )}
+                  </View>
+                  <Pressable
+                    className="rounded-full bg-blue-600 px-5 py-3"
+                    onPress={() => setshowRoomSelectModal(true)}>
+                    <Text className="text-lg font-semibold text-white">
+                      {selectedRoom ? 'Change Room' : 'Select Room'}
                     </Text>
-                    <Text className="text-md font-normal text-gray-500">Per night</Text>
-                    <Text className="text-sm text-gray-600">{selectedRoom.room_name}</Text>
-                  </>
-                ) : (
-                  <>
-                    <Text className="text-3xl font-bold text-[#00AEEF]">₹0</Text>
-                    <Text className="text-md font-normal text-gray-500">Per night</Text>
-                  </>
-                )}
-              </View>
-              <Pressable
-                className="rounded-full bg-blue-600 px-5 py-3"
-                onPress={() => setshowRoomSelectModal(true)}>
-                <Text className="text-lg font-semibold text-white">
-                  {selectedRoom ? 'Change Room' : 'Select Room'}
-                </Text>
-              </Pressable>
-            </View>
+                  </Pressable>
+                </View>
 
-            <RoomSelectionModal
-              visible={showRoomSelectModal}
-              onClose={() => setshowRoomSelectModal(false)}
-              propertyId={propertyId || ''}
-              searchParams={searchParams}
-              onRoomSelect={(room) => {
-                setSelectedRoom(room);
-                setshowRoomSelectModal(false);
-              }}
-            />
+                <RoomSelectionModal
+                  visible={showRoomSelectModal}
+                  onClose={() => setshowRoomSelectModal(false)}
+                  propertyId={propertyId || ''}
+                  searchParams={searchParams}
+                  onRoomSelect={(room) => {
+                    setSelectedRoom(room);
+                    setshowRoomSelectModal(false);
+                  }}
+                />
 
-            {/* Checkout Button */}
-            <View className="px-4 mb-4">
-              <Pressable
-                className={`w-full rounded-full py-4 ${selectedRoom ? 'bg-[#0E54EC]' : 'bg-gray-300'}`}
-                onPress={() => {
-                  if (selectedRoom) setShowCheckoutModal(true);
-                }}
-                disabled={!selectedRoom}
-              >
-                <Text className="text-center font-poppins text-lg font-semibold text-white">
-                  Proceed to Checkout
-                </Text>
-              </Pressable>
-            </View>
+                {/* Checkout Button */}
+                <View className="px-4 mb-4">
+                  <Pressable
+                    className={`w-full rounded-full py-4 ${selectedRoom ? 'bg-[#0E54EC]' : 'bg-gray-300'}`}
+                    onPress={() => {
+                      if (selectedRoom) setShowCheckoutModal(true);
+                    }}
+                    disabled={!selectedRoom}
+                  >
+                    <Text className="text-center font-poppins text-lg font-semibold text-white">
+                      Proceed to Checkout
+                    </Text>
+                  </Pressable>
+                </View>
+              </>
+            ) : (
+              <>
+                {/* Not logged in - Show login prompt */}
+                <View className="mx-4 mb-4 rounded-xl border border-gray-200 bg-gray-50 p-6">
+                  <View className="mb-4 items-center">
+                    <Text className="mb-2 text-center font-poppins text-lg font-semibold text-gray-800">
+                      Login Required
+                    </Text>
+                    <Text className="text-center font-poppins text-sm text-gray-600">
+                      Please login to select rooms and proceed with your booking
+                    </Text>
+                  </View>
+                  <Pressable
+                    className="w-full rounded-full bg-[#0E54EC] py-4"
+                    onPress={() => navigation.navigate('Auth', { screen: 'Login' })}
+                  >
+                    <Text className="text-center font-poppins text-lg font-semibold text-white">
+                      Login to Book
+                    </Text>
+                  </Pressable>
+                </View>
+              </>
+            )}
 
             {/* Checkout Modal */}
             <Modal
