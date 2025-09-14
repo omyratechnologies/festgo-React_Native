@@ -15,22 +15,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '~/components/ui/Button';
 import MailIcon from '~/assets/icons/mail.svg';
 import PhoneIcon from '~/assets/icons/phone.svg'; // Add phone icon
-import FacebookIcon from '~/assets/icons/facebook.svg';
-import GoogleIcon from '~/assets/icons/google.svg';
 // import CheckIcon from '~/assets/icons/check.svg'; // Add check icon for success modal
 import { useNavigation } from '@react-navigation/native';
 import { NavigationProp } from '~/navigation/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from '@gorhom/bottom-sheet';
 import { API_URL } from '~/utils/api';
-// import { signInWithGoogle, signInWithFacebook } from '~/utils/socialAuth';
 
 const LoginScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const [loginType, setLoginType] = useState<'email' | 'phone'>('email');
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
-  const [socialLoading, setSocialLoading] = useState<'google' | 'facebook' | null>(null);
   const bottomSheetModalRef = React.useRef<BottomSheetModal>(null);
 
   const handleLoginTypeToggle = () => {
@@ -126,43 +122,6 @@ const LoginScreen = () => {
     navigation.navigate('Main', { screen: 'HomePage' });
   };
 
-  // Handle Google Sign In
-  // const handleGoogleSignIn = async () => {
-  //   setSocialLoading('google');
-  //   try {
-  //     const result = await signInWithGoogle();
-  //     if (result.success) {
-  //       Alert.alert('Success', result.message);
-  //       navigation.navigate('Main', { screen: 'HomePage' });
-  //     } else {
-  //       Alert.alert('Error', result.message);
-  //     }
-  //   } catch (error) {
-  //     console.error('Google sign in error:', error);
-  //     Alert.alert('Error', 'Google sign in failed. Please try again.');
-  //   } finally {
-  //     setSocialLoading(null);
-  //   }
-  // };
-
-  // // Handle Facebook Sign In
-  // const handleFacebookSignIn = async () => {
-  //   setSocialLoading('facebook');
-  //   try {
-  //     const result = await signInWithFacebook();
-  //     if (result.success) {
-  //       Alert.alert('Success', result.message);
-  //       navigation.navigate('Main', { screen: 'HomePage' });
-  //     } else {
-  //       Alert.alert('Error', result.message);
-  //     }
-  //   } catch (error) {
-  //     console.error('Facebook sign in error:', error);
-  //     Alert.alert('Error', 'Facebook sign in failed. Please try again.');
-  //   } finally {
-  //     setSocialLoading(null);
-  //   }
-  // };
 
   return (
     <BottomSheetModalProvider>
@@ -218,35 +177,6 @@ const LoginScreen = () => {
               disabled={loading}
             />
 
-            {/* Divider */}
-            <View className="mb-4 flex-row items-center">
-              <View className="h-px flex-1 bg-gray-300" />
-              <Text className="mx-3 text-gray-500">or login with</Text>
-              <View className="h-px flex-1 bg-gray-300" />
-            </View>
-
-            {/* Social Buttons */}
-            <TouchableOpacity 
-              className="mb-3 h-14 flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] p-3"
-              // onPress={handleFacebookSignIn}
-              disabled={socialLoading !== null}
-            >
-              <FacebookIcon width={20} height={20} />
-              <Text className="ml-2 font-baloo text-gray-700">
-                {socialLoading === 'facebook' ? 'Signing in...' : 'Login with Facebook'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              className="h-14 flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] p-3"
-              // onPress={handleGoogleSignIn}
-              disabled={socialLoading !== null}
-            >
-              <GoogleIcon width={20} height={20} />
-              <Text className="ml-2 font-baloo text-gray-700">
-                {socialLoading === 'google' ? 'Signing in...' : 'Login with Google'}
-              </Text>
-            </TouchableOpacity>
 
             {/* Bottom Color Div */}
             <View className="mt-6 h-4 flex-row">

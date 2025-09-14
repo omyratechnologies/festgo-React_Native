@@ -5,15 +5,6 @@ export const ENV_CONFIG = {
   // API Configuration
   API_URL: 'https://server.festgo.in/api',
   
-  // OAuth Configuration
-  OAUTH: {
-    GOOGLE: {
-      CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID',
-    },
-    FACEBOOK: {
-      APP_ID: process.env.EXPO_PUBLIC_FACEBOOK_APP_ID || 'YOUR_FACEBOOK_APP_ID',
-    },
-  },
   
   // App Configuration
   APP: {

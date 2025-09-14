@@ -34,7 +34,6 @@
         "NSMicrophoneUsageDescription": "This app needs access to microphone for voice features.",
         "NSFaceIDUsageDescription": "This app uses Face ID for secure authentication.",
         "UIBackgroundModes": [
-          "location",
           "fetch"
         ],
         "CFBundleDisplayName": "FestGo",

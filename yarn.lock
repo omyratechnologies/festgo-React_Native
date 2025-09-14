@@ -1855,20 +1855,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-google-signin/google-signin@npm:^15.0.0":
-  version: 15.0.0
-  resolution: "@react-native-google-signin/google-signin@npm:15.0.0"
-  peerDependencies:
-    expo: ">=52.0.40"
-    react: "*"
-    react-native: "*"
-  peerDependenciesMeta:
-    expo:
-      optional: true
-  checksum: 10c0/e0a2100bab0a59d795e352986cbc7bd3ba5fea85346ac628c8c5c7583af66ed3faed9873e2a53c422b86d44c8e21e2c8a1e3c96e85dc1ea559c28fbb3c35ee42
-  languageName: node
-  linkType: hard
-
 "@react-native-picker/picker@npm:^2.11.1":
   version: 2.11.1
   resolution: "@react-native-picker/picker@npm:2.11.1"
@@ -5254,7 +5240,6 @@ __metadata:
     "@react-native-async-storage/async-storage": "npm:2.1.2"
     "@react-native-community/datetimepicker": "npm:8.4.1"
     "@react-native-community/geolocation": "npm:^3.4.0"
-    "@react-native-google-signin/google-signin": "npm:^15.0.0"
     "@react-native-picker/picker": "npm:^2.11.1"
     "@react-navigation/bottom-tabs": "npm:^7.3.1"
     "@react-navigation/native": "npm:^7.0.17"
@@ -5280,7 +5265,6 @@ __metadata:
     prettier-plugin-tailwindcss: "npm:^0.5.11"
     react: "npm:19.0.0"
     react-native: "npm:0.79.5"
-    react-native-fbsdk-next: "npm:^13.4.1"
     react-native-gesture-handler: "npm:~2.24.0"
     react-native-reanimated: "npm:~3.17.4"
     react-native-reanimated-carousel: "npm:^4.0.2"
@@ -8436,19 +8420,6 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/6373cc1b447eae31689a9b62e38b15621e9273626e2324700c4c3eb58c02ce489236a4b9e3e0dc1187e062defd8316195c5b1213facd718706b79b92127a05a3
-  languageName: node
-  linkType: hard
-
-"react-native-fbsdk-next@npm:^13.4.1":
-  version: 13.4.1
-  resolution: "react-native-fbsdk-next@npm:13.4.1"
-  peerDependencies:
-    expo: ">=47.0.0"
-    react-native: ">=0.63.3"
-  peerDependenciesMeta:
-    expo:
-      optional: true
-  checksum: 10c0/f38b8d360986e47dede9b5bcd6166e750f93c4f6d38b85013499ce6fa7d0a181b20cc009b6a05167930df0f56ed8dc79223f9cc4bee9969c8d928405fc750576
   languageName: node
   linkType: hard
 
