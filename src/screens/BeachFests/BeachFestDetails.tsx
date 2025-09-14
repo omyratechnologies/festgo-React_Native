@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,13 +13,39 @@ type Props = {
   onClose: () => void;
 };
 
-const BeachFestDetails = ({ fest, onClose }: Props) => {
+const BeachFestDetails = React.memo(({ fest, onClose }: Props) => {
   const navigation = useNavigation<MainTabNavigationProp>();
-  const handleBookNow = () => {
+  
+  const handleBookNow = useCallback(() => {
     if (!fest.id) return;
     onClose();
     navigation.navigate('BeachFestCheckout', { festId: fest.id });
-  };
+  }, [fest.id, onClose, navigation]);
+  console.log("festId", fest.id)
+
+  // Memoize date formatting to prevent re-renders
+  const formattedStartDate = useMemo(() => {
+    return new Date(fest.event_start).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+  }, [fest.event_start]);
+
+  const formattedStartTime = useMemo(() => {
+    return new Date(fest.event_start).toLocaleString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }, [fest.event_start]);
+
+  const formattedEndTime = useMemo(() => {
+    return new Date(fest.event_end).toLocaleString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }, [fest.event_end]);
 
   return (
     <View className="flex-1 bg-white">
@@ -72,22 +98,7 @@ const BeachFestDetails = ({ fest, onClose }: Props) => {
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
             <Ionicons name="calendar" size={16} color="#d1d5db" style={{ marginRight: 4 }} />
             <Text className="font-poppins text-sm text-white">
-              {new Date(fest.event_start).toLocaleString('en-US', {
-                month: 'short',
-                day: 'numeric',
-              })}{' '}
-              |{' '}
-              {new Date(fest.event_start).toLocaleString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true,
-              })}{' '}
-              -{' '}
-              {new Date(fest.event_end).toLocaleString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true,
-              })}
+              {formattedStartDate} | {formattedStartTime} - {formattedEndTime}
             </Text>
           </View>
         </View>
@@ -148,6 +159,6 @@ const BeachFestDetails = ({ fest, onClose }: Props) => {
       </ScrollView>
     </View>
   );
-};
+});
 
 export default BeachFestDetails;

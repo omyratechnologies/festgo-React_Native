@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getConfig } from '../config/env';
-import * as WebBrowser from 'expo-web-browser';
-import { Alert } from 'react-native';
+import RazorpayCheckout from 'react-native-razorpay';
 
 const config = getConfig();
 
@@ -40,81 +39,60 @@ export interface BookingResponse {
   };
 }
 
-// Initialize web-based Razorpay payment
+// ✅ Razorpay Checkout integration
 export const initiatePayment = async (options: PaymentOptions): Promise<PaymentResult> => {
   try {
-    console.log('Starting payment process with options:', options);
+    console.log('Starting Razorpay payment with options:', options);
 
-    // For testing purposes, let's use a simple Razorpay test URL
-    const paymentUrl = `https://checkout.razorpay.com/v1/checkout.html?` + new URLSearchParams({
-      key: 'rzp_test_1DP5mmOlF5G5ag', // Test key - replace with your actual key
-      amount: options.amount.toString(),
-      currency: options.currency || 'INR',
-      name: options.name,
+    const razorpayOptions = {
       description: options.description,
-      order_id: options.orderId,
-      prefill: JSON.stringify({
+      image: 'https://your-logo-url.png', // optional
+      currency: options.currency || 'INR',
+      key: 'rzp_test_1DP5mmOlF5G5ag', // 🔑 replace with your live key in prod
+      amount: options.amount, // in paise
+      name: options.name,
+      order_id: options.orderId, // from backend
+      prefill: {
         email: options.prefill?.email || '',
         contact: options.prefill?.contact || '',
         name: options.prefill?.name || '',
-      }),
-      notes: JSON.stringify(options.notes || {}),
-      theme: JSON.stringify({
-        color: '#F15A29'
-      })
-    }).toString();
+      },
+      notes: options.notes || {},
+      theme: { color: '#F15A29' },
+    };
 
-    console.log('Opening payment URL:', paymentUrl);
+    const paymentData = await RazorpayCheckout.open(razorpayOptions);
 
-    // Open payment in web browser
-    const result = await WebBrowser.openBrowserAsync(paymentUrl);
+    console.log('Razorpay success:', paymentData);
 
-    console.log('WebBrowser result:', result);
+    // Send paymentData to backend for verification
+    // paymentData = { razorpay_payment_id, razorpay_order_id, razorpay_signature }
 
-    if (result.type === 'dismiss') {
-      return {
-        success: false,
-        message: 'Payment was cancelled by user',
-      };
-    }
-
-    // For now, assume payment was successful if browser was closed
-    // In production, you would implement proper webhook handling
-    const mockPaymentId = `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
     return {
       success: true,
       message: 'Payment successful',
-      paymentId: mockPaymentId,
+      paymentId: paymentData.razorpay_payment_id,
     };
   } catch (error: any) {
-    console.error('Payment error:', error);
+    console.error('Razorpay payment error:', error);
+
     return {
       success: false,
-      message: error.message || 'Payment failed. Please try again.',
+      message: error.description || 'Payment cancelled',
     };
   }
 };
 
-
-
-// Process BeachFest booking
+// ✅ BeachFest Booking
 export const processBeachFestBooking = async (bookingData: any): Promise<PaymentResult> => {
   try {
-    console.log('Processing BeachFest booking with data:', bookingData);
-
     const jwtToken = await AsyncStorage.getItem('jwtToken');
     if (!jwtToken) {
-      return {
-        success: false,
-        message: 'You must be logged in to book a fest.',
-      };
+      return { success: false, message: 'You must be logged in to book a fest.' };
     }
-    
+
     const { booking, razorpayOrder } = bookingData;
-    console.log('booking:', booking);
-    console.log('razorpayOrder:', razorpayOrder);
-    // Initiate payment
+
     const paymentOptions: PaymentOptions = {
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
@@ -134,7 +112,6 @@ export const processBeachFestBooking = async (bookingData: any): Promise<Payment
       },
     };
 
-    console.log('Initiating payment with options:', paymentOptions);
     const paymentResult = await initiatePayment(paymentOptions);
 
     if (paymentResult.success) {
@@ -149,12 +126,10 @@ export const processBeachFestBooking = async (bookingData: any): Promise<Payment
     return paymentResult;
   } catch (error: any) {
     console.error('BeachFest booking error:', error);
-    return {
-      success: false,
-      message: error.message || 'Booking failed. Please try again.',
-    };
+    return { success: false, message: error.message || 'Booking failed. Please try again.' };
   }
 };
+
 
 // Process Hotel booking
 export const processHotelBooking = async (bookingData: any): Promise<PaymentResult> => {
@@ -351,6 +326,7 @@ export const processDirectPayment = async (bookingData: any, bookingType: 'beach
         message: 'You must be logged in to make a booking.',
       };
     }
+    console.log("bookingData", bookingData);
 
     let endpoint = '';
     switch (bookingType) {
@@ -373,18 +349,18 @@ export const processDirectPayment = async (bookingData: any, bookingType: 'beach
       },
       body: JSON.stringify(bookingData),
     });
-
+    console.log("response", response);
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Booking failed');
     }
 
     const result: BookingResponse = await response.json();
-
+    console.log("result", result.data);
     if (result.success) {
       // For testing, simulate successful payment
       const mockPaymentId = `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       return {
         success: true,
         message: 'Booking successful! (Payment simulated for testing)',

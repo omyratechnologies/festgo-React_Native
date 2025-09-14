@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,10 +14,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HeaderMenu from '../HomePage/HeaderMenu';
 import BottomMenu from '~/components/common/BottomMenu';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';
 import { processBeachFestBooking } from '~/utils/payment';
-import { MainTabNavigationProp } from '~/navigation/types';
+import { MainTabNavigationProp, MainStackParamList } from '~/navigation/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ICON_SIZE = 22;
@@ -64,11 +64,20 @@ const paymentMethods = [
   { label: 'Wallet', value: 'WALLET' },
 ];
 
-const BeachFestCheckout = () => {
-  const navigation = useNavigation<MainTabNavigationProp>();
-  const route = useRoute<any>();
-  const { festId } = route.params || {};
+// Global cache to prevent multiple API calls
+const festCache = new Map<string, any>();
+const loadingStates = new Set<string>();
 
+// Component instance tracking to prevent multiple instances
+let currentInstance: string | null = null;
+
+type BeachFestCheckoutRouteProp = RouteProp<MainStackParamList, 'BeachFestCheckout'>;
+
+const BeachFestCheckout = React.memo(() => {
+  const navigation = useNavigation<MainTabNavigationProp>();
+  const route = useRoute<BeachFestCheckoutRouteProp>();
+  const { festId } = route.params;
+  
   const [fest, setFest] = useState<any>(null);
   const [loadingFest, setLoadingFest] = useState(true);
   const [form, setForm] = useState({
@@ -79,31 +88,77 @@ const BeachFestCheckout = () => {
     payment_method: 'CARD',
   });
   const [submitting, setSubmitting] = useState(false);
-  // console.log(fest)
-  useEffect(() => {
-    const fetchFest = async () => {
+  // Use useMemo to prevent re-creation of the fetch function
+  const fetchFestData = useMemo(() => {
+    return async (id: string) => {
+      // Only fetch if festId is available and valid
+      if (!id || id === 'undefined' || id === 'null' || id === '') {
+        console.log('festId is not valid:', id);
+        setLoadingFest(false);
+        Alert.alert('Error', 'Fest ID is missing. Please try again.');
+        return;
+      }
+
+      // Check if we already have this fest in cache
+      if (festCache.has(id)) {
+        setFest(festCache.get(id));
+        setLoadingFest(false);
+        return;
+      }
+
+      // Check if we're already loading this fest
+      if (loadingStates.has(id)) {
+        return;
+      }
+
       try {
         setLoadingFest(true);
-        const res = await fetch(`https://server.festgo.in/api/beach-fests/${festId}`);
+        loadingStates.add(id);
+        
+        const res = await fetch(`https://server.festgo.in/api/beach-fests/${id}`);
         if (!res.ok) throw new Error('Failed to fetch fest details');
         const data = await res.json();
+        
+        // Cache the result
+        festCache.set(id, data);
         setFest(data);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error('Error fetching fest:', error);
         Alert.alert('Error', errorMessage);
       } finally {
         setLoadingFest(false);
+        loadingStates.delete(id);
       }
     };
-    fetchFest();
-  }, [festId]);
-  const handleInput = (key: string, value: string) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
+  }, []);
 
-  const handleRadio = (value: string) => {
+  useEffect(() => {
+    // Prevent multiple instances of the same component
+    if (currentInstance && currentInstance !== festId) {
+      console.log('Preventing multiple instances, current:', currentInstance, 'new:', festId);
+      return;
+    }
+    
+    currentInstance = festId;
+    fetchFestData(festId);
+    
+    // Cleanup on unmount
+    return () => {
+      if (currentInstance === festId) {
+        currentInstance = null;
+      }
+    };
+  }, [festId, fetchFestData]);
+
+  
+  const handleInput = useCallback((key: string, value: string) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const handleRadio = useCallback((value: string) => {
     setForm((prev) => ({ ...prev, payment_method: value }));
-  };
+  }, []);
 
   const handleContinue = async () => {
     if (!form.passes || !form.name || !form.phone || !form.email) {
@@ -323,6 +378,6 @@ const BeachFestCheckout = () => {
       </View>
     </SafeAreaView>
   );
-};
+});
 
 export default BeachFestCheckout;
