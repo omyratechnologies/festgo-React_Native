@@ -8,9 +8,8 @@ import LocationIcon from '~/assets/icons/navigationPin.svg';
 import { API_URL } from '~/utils/api';
 import { SearchParams } from '~/screens/HotelBooking/HotelBookingSearch';
 import * as Location from 'expo-location';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const TABS = ['Hotels', 'Resorts', 'HourlyStay'];
+const TABS: ('Hotels' | 'Resorts' | 'HourlyStay')[] = ['Hotels', 'Resorts', 'HourlyStay'];
 
 // Mock data for recent and popular searches
 const RECENT_SEARCHES = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Vishakapatnam'];
@@ -36,8 +35,12 @@ const generateMonths = () => {
   return months;
 };
 
-const HotelBookingCard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('Hotels');
+interface HotelBookingCardProps {
+  initialTab?: 'Hotels' | 'Resorts' | 'HourlyStay';
+}
+
+const HotelBookingCard: React.FC<HotelBookingCardProps> = ({ initialTab = 'Hotels' }) => {
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [locationModalVisible, setLocationModalVisible] = useState(false);
   const [dateModalVisible, setDateModalVisible] = useState(false);
   const [guestsModalVisible, setGuestsModalVisible] = useState(false);
@@ -60,6 +63,13 @@ const HotelBookingCard: React.FC = () => {
 
   const navigation = useNavigation<MainTabNavigationProp>();
   const months = generateMonths();
+
+  // Update activeTab when initialTab prop changes
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Calculate number of nights
   const calculateNights = () => {

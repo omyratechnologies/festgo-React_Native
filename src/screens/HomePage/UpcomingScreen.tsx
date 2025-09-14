@@ -1,8 +1,6 @@
-import { View, Text } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import React from 'react';
 import BottomMenu from '~/components/common/BottomMenu';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScrollView } from 'react-native-gesture-handler';
 import ProfileHeaderMenu from '~/components/Profile/ProfileHeaderMenu';
 
 const UpcomingScreen = () => {

@@ -5,11 +5,10 @@ import HotelBackgroundImage from '~/assets/images/homepage/HomeBackground.svg';
 import HotelBookingHeaderMenu from '~/components/HotelBooking/HotelBookingHeaderMenu';
 import HotelBookingCard from '~/components/HotelBooking/HotelBookingCard';
 import NearbyHotels from '~/components/HotelBooking/HotelBookingHome/NearbyHotels';
-import RecommendationHotels from '~/components/HotelBooking/HotelBookingHome/RecommendationHotels';
 
-type DataItem = 'spacer' | 'nearby' | 'recommendations';
+type DataItem = 'spacer' | 'nearby';
 
-const DATA: DataItem[] = ['spacer', 'nearby', 'recommendations'];
+const DATA: DataItem[] = ['spacer', 'nearby'];
 
 const HotelBooking = () => {
   // Removed unused 'sheet' and 'setSheet'
@@ -34,9 +33,6 @@ const HotelBooking = () => {
     }
     if (item === 'nearby') {
       return <NearbyHotels />;
-    }
-    if (item === 'recommendations') {
-      return <RecommendationHotels />;
     }
     return null;
   };

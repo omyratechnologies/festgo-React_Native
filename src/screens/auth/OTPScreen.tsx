@@ -31,7 +31,7 @@ const OTPScreen = () => {
   const [loading, setLoading] = useState(false);
 
   // Use array of refs, one for each input
-  const inputRefs = useRef<(TextInput | null)[]>(Array(6).fill(null));
+  const inputRefs = useRef<TextInput[]>([]);
 
   useEffect(() => {
     if (timer > 0) {
@@ -42,23 +42,44 @@ const OTPScreen = () => {
     }
   }, [timer]);
 
+  // Focus first input when component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      inputRefs.current[0]?.focus();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
 
   const handleOtpChange = (text: string, index: number) => {
-    // Only allow digits
-    if (!/^\d*$/.test(text)) return;
-
+    if (!/^\d*$/.test(text)) return; // only digits
+  
     const newOtp = [...otp];
+  
+    // If user pastes multiple digits
+    if (text.length > 1) {
+      const chars = text.split('').slice(0, 6);
+      chars.forEach((char, i) => {
+        newOtp[i] = char;
+      });
+      setOtp(newOtp);
+  
+      // Focus next empty input
+      const nextIndex = chars.length < 6 ? chars.length : 5;
+      inputRefs.current[nextIndex]?.focus();
+      return;
+    }
+  
+    // Handle single digit input
     newOtp[index] = text;
     setOtp(newOtp);
-
-    // Auto-focus next input when digit is entered
+  
     if (text && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
-
+  
   const handleKeyPress = (e: any, index: number) => {
-    // Handle backspace - move to previous input when current is empty
     if (e.nativeEvent.key === 'Backspace' && otp[index] === '' && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -77,7 +98,7 @@ const OTPScreen = () => {
     // Focus first input after resend
     setTimeout(() => {
       inputRefs.current[0]?.focus();
-    }, 300);
+    }, 500);
   };
 
   const handleLogin = async () => {
@@ -156,20 +177,21 @@ const OTPScreen = () => {
                 <View className="mb-4 mt-2 flex-row justify-between gap-4">
                   {[0, 1, 2, 3, 4, 5].map((index) => (
                     <TextInput
-                      key={index}
-                      ref={ref => {
-                        inputRefs.current[index] = ref;
-                      }}
-                      className="h-16 w-12 rounded-xl border border-gray-300 text-center text-2xl text-gray-800"
-                      keyboardType="number-pad"
-                      maxLength={1}
-                      value={otp[index]}
-                      onChangeText={text => handleOtpChange(text, index)}
-                      onKeyPress={e => handleKeyPress(e, index)}
-                      autoFocus={index === 0}
-                      selectTextOnFocus
-                      textContentType="oneTimeCode"
-                    />
+                    key={index}
+                    ref={(ref) => {
+                      if (ref) inputRefs.current[index] = ref;
+                    }}
+                    className="h-16 w-12 rounded-xl border border-gray-300 text-center text-2xl text-gray-800"
+                    keyboardType="number-pad"
+                    maxLength={1}
+                    value={otp[index]}
+                    onChangeText={(text) => handleOtpChange(text, index)}
+                    onKeyPress={(e) => handleKeyPress(e, index)}
+                    selectTextOnFocus
+                    textContentType="oneTimeCode"
+                    returnKeyType={index === 5 ? 'done' : 'next'}
+                  />
+                  
                   ))}
                 </View>
 

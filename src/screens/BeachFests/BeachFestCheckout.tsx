@@ -9,10 +9,10 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HeaderMenu from '../HomePage/HeaderMenu';
-import { ScrollView } from 'react-native-gesture-handler';
 import BottomMenu from '~/components/common/BottomMenu';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';

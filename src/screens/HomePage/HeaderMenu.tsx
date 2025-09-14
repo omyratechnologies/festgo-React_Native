@@ -10,6 +10,7 @@ import WalletLight from '~/assets/images/common/Navbar/walletLight.svg';
 import UserProfileLight from '~/assets/images/common/Navbar/userProfileLight.svg';
 import { useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
+import { useAuth } from '~/hooks/useAuth';
 
 type HeaderMenuProps = {
   white?: boolean;
@@ -17,6 +18,7 @@ type HeaderMenuProps = {
 
 const HeaderMenu: React.FC<HeaderMenuProps> = ({ white = false }) => {
   const navigation = useNavigation<MainTabNavigationProp>();
+  const {userData} = useAuth();
 
   const UserIcon = white ? UserProfileLight : UserProfileIcon;
   const Wallet = white ? WalletLight : WalletIcon;
@@ -27,15 +29,19 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ white = false }) => {
   return (
     <View className="z-10 w-full flex-row items-center justify-between bg-transparent px-8 pb-6 pt-2">
       {/* Left Section */}
-      <View className="flex-row items-center">
-        <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+      <TouchableOpacity className="flex-row items-center" >
+        <TouchableOpacity  onPress={() => navigation.navigate('Profile')}>
           <UserIcon width={32} height={32} />
         </TouchableOpacity>
-        <TouchableOpacity className="ml-3 flex-row items-center">
-          <Text className={`mr-1 mt-2 font-baloo text-xl font-medium ${textColor}`}>Hyderabad</Text>
+        {userData?.location && (
+        <TouchableOpacity  onPress={() => navigation.navigate('Profile')} className="ml-3 flex-row items-center">
+          <Text className={`mr-1 mt-2 font-baloo text-xl font-medium ${textColor}`}>
+            {userData?.location.split(' ').slice(0,2).join(' ')}
+          </Text>
           <ChevronDownIcon width={18} height={18} />
-        </TouchableOpacity>
-      </View>
+          </TouchableOpacity>
+        )}
+      </TouchableOpacity>
       {/* Right Section */}
       <View className="flex-row items-center">
         <TouchableOpacity onPress={() => navigation.navigate('Wallet')} className="mr-4">
