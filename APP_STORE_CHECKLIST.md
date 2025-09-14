@@ -26,7 +26,6 @@
 - [ ] Screenshots for iPhone 6.7" (1290x2796px) - 5 screenshots
 - [ ] Screenshots for iPhone 6.5" (1242x2688px) - 5 screenshots
 - [ ] Screenshots for iPhone 5.5" (1242x2208px) - 5 screenshots
-- [ ] Screenshots for iPad Pro 12.9" (2048x2732px) - 5 screenshots
 - [ ] App preview video (optional, 30 seconds max)
 
 ### 5. App Store Metadata
@@ -134,7 +133,6 @@ npm run screenshots
 - [ ] Beach fest
 - [ ] Profile screen
 
-### iPad Pro 12.9" (2048x2732px)
 - [ ] Home screen
 - [ ] Hotel booking
 - [ ] Events page

@@ -41,7 +41,6 @@ Create the following assets in the correct sizes:
 - iPhone 6.7" (1290x2796px): 3-5 screenshots
 - iPhone 6.5" (1242x2688px): 3-5 screenshots  
 - iPhone 5.5" (1242x2208px): 3-5 screenshots
-- iPad Pro 12.9" (2048x2732px): 3-5 screenshots
 
 **App Preview Videos** (optional but recommended):
 - 30 seconds max

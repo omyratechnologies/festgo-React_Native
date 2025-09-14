@@ -30,12 +30,6 @@ const SCREENSHOT_REQUIREMENTS = {
     device: 'iPhone 8 Plus',
     count: 5
   },
-  'iPad Pro 12.9"': {
-    width: 2048,
-    height: 2732,
-    device: 'iPad Pro 12.9"',
-    count: 5
-  }
 };
 
 // Key screens to capture
@@ -109,7 +103,6 @@ const folders = [
   'screenshots/iphone-6-7',
   'screenshots/iphone-6-5', 
   'screenshots/iphone-5-5',
-  'screenshots/ipad-pro-12-9'
 ];
 
 folders.forEach(folder => {

@@ -23,7 +23,6 @@ import StarIcon from '~/assets/icons/star.svg';
 import LocationIcon from '~/assets/icons/location-pin.svg';
 import BackIconModal from '~/assets/icons/hotelBooking/BackIcon.svg';
 import TickIcon from '~/assets/icons/Tick.svg';
-import RecommendationHotels from '~/components/HotelBooking/HotelBookingHome/RecommendationHotels';
 import { fetchPropertyDetails, PropertyDetailsParams, Room } from '~/utils/api';
 import EditSearchModal from './EditSearchModal';
 import RoomSelectionModal from '~/components/HotelBooking/RoomSelectionModal';
@@ -675,8 +674,6 @@ export default function HotelBookingSingleDetail() {
                 </Text>
               </View>
             </View>
-
-            <RecommendationHotels />
 
           </>
         )}

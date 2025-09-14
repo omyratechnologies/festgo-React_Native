@@ -114,7 +114,6 @@ npm run test:production
 - **iPhone 6.7"**: 5 screenshots (1290x2796px)
 - **iPhone 6.5"**: 5 screenshots (1242x2688px)
 - **iPhone 5.5"**: 5 screenshots (1242x2208px)
-- **iPad Pro 12.9"**: 5 screenshots (2048x2732px)
 
 ### Key Screens to Capture
 1. **Home Screen** - Main dashboard
