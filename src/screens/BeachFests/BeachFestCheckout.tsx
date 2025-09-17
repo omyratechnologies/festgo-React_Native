@@ -16,7 +16,7 @@ import HeaderMenu from '../HomePage/HeaderMenu';
 import BottomMenu from '~/components/common/BottomMenu';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';
-import { processBeachFestBooking } from '~/utils/payment';
+import { createRazorpayOptions } from '~/utils/payment';
 import { MainTabNavigationProp, MainStackParamList } from '~/navigation/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -200,18 +200,37 @@ const BeachFestCheckout = React.memo(() => {
       }
       const response = await res.json();
       console.log("response", response.data)
-      const result = await processBeachFestBooking(response.data);
+      
+      const { booking, razorpayOrder } = response.data;
+      
+      // Create Razorpay options for WebView
+      const razorpayOptions = createRazorpayOptions({
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        name: 'FestGo BeachFest',
+        description: `Booking for ${booking.name} - ${booking.passes} passes`,
+        orderId: razorpayOrder.id,
+        bookingId: booking.id,
+        prefill: {
+          email: booking.email,
+          contact: booking.phone,
+          name: booking.name,
+        },
+        notes: {
+          booking_id: booking.id,
+          payment_for: 'beachfest_booking',
+          payment_type: booking.payment_method,
+        },
+      });
 
-      if (result.success) {
-        // Navigate to success screen
-        navigation.navigate('BookingSuccess', {
-          bookingData: result.bookingData,
-          paymentId: result.paymentId!,
-          bookingType: 'beachfest',
-        });
-      } else {
-        Alert.alert('Error', result.message);
-      }
+      console.log('Created Razorpay options:', razorpayOptions);
+
+      // Navigate to PaymentWebView
+      navigation.navigate('PaymentWebView', {
+        razorpayOptions,
+        bookingData: booking,
+        bookingType: 'beachfest',
+      });
     } catch (e: any) {
       Alert.alert('Error', e.message || 'Booking failed. Please try again.');
     } finally {

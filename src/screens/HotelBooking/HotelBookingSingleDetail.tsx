@@ -565,6 +565,7 @@ export default function HotelBookingSingleDetail() {
                   <HotelBookingCheckout
                     bookingData={searchParams}
                     hotelData={hotelData}
+                    propertyId={propertyId}
                     roomData={selectedRoom}
                     onClose={() => setShowCheckoutModal(false)}
                   />

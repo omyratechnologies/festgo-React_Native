@@ -98,6 +98,15 @@ export type MainStackParamList = {
     };
   };
 
+  // payment
+  PaymentWebView: {
+    razorpayOptions: any;
+    bookingData?: any;
+    bookingType?: 'beachfest' | 'hotel' | 'event';
+    onPaymentSuccess?: (data: any) => void;
+    onPaymentError?: (data: any) => void;
+  };
+
   // booking success
   BookingSuccess: {
     bookingData: any;

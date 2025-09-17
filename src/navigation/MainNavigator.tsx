@@ -32,6 +32,7 @@ import OffersPage from '~/screens/Profile/OffersPage';
 import GSTDetails from '~/screens/Profile/GSTDetails';
 import DeviceActivityScreen from '~/screens/Profile/DeviceActivityScreen';
 import BookingSuccessScreen from '~/screens/common/BookingSuccessScreen';
+import PaymentWebView from '~/screens/Payments/PaymentWebView';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -82,9 +83,6 @@ const ProtectedDeviceActivityScreen = () => (
 const ProtectedCityFestCheckout = () => (
   <ProtectedScreenWrapper><CityFestCheckout /></ProtectedScreenWrapper>
 );
-const ProtectedBeachFestCheckout = () => (
-  <ProtectedScreenWrapper><BeachFestCheckout /></ProtectedScreenWrapper>
-);
 const ProtectedHotelBookingCheckout = () => (
   <ProtectedScreenWrapper><HotelBookingCheckout /></ProtectedScreenWrapper>
 );
@@ -128,8 +126,11 @@ export const MainNavigator = () => {
 
         {/* Protected checkout screens */}
         <Stack.Screen name="CityFestCheckout" component={ProtectedCityFestCheckout} />
-        <Stack.Screen name="BeachFestCheckout" component={ProtectedBeachFestCheckout} />
+        <Stack.Screen name="BeachFestCheckout" component={BeachFestCheckout} />
         <Stack.Screen name="HotelBookingCheckout" component={ProtectedHotelBookingCheckout} />
+
+        {/* Payment Screen */}
+        <Stack.Screen name="PaymentWebView" component={PaymentWebView} />
 
         {/* Booking Success Screen */}
         <Stack.Screen name="BookingSuccess" component={BookingSuccessScreen} />

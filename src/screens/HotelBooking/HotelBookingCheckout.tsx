@@ -14,11 +14,13 @@ import {
 import { MaterialIcons, FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
-import { processDirectPayment } from '~/utils/payment';
+import { createRazorpayOptions } from '~/utils/payment';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type HotelBookingCheckoutProps = {
   bookingData: any;
   hotelData: any;
+  propertyId: string;
   roomData: any;
   onClose: () => void;
 };
@@ -26,6 +28,7 @@ type HotelBookingCheckoutProps = {
 const HotelBookingCheckout: React.FC<HotelBookingCheckoutProps> = ({
   bookingData,
   hotelData,
+  propertyId,
   roomData,
   onClose,
 }) => {
@@ -230,34 +233,83 @@ const HotelBookingCheckout: React.FC<HotelBookingCheckoutProps> = ({
           onPress={async () => {
             setLoading(true);
             try {
-              const hotelBookingData = {
-                ...bookingData,
-                hotel_id: hotelData?.id,
+              const jwtToken = await AsyncStorage.getItem('jwtToken');
+              if (!jwtToken) {
+                Alert.alert('Error', 'You must be logged in to book a hotel.');
+                return;
+              }
+              // Format the data to match the required structure
+              const hotelBookingData = JSON.stringify({
+                property_id: propertyId,
                 room_id: roomData?.id,
-                hotel_name: hotelData?.hotelName,
-                room_name: roomData?.room_name,
-                price_per_night: roomData?.pricing?.pricePerNight,
-                total_amount: total,
+                festgo_coins: 0,
+                check_in_date: bookingData?.todate
+                  ? bookingData.todate.split('-').reverse().join('-')
+                  : undefined,
+                check_out_date: bookingData?.enddate
+                  ? bookingData.enddate.split('-').reverse().join('-')
+                  : undefined,
+                num_adults: Number(bookingData?.adult) || 1,
+                num_children: Number(bookingData?.child) || 0,
+                num_rooms: Number(bookingData?.rooms) || 1,
+                notes: bookingData?.notes || "",
+                referral_id: bookingData?.referral_id || "",
+                // Optionally, add coupon and GST details if needed by backend
                 coupon_code: couponApplied ? coupon : null,
                 coupon_discount: discount,
                 gst_details: gstChecked ? gstDetails : null,
-              };
-
-              const result = await processDirectPayment(hotelBookingData, 'hotel');
-
-              if (result.success) {
-                // Navigate to success screen
-                navigation.navigate('BookingSuccess', {
-                  bookingData: result.bookingData,
-                  paymentId: result.paymentId!,
-                  bookingType: 'hotel',
-                });
-                onClose && onClose();
-              } else {
-                Alert.alert('Error', result.message);
+              });
+              const res = await fetch('https://server.festgo.in/api/property-booking', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${jwtToken}`,
+                },
+                body: hotelBookingData,
+              });
+              console.log(res)
+              if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message || 'Booking failed');
               }
-            } catch (error: any) {
-              Alert.alert('Error', error.message || 'Booking failed. Please try again.');
+              const response = await res.json();
+              console.log("response", response)
+              
+              const { booking, razorpayOrder } = response;
+              
+              // Create Razorpay options for WebView
+              const razorpayOptions = createRazorpayOptions({
+                amount: razorpayOrder.amount,
+                currency: razorpayOrder.currency,
+                name: 'FestGo Hotel Booking',
+                description: `Hotel booking for ${hotelData?.hotelName || 'Hotel'}`,
+                orderId: razorpayOrder.id,
+                bookingId: booking.id,
+                prefill: {
+                  email: booking.email,
+                  contact: booking.phone,
+                  name: booking.guest_name,
+                },
+                notes: {
+                  booking_id: booking.id,
+                  payment_for: 'hotel_booking',
+                  payment_type: booking.payment_method,
+                },
+              });
+
+              console.log('Created Razorpay options for hotel:', razorpayOptions);
+
+              // Close the modal first
+              onClose && onClose();
+
+              // Navigate to PaymentWebView
+              navigation.navigate('PaymentWebView', {
+                razorpayOptions,
+                bookingData: booking,
+                bookingType: 'hotel',
+              });
+            } catch (e: any) {
+              Alert.alert('Error', e.message || 'Booking failed. Please try again.');
             } finally {
               setLoading(false);
             }

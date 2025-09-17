@@ -7,6 +7,7 @@ import BeachFestImageBackground from '~/assets/images/events/CityFests.svg';
 import HotelBookingHeaderMenu from '~/components/HotelBooking/HotelBookingHeaderMenu';
 import { useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
+import { useAuth } from '~/hooks/useAuth';
 
 type Props = {
   fest: BeachFestItem;
@@ -15,6 +16,7 @@ type Props = {
 
 const BeachFestDetails = React.memo(({ fest, onClose }: Props) => {
   const navigation = useNavigation<MainTabNavigationProp>();
+  const { isAuthenticated} = useAuth();
   
   const handleBookNow = useCallback(() => {
     if (!fest.id) return;
@@ -149,6 +151,8 @@ const BeachFestDetails = React.memo(({ fest, onClose }: Props) => {
           />
         </View>
 
+{isAuthenticated && (
+
         <TouchableOpacity
           className="mb-12 mt-2 rounded-full bg-blue-600 px-4 py-3 text-center"
           onPress={handleBookNow}>
@@ -156,6 +160,8 @@ const BeachFestDetails = React.memo(({ fest, onClose }: Props) => {
             Entry Pass at ₹{fest.price_per_pass} only
           </Text>
         </TouchableOpacity>
+)}
+
       </ScrollView>
     </View>
   );
