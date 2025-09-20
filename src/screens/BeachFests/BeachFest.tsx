@@ -16,8 +16,10 @@ import { API_URL } from '~/utils/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import BeachFestDetails from './BeachFestDetails';
 import Svg, { Path } from 'react-native-svg';
+import WalletIcon from '~/assets/images/common/Navbar/walletLight.svg';
+import NotificationIcon from '~/assets/images/common/Navbar/NotificationLight.svg';
+import UserProfileLight from '~/assets/images/common/Navbar/userProfileLight.svg';
 
-const { width } = Dimensions.get('window');
 
 export type BeachFestItem = {
   id: string;
@@ -81,6 +83,9 @@ const BeachFest = () => {
     fetchFests();
   }, []);
 
+  const Wallet = WalletIcon;
+  const Notification = NotificationIcon;
+
   return (
     <View className="flex-1 bg-white">
       {/* Header Section */}
@@ -105,43 +110,17 @@ const BeachFest = () => {
         {/* Top Bar with Location and Icons */}
         <View className="absolute z-10 mt-16 w-full flex-row items-center justify-between bg-transparent px-8 pb-6 pt-2">
           <View className="flex-row items-center">
-            <TouchableOpacity className="flex-row items-center">
-              <View className="mr-2 h-8 w-8 rounded-full bg-white/20" />
-              <Text className="mr-1 font-poppins text-base font-medium text-white">
-                {selectedLocation}
-              </Text>
-              <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M7 10l5 5 5-5"
-                  stroke="white"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </Svg>
-            </TouchableOpacity>
+            <TouchableOpacity  onPress={() => navigation.navigate('Profile')}>
+          <UserProfileLight width={32} height={32} />
+        </TouchableOpacity>
           </View>
 
           <View className="flex-row items-center">
-            <TouchableOpacity className="mr-4">
-              <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
-                  fill="white"
-                />
-                <Path
-                  d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"
-                  fill="white"
-                />
-              </Svg>
+            <TouchableOpacity onPress={() => navigation.navigate('Wallet')} className="mr-4">
+              <Wallet width={28} height={28} />
             </TouchableOpacity>
-            <TouchableOpacity>
-              <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"
-                  fill="white"
-                />
-              </Svg>
+            <TouchableOpacity  onPress={() => navigation.navigate('Notifications')}>
+              <Notification width={28} height={28} />
             </TouchableOpacity>
           </View>
         </View>

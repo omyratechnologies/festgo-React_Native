@@ -9,23 +9,32 @@ import { useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
 import { useAuth } from '~/hooks/useAuth';
 
-type Props = {
-  fest: BeachFestItem;
-  onClose: () => void;
-};
+function extractLatLngFromGMapUrl(url: string): { latitude: number; longitude: number } | null {
+  const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+  const regex2 = /[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/;
+  const regex3 = /\/place\/(-?\d+\.\d+),(-?\d+\.\d+)/;
+  let match = url.match(regex);
+  if (!match) match = url.match(regex2);
+  if (!match) match = url.match(regex3);
+  if (match) {
+    return {
+      latitude: parseFloat(match[1]),
+      longitude: parseFloat(match[2]),
+    };
+  }
+  return null;
+}
 
-const BeachFestDetails = React.memo(({ fest, onClose }: Props) => {
+const BeachFestDetails = React.memo(({ fest, onClose }: { fest: BeachFestItem; onClose: () => void }) => {
   const navigation = useNavigation<MainTabNavigationProp>();
-  const { isAuthenticated} = useAuth();
-  
+  const { isAuthenticated } = useAuth();
+
   const handleBookNow = useCallback(() => {
     if (!fest.id) return;
     onClose();
     navigation.navigate('BeachFestCheckout', { festId: fest.id });
   }, [fest.id, onClose, navigation]);
-  console.log("festId", fest.id)
 
-  // Memoize date formatting to prevent re-renders
   const formattedStartDate = useMemo(() => {
     return new Date(fest.event_start).toLocaleString('en-US', {
       month: 'short',
@@ -48,6 +57,31 @@ const BeachFestDetails = React.memo(({ fest, onClose }: Props) => {
       hour12: true,
     });
   }, [fest.event_end]);
+
+  const handleOpenMap = useCallback(() => {
+    if (fest.gmap_url) {
+      Linking.openURL(fest.gmap_url);
+    }
+  }, [fest.gmap_url]);
+
+  const mapCoords = useMemo(() => {
+    if (fest.gmap_url) {
+      return extractLatLngFromGMapUrl(fest.gmap_url);
+    }
+    return null;
+  }, [fest.gmap_url]);
+
+  // Generate Google Static Maps API URL for preview
+  const staticMapUrl = useMemo(() => {
+    if (mapCoords) {
+      const { latitude, longitude } = mapCoords;
+      // You can add your Google Maps Static API key if you want higher resolution or more features
+      // const apiKey = 'YOUR_GOOGLE_MAPS_STATIC_API_KEY';
+      // &key=${apiKey}
+      return `https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=15&size=600x300&markers=color:red%7C${latitude},${longitude}&scale=2`;
+    }
+    return null;
+  }, [mapCoords]);
 
   return (
     <View className="flex-1 bg-white">
@@ -143,25 +177,64 @@ const BeachFestDetails = React.memo(({ fest, onClose }: Props) => {
           ))}
         </View>
 
-        <View className="mt-12 h-48 overflow-hidden rounded-lg">
-          <Image
-            source={{ uri: 'https://staticmapmaker.com/img/google-placeholder.png' }}
-            className="h-40 w-full rounded-3xl"
-            resizeMode="cover"
-          />
-        </View>
+        {/* Google Maps Preview Map */}
+        {/* {fest.gmap_url && mapCoords && staticMapUrl ? (
+          <TouchableOpacity
+            className="mt-12 mb-4 overflow-hidden rounded-lg"
+            onPress={handleOpenMap}
+            activeOpacity={0.85}
+            style={{
+              height: 192, // h-48
+              width: '100%',
+              borderRadius: 16,
+              marginBottom: 8,
+              shadowColor: '#000',
+              shadowOpacity: 0.08,
+              shadowRadius: 8,
+              elevation: 2,
+            }}
+          >
+            <Image
+              source={{ uri: staticMapUrl }}
+              style={{
+                width: '100%',
+                height: '100%',
+                borderRadius: 16,
+                resizeMode: 'cover',
+              }}
+              resizeMode="cover"
+            />
+            <View
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(255,255,255,0.85)',
+                padding: 10,
+                flexDirection: 'row',
+                alignItems: 'center',
+                borderBottomLeftRadius: 16,
+                borderBottomRightRadius: 16,
+              }}
+            >
+              <Ionicons name="map" size={22} color="#2563eb" style={{ marginRight: 8 }} />
+              <Text className="font-poppins text-base font-semibold text-blue-700 underline">
+                View on Google Maps
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ) : null} */}
 
-{isAuthenticated && (
-
-        <TouchableOpacity
-          className="mb-12 mt-2 rounded-full bg-blue-600 px-4 py-3 text-center"
-          onPress={handleBookNow}>
-          <Text className="text-center text-lg font-semibold text-white">
-            Entry Pass at ₹{fest.price_per_pass} only
-          </Text>
-        </TouchableOpacity>
-)}
-
+        {isAuthenticated && (
+          <TouchableOpacity
+            className="mb-12 mt-2 rounded-full bg-blue-600 px-4 py-3 text-center"
+            onPress={handleBookNow}>
+            <Text className="text-center text-lg font-semibold text-white">
+              Entry Pass at ₹{fest.price_per_pass} only
+            </Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </View>
   );

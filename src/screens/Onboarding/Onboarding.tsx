@@ -57,7 +57,7 @@ const Onboarding = () => {
 
   const handleLogin = () => {
     // Navigate to Login screen
-    navigation.navigate('Login');
+    navigation.navigate('Auth', {screen: 'Login'});
   };
 
   const handleLoginLater = async () => {

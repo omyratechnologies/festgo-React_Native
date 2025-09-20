@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import React from 'react';
 import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import BottomMenuIcon from '~/assets/images/homepage/BottomMenu.svg';
@@ -96,7 +96,7 @@ const BottomMenu = () => {
         })}
       </View>
       {/* Play Button with drop shadow */}
-      <View
+      <TouchableOpacity
         style={{
           position: 'absolute',
           bottom: 20,
@@ -110,9 +110,13 @@ const BottomMenu = () => {
           elevation: 9,
           borderRadius: 37.5,
           backgroundColor: 'transparent',
-        }}>
+        }}
+        onPress={() => {
+          Linking.openURL('https://youtube.com/@festgoevents?si=rlUuQzHXnfsyjmLN');
+        }}
+      >
         <MenuPlayButton width={'100%'} height={'100%'} />
-      </View>
+      </TouchableOpacity>
     </View>
   );
 };

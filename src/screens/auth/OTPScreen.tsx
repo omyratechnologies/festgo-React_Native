@@ -25,13 +25,10 @@ const OTPScreen = () => {
 
   const { phoneNumber } = route.params;
 
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState('');
   const [timer, setTimer] = useState(60);
   const [isResendEnabled, setIsResendEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // Use array of refs, one for each input
-  const inputRefs = useRef<TextInput[]>([]);
 
   useEffect(() => {
     if (timer > 0) {
@@ -42,69 +39,26 @@ const OTPScreen = () => {
     }
   }, [timer]);
 
-  // Focus first input when component mounts
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      inputRefs.current[0]?.focus();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-
-  const handleOtpChange = (text: string, index: number) => {
-    if (!/^\d*$/.test(text)) return; // only digits
-  
-    const newOtp = [...otp];
-  
-    // If user pastes multiple digits
-    if (text.length > 1) {
-      const chars = text.split('').slice(0, 6);
-      chars.forEach((char, i) => {
-        newOtp[i] = char;
-      });
-      setOtp(newOtp);
-  
-      // Focus next empty input
-      const nextIndex = chars.length < 6 ? chars.length : 5;
-      inputRefs.current[nextIndex]?.focus();
-      return;
-    }
-  
-    // Handle single digit input
-    newOtp[index] = text;
-    setOtp(newOtp);
-  
-    if (text && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-  
-  const handleKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace' && otp[index] === '' && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
+  const handleOtpChange = (text: string) => {
+    // Only allow digits and max 6 characters
+    const cleanText = text.replace(/\D/g, '').slice(0, 6);
+    setOtp(cleanText);
   };
 
   const handleResend = () => {
     if (!isResendEnabled) return;
 
     // Reset UI
-    setOtp(['', '', '', '', '', '']);
+    setOtp('');
     setTimer(60);
     setIsResendEnabled(false);
 
     // TODO: Trigger resend OTP API here if needed
     Alert.alert('OTP Resent', `A new OTP has been sent to ${phoneNumber}`);
-    // Focus first input after resend
-    setTimeout(() => {
-      inputRefs.current[0]?.focus();
-    }, 500);
   };
 
   const handleLogin = async () => {
-    const finalOtp = otp.join('');
-
-    if (finalOtp.length !== 6) {
+    if (otp.length !== 6) {
       Alert.alert('Error', 'Please enter the complete 6-digit OTP.');
       return;
     }
@@ -117,7 +71,7 @@ const OTPScreen = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           number: phoneNumber,
-          otp: finalOtp,
+          otp: otp,
         }),
       });
 
@@ -146,6 +100,7 @@ const OTPScreen = () => {
     }
   };
 
+
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
       <KeyboardAvoidingView
@@ -172,31 +127,33 @@ const OTPScreen = () => {
                 </Text>
               </View>
 
-              {/* OTP Inputs */}
+              {/* OTP Input */}
               <View className="mb-6 items-center">
-                <View className="mb-4 mt-2 flex-row justify-between gap-4">
+                <TextInput
+                  className="mb-4 h-16 w-64 rounded-xl border border-gray-300 text-center text-2xl text-gray-800"
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  value={otp}
+                  onChangeText={handleOtpChange}
+                  placeholder="Enter 6-digit code"
+                  placeholderTextColor="#9CA3AF"
+                  autoFocus
+                />
+                
+                {/* Visual Indicators */}
+                <View className="flex-row gap-2">
                   {[0, 1, 2, 3, 4, 5].map((index) => (
-                    <TextInput
-                    key={index}
-                    ref={(ref) => {
-                      if (ref) inputRefs.current[index] = ref;
-                    }}
-                    className="h-16 w-12 rounded-xl border border-gray-300 text-center text-2xl text-gray-800"
-                    keyboardType="number-pad"
-                    maxLength={1}
-                    value={otp[index]}
-                    onChangeText={(text) => handleOtpChange(text, index)}
-                    onKeyPress={(e) => handleKeyPress(e, index)}
-                    selectTextOnFocus
-                    textContentType="oneTimeCode"
-                    returnKeyType={index === 5 ? 'done' : 'next'}
-                  />
-                  
+                    <View
+                      key={index}
+                      className={`h-3 w-3 rounded-full ${
+                        index < otp.length ? 'bg-[#F15A29]' : 'bg-gray-300'
+                      }`}
+                    />
                   ))}
                 </View>
 
                 {/* Timer and Resend */}
-                <View className="mb-12 w-full flex-row justify-between px-12">
+                <View className="my-12 w-full flex-row justify-between px-12">
                   <Text className="font-baloo text-[#F15A29]">
                     {timer > 0 ? `Resend in ${timer}s` : ''}
                   </Text>
