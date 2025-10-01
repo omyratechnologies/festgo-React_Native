@@ -12,7 +12,17 @@ import { getCurrentLocation } from '~/utils/location';
 interface Hotel {
   id: string;
   name: string;
-  location: string;
+  location: string | {
+    lat: number;
+    lng: number;
+    city: string;
+    state: string;
+    country: string;
+    pincode: string;
+    locality: string;
+    houseNumber: string;
+    searchLocation: string;
+  };
   rating: number;
   price: number;
   image: string;
@@ -62,7 +72,11 @@ const HotelCard = ({ hotel }: { hotel: Hotel }) => {
           </Text>
           <View className="mb-1 flex-row items-center">
             <MapPinIcon className="mr-2" />
-            <Text className="ml-1 font-poppins text-xs text-white">{hotel.location}</Text>
+            <Text className="ml-1 font-poppins text-xs text-white">
+              {typeof hotel.location === 'string' 
+                ? hotel.location 
+                : hotel.location.city || hotel.location.locality || hotel.location.searchLocation || 'Location not available'}
+            </Text>
           </View>
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center">
