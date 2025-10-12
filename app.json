@@ -57,7 +57,11 @@
       },
       "config": {
         "usesNonExemptEncryption": false
-      }
+      },
+      "associatedDomains": [
+  "applinks:festgo.in",
+  "applinks:www.festgo.in"
+]
     },
     "android": {
       "adaptiveIcon": {

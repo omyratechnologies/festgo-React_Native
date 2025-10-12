@@ -1,16 +1,17 @@
 import { NavigationContainer } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
+import * as Linking from 'expo-linking';
 import { StatusBar } from 'expo-status-bar';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import 'react-native-gesture-handler';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 import { AuthNavigator } from '~/navigation/AuthNavigator';
 import { MainNavigator } from '~/navigation/MainNavigator';
 import { RootStackParamList } from '~/navigation/types';
-import { useFonts } from 'expo-font';
-import * as Linking from 'expo-linking';
+
 
 import './global.css';
-import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
