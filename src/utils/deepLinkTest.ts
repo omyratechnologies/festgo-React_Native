@@ -27,3 +27,40 @@ export const parseTokenFromUrl = (url: string): string | null => {
     return null;
   }
 };
+
+// Enhanced URL parsing with fallback
+export const parseTokenFromUrlEnhanced = (url: string): string | null => {
+  try {
+    // First try proper URL parsing
+    const urlObj = new URL(url);
+    const token = urlObj.searchParams.get('token');
+    if (token) {
+      return decodeURIComponent(token);
+    }
+  } catch (error) {
+    console.log('URL parsing failed, trying regex fallback');
+  }
+  
+  // Fallback to regex parsing
+  const tokenMatch = url.match(/token=([^&]+)/);
+  if (tokenMatch && tokenMatch[1]) {
+    return decodeURIComponent(tokenMatch[1]);
+  }
+  
+  return null;
+};
+
+// Debug function to log deep link information
+export const debugDeepLink = (url: string) => {
+  // console.log('=== Deep Link Debug Info ===');
+  // console.log('Original URL:', url);
+  // console.log('Contains /verify:', url.includes('/verify'));
+  // console.log('Contains token=:', url.includes('token='));
+  
+  const token = parseTokenFromUrlEnhanced(url);
+  // console.log('Extracted token:', token);
+  // console.log('Token length:', token ? token.length : 0);
+  // console.log('============================');
+  
+  return token;
+};

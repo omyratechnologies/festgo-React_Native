@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthNavigator } from '~/navigation/AuthNavigator';
 import { MainNavigator } from '~/navigation/MainNavigator';
 import { RootStackParamList } from '~/navigation/types';
+import { debugDeepLink } from '~/utils/deepLinkTest';
 
 
 import './global.css';
@@ -56,12 +57,20 @@ export default function App() {
     const handleDeepLink = (url: string) => {
       console.log('Deep link received:', url);
       
+      // Use enhanced debug function
+      const token = debugDeepLink(url);
+      
       // Check if it's an email verification link
-      if (url.includes('/verify?token=')) {
-        const token = url.split('token=')[1];
+      if (url.includes('/verify')) {
         if (token) {
+          // console.log('Email verification token found:', token);
           setDeepLinkParams({ token });
           setInitialRoute('Auth'); // Navigate to auth stack for verification
+        } else {
+          // console.log('Email verification link detected but no token found');
+          // Still navigate to auth but without token
+          setDeepLinkParams({ token: '' });
+          setInitialRoute('Auth');
         }
       }
     };
@@ -69,12 +78,14 @@ export default function App() {
     // Handle initial URL if app was opened via deep link
     Linking.getInitialURL().then((url) => {
       if (url) {
+        // console.log('Initial URL detected:', url);
         handleDeepLink(url);
       }
     });
 
     // Handle deep links when app is already running
     const subscription = Linking.addEventListener('url', (event) => {
+      // console.log('Deep link event received:', event.url);
       handleDeepLink(event.url);
     });
 

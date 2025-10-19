@@ -23,13 +23,21 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ token
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    verifyEmailToken();
+    if (token && token.trim() !== '') {
+      verifyEmailToken();
+    } else {
+      console.log('No token provided for email verification');
+      setError('No verification token found. Please try clicking the link in your email again.');
+      setLoading(false);
+    }
   }, [token]);
 
   const verifyEmailToken = async () => {
     try {
       setLoading(true);
       setError(null);
+
+      // console.log('Verifying email token:', token);
 
       const response = await fetch(`${API_URL}/verify-email`, {
         method: 'POST',
@@ -42,40 +50,33 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ token
       });
 
       const data = await response.json();
+      console.log('Email verification response:', data);
 
       if (data.success) {
         setVerified(true);
         
         // Store user data if provided
         if (data.user && data.user.id) { 
-          
+          console.log('Storing user data:', data.user);
           await AsyncStorage.setItem('userId', data.user.id);
           await AsyncStorage.setItem('userData', JSON.stringify(data.user));
         }
 
         // Store JWT token if provided
         if (data.jwtToken && data.jwtToken !== null && data.jwtToken !== undefined) {
+          console.log('Storing JWT token');
           await AsyncStorage.setItem('jwtToken', data.jwtToken);
           await AsyncStorage.setItem('isLoggedIn', 'true');
         }
 
-        Alert.alert(
-          'Email Verified!',
-          'Your email has been successfully verified.',
-          [
-            {
-              text: 'Continue',
-              onPress: () => {
-                // Navigate to main app or login screen
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'Main', params: { screen: 'HomePage' } }],
-                });
-              },
-            },
-          ]
-        );
+        // Automatically navigate to homepage without alert
+        console.log('Email verified successfully, navigating to homepage');
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Main', params: { screen: 'HomePage' } }],
+        });
       } else {
+        console.log('Email verification failed:', data.message);
         setError(data.message || 'Email verification failed');
       }
     } catch (err) {
