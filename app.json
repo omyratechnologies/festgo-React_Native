@@ -2,7 +2,7 @@
   "expo": {
     "name": "FestGo",
     "slug": "festgo",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "scheme": "festgo",
     "linking": {
       "prefixes": [
@@ -31,7 +31,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.festgo.app",
-      "buildNumber": "6",
+      "buildNumber": "7",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app needs access to location to find nearby hotels and provide location-based services.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs access to location to find nearby hotels and provide location-based services even when the app is in the background.",
@@ -44,8 +44,8 @@
         ],
         "CFBundleDisplayName": "FestGo",
         "CFBundleName": "FestGo",
-        "CFBundleShortVersionString": "1.5.0",
-        "CFBundleVersion": "6",
+        "CFBundleShortVersionString": "1.6.0",
+        "CFBundleVersion": "7",
         "LSApplicationQueriesSchemes": [
           "tel",
           "mailto",
@@ -68,7 +68,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.festgo.app",
-      "versionCode": 6,
+      "versionCode": 7,
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
