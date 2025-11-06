@@ -75,6 +75,9 @@ export type MainStackParamList = {
 
 
   TripsScreen: undefined;
+  TripBrowse: undefined;
+  TripDetailsFlow: { trip: any };
+  TripPlan: undefined;
   // hotel bookings
   HotelBooking: undefined;
   HotelBookingDetails: {
@@ -103,7 +106,7 @@ export type MainStackParamList = {
   PaymentWebView: {
     razorpayOptions: any;
     bookingData?: any;
-    bookingType?: 'beachfest' | 'hotel' | 'event';
+    bookingType?: 'beachfest' | 'hotel' | 'event' | 'trip';
     onPaymentSuccess?: (data: any) => void;
     onPaymentError?: (data: any) => void;
   };
@@ -112,7 +115,7 @@ export type MainStackParamList = {
   BookingSuccess: {
     bookingData: any;
     paymentId: string;
-    bookingType: 'beachfest' | 'hotel' | 'event';
+    bookingType: 'beachfest' | 'hotel' | 'event' | 'trip';
   };
 };
 

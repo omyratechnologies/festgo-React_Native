@@ -18,7 +18,7 @@ interface BookingSuccessScreenProps {
     params: {
       bookingData: any;
       paymentId: string;
-      bookingType: 'beachfest' | 'hotel' | 'event';
+      bookingType: 'beachfest' | 'hotel' | 'event' | 'trip';
     };
   };
 }
@@ -88,6 +88,8 @@ const BookingSuccessScreen: React.FC<BookingSuccessScreenProps> = ({ route }) =>
         return 'Hotel Booking Confirmed!';
       case 'event':
         return 'Event Booking Confirmed!';
+      case 'trip':
+        return 'Trip Booking Confirmed!';
       default:
         return 'Booking Confirmed!';
     }

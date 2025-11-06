@@ -33,6 +33,10 @@ import GSTDetails from '~/screens/Profile/GSTDetails';
 import DeviceActivityScreen from '~/screens/Profile/DeviceActivityScreen';
 import BookingSuccessScreen from '~/screens/common/BookingSuccessScreen';
 import PaymentWebView from '~/screens/Payments/PaymentWebView';
+import TripsScreen from '~/screens/Trips/TripsScreen';
+import TripBrowse from '~/screens/Trips/TripBrowse';
+import TripDetailsFlow from '~/screens/Trips/TripDetailsFlow';
+import TripPlan from '~/screens/Trips/TripPlan';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -102,6 +106,10 @@ export const MainNavigator = () => {
         <Stack.Screen name="BeachFestsPage" component={BeachFest} />
         <Stack.Screen name="FestBite" component={FestBite} />
         <Stack.Screen name="UpcomingScreen" component={UpcomingScreen} />
+        <Stack.Screen name="TripsScreen" component={TripsScreen} />
+        <Stack.Screen name="TripBrowse" component={TripBrowse} />
+        <Stack.Screen name="TripDetailsFlow" component={TripDetailsFlow} />
+        <Stack.Screen name="TripPlan" component={TripPlan} />
 
         {/* Hotel Booking Screens - Public viewing, protected checkout */}
         <Stack.Screen name="HotelBooking" component={HotelBooking} />

@@ -53,7 +53,6 @@ const BeachFest = () => {
   const [fests, setFests] = useState<BeachFestItem[]>([]);
   const [selectedFest, setSelectedFest] = useState<BeachFestItem | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState('Hyderabad');
 
   const handleFestPress = (fest: BeachFestItem) => {
     setSelectedFest(fest);

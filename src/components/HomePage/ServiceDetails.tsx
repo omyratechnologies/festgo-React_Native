@@ -22,7 +22,7 @@ const topServices = [
 const bottomServices = [
   { icon: BanquetsIcon, label: 'Banquets', page: 'HotelBooking' },
   { icon: CityFestsIcon, label: 'City Fests', page: 'CityFestsPage' },
-  { icon: TripsIcon, label: 'Trips', page: 'HotelBooking' },
+  { icon: TripsIcon, label: 'Trips', page: 'TripsScreen' },
   { icon: FestBiteIcon, label: 'Fest Bite', page: 'FestBite' },
 ];
 
