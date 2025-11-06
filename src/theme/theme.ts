@@ -5,9 +5,9 @@ export const colors = {
     dark: '#0e7490',
   },
   secondary: {
-    DEFAULT: '#8b5cf6', 
-    light: '#a78bfa', // violet-400
-    dark: '#7c3aed', // violet-600
+    DEFAULT: '#0E54EC', 
+    light: '#0E54EC', // violet-400
+    dark: '#0E54EC', // violet-600
   },
   background: {
     DEFAULT: '#ffffff',
