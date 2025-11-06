@@ -33,23 +33,25 @@ export const useAuth = () => {
     };
 
     checkAuthAndLoadProfile();
-  }, [navigation]);
+  }, [fetchUserProfile, clearUserData]);
 
   useEffect(() => {
     if (error && (error.includes('Authentication failed') || error.includes('No authentication token found'))) {
       clearUserData();
       // Don't navigate automatically, let individual screens handle this
     }
-  }, [error, navigation]);
+  }, [error, clearUserData]);
 
   const logout = async () => {
     try {
       await AsyncStorage.removeItem('jwtToken');
       clearUserData();
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Auth' }],
-      });
+      if (navigation && typeof navigation.reset === 'function') {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Auth' }],
+        });
+      }
     } catch (error) {
       console.error('Error during logout:', error);
     }

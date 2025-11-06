@@ -10,7 +10,6 @@ import {
   Animated,
   Easing,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
 import FilterIcon from '~/assets/icons/FilterIcon.svg';
 import PropertyIcon from '~/assets/icons/PropertyIcon.svg';
 import SortIcon from '~/assets/icons/SortIcon.svg';
@@ -27,22 +26,18 @@ const MENU_ITEMS = [
 const ACTIVE_COLOR = '#02AFFF';
 const INACTIVE_COLOR = '#888';
 
-// Dummy data for demonstration
+// Sort options that map to parent component's sort values
 const SORT_OPTIONS = [
-  { value: 'price_low_high', label: 'Price: Low to High' },
-  { value: 'price_high_low', label: 'Price: High to Low' },
-  { value: 'rating', label: 'Rating' },
-  { value: 'distance', label: 'Distance' },
+  { value: 'popularity', label: 'Popularity' },
+  { value: 'rating', label: 'Customer Rating' },
+  { value: 'price', label: 'Price: Low to High' },
 ];
 
 const PROPERTY_TYPES = [
-  { value: 'hotel', label: 'Hotel' },
-  { value: 'apartment', label: 'Apartment' },
-  { value: 'resort', label: 'Resort' },
-  { value: 'villa', label: 'Villa' },
-  { value: 'homestay', label: 'Homestay' },
-  { value: 'beachhut', label: 'Beach Hut' },
-  { value: 'farmhouse', label: 'Farmhouse' },
+  { value: 'hotels', label: 'Hotels' },
+  { value: 'villas', label: 'Villas' },
+  { value: 'resorts', label: 'Resorts' },
+  { value: 'apartments', label: 'Apartments' },
 ];
 
 const FILTER_OPTIONS = [
@@ -53,17 +48,30 @@ const FILTER_OPTIONS = [
   { value: 'pet_friendly', label: 'Pet Friendly' },
 ];
 
-const HotelBookingBottomFiltersMenu = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
+interface HotelBookingBottomFiltersMenuProps {
+  selectedSort?: 'popularity' | 'rating' | 'price';
+  selectedPropertyType?: 'hotels' | 'villas' | 'resorts' | 'apartments';
+  selectedFilters?: string[];
+  onSortChange?: (sort: 'popularity' | 'rating' | 'price') => void;
+  onPropertyTypeChange?: (propertyType: 'hotels' | 'villas' | 'resorts' | 'apartments') => void;
+  onFiltersChange?: (filters: string[]) => void;
+}
 
+const HotelBookingBottomFiltersMenu: React.FC<HotelBookingBottomFiltersMenuProps> = ({
+  selectedSort: parentSelectedSort = 'popularity',
+  selectedPropertyType: parentSelectedPropertyType = 'hotels',
+  selectedFilters: parentSelectedFilters = [],
+  onSortChange,
+  onPropertyTypeChange,
+  onFiltersChange,
+}) => {
   // State for which bottom sheet is open
   const [openSheet, setOpenSheet] = useState<null | 'sort' | 'filter' | 'property'>(null);
 
-  // State for selected options
-  const [selectedSort, setSelectedSort] = useState<string>(SORT_OPTIONS[0].value);
-  const [selectedPropertyType, setSelectedPropertyType] = useState<string>(PROPERTY_TYPES[0].value);
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  // Use parent state or local fallback
+  const selectedSort = parentSelectedSort;
+  const selectedPropertyType = parentSelectedPropertyType;
+  const selectedFilters = [...parentSelectedFilters];
 
   // Animation for bottom sheet
   const sheetAnim = useRef(new Animated.Value(0)).current;
@@ -96,9 +104,22 @@ const HotelBookingBottomFiltersMenu = () => {
 
   // Filter toggle
   const toggleFilter = (value: string) => {
-    setSelectedFilters((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-    );
+    const newFilters = selectedFilters.includes(value)
+      ? selectedFilters.filter((v) => v !== value)
+      : [...selectedFilters, value];
+    onFiltersChange?.(newFilters);
+  };
+
+  // Handle sort change
+  const handleSortChange = (sortValue: 'popularity' | 'rating' | 'price') => {
+    onSortChange?.(sortValue);
+  };
+
+  // Handle property type change
+  const handlePropertyTypeChange = (propertyValue: 'hotels' | 'villas' | 'resorts' | 'apartments') => {
+    onPropertyTypeChange?.(propertyValue);
+    // Close sheet after selection for better UX
+    setTimeout(() => closeBottomSheet(), 200);
   };
 
   return (
@@ -181,7 +202,11 @@ const HotelBookingBottomFiltersMenu = () => {
                     className={`flex-row items-center py-3 w-full border p-3 mb-2 rounded-lg ${
                       selectedSort === option.value ? 'border-[#0E54EC] bg-[#0E54EC2B]/20' : 'border-gray-300'
                     }`}
-                    onPress={() => setSelectedSort(option.value)}
+                    onPress={() => {
+                      handleSortChange(option.value as 'popularity' | 'rating' | 'price');
+                      // Close sheet after selection for better UX
+                      setTimeout(() => closeBottomSheet(), 200);
+                    }}
                     activeOpacity={0.7}
                   >
                     <View
@@ -221,7 +246,7 @@ const HotelBookingBottomFiltersMenu = () => {
                       className={`flex-row items-center py-3 w-full border p-3 mb-2 rounded-lg ${
                         selectedPropertyType === type.value ? 'border-[#0E54EC] bg-[#0E54EC2B]/20' : 'border-gray-300'
                       }`}
-                      onPress={() => setSelectedPropertyType(type.value)}
+                      onPress={() => handlePropertyTypeChange(type.value as 'hotels' | 'villas' | 'resorts' | 'apartments')}
                       activeOpacity={0.7}
                     >
                       <View
@@ -252,15 +277,6 @@ const HotelBookingBottomFiltersMenu = () => {
                         {type.label}
                       </Text>
                     </TouchableOpacity>
-                    {idx === PROPERTY_TYPES.length - 1 && (
-                      <TouchableOpacity
-                        onPress={closeBottomSheet}
-                        className="mt-2 mb-2 py-2 px-4 rounded bg-[#0E54EC] items-center"
-                        activeOpacity={0.8}
-                      >
-                        <Text className="text-white font-semibold text-base">Confirm</Text>
-                      </TouchableOpacity>
-                    )}
                   </React.Fragment>
                 ))}
 
@@ -308,7 +324,9 @@ const HotelBookingBottomFiltersMenu = () => {
             {openSheet === 'filter' && (
               <View className="flex-row justify-between mb-8 items-center border-t border-gray-200 pt-4 pb-2 px-1 bg-white">
                 <TouchableOpacity
-                  onPress={() => setSelectedFilters([])}
+                  onPress={() => {
+                    onFiltersChange?.([]);
+                  }}
                   className="py-2 px-4 rounded bg-[#F2F7FF]"
                 >
                   <Text className="text-[#0E54EC] font-semibold">Reset All</Text>

@@ -7,6 +7,7 @@ import SearchIcon from '~/assets/icons/search.svg';
 import LocationIcon from '~/assets/icons/navigationPin.svg';
 import { API_URL } from '~/utils/api';
 import { SearchParams } from './HotelBookingSearch';
+import * as Location from 'expo-location';
 
 const TABS = ['Hotels', 'Resorts', 'HourlyStay'];
 
@@ -50,6 +51,12 @@ const EditSearchModal: React.FC<{
   const [locationSearch, setLocationSearch] = useState('');
   const [selectedLocation, setSelectedLocation] = useState(
     data?.destination || data?.location || ''
+  );
+  const [currentLatitude, setCurrentLatitude] = useState<number | null>(
+    (data as any)?.latitude ?? null
+  );
+  const [currentLongitude, setCurrentLongitude] = useState<number | null>(
+    (data as any)?.longitude ?? null
   );
 
   // Date state
@@ -176,9 +183,43 @@ const EditSearchModal: React.FC<{
     }
   };
 
-  const handleNearMeLocation = () => {
-    // Mock location for demo - in real app, use geolocation
-    handleLocationSelect('Current Location');
+  const handleNearMeLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Location permission is needed to find places near you.');
+        return;
+      }
+
+      const position = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = position.coords;
+      setCurrentLatitude(latitude);
+      setCurrentLongitude(longitude);
+
+      let friendlyName = 'Current Location';
+      try {
+        const results = await Location.reverseGeocodeAsync({ latitude, longitude });
+        if (results && results.length > 0) {
+          const r = results[0];
+          friendlyName = r.city || r.subregion || r.region || r.name || r.district || friendlyName;
+        }
+      } catch (e) {
+        console.warn('Reverse geocoding failed:', e);
+      }
+
+      setSelectedLocation(friendlyName);
+      setLocationSearch(friendlyName);
+      setLocationModalVisible(false);
+
+      if (selectedStartDate && selectedEndDate) {
+        setTimeout(() => {
+          handleSearch();
+        }, 200);
+      }
+    } catch (err) {
+      console.error('Near me error:', err);
+      Alert.alert('Error', 'Unable to get your current location.');
+    }
   };
 
   // Date handlers
@@ -263,8 +304,8 @@ const EditSearchModal: React.FC<{
 
   // Search handler
   const handleSearch = async () => {
-    if (!selectedLocation) {
-      Alert.alert('Error', 'Please select a location');
+    if (!selectedLocation && (currentLatitude == null || currentLongitude == null)) {
+      Alert.alert('Error', 'Please select a location or use Near me');
       return;
     }
 
@@ -280,19 +321,30 @@ const EditSearchModal: React.FC<{
         (selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 60 * 60 * 24)
       );
 
-      const requestBody = {
+      const formatDate = (d: Date) =>
+        `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+
+      const baseBody: any = {
         property_type:
           activeTab === 'Hotels' ? 'Hotel' : activeTab === 'Resorts' ? 'Resort' : 'HourlyStay',
-        latitude: null,
-        longitude: null,
-        location: selectedLocation,
         rooms: rooms.toString(),
         adult: adults.toString(),
         child: children.toString(),
-        todate: `${String(selectedStartDate.getDate()).padStart(2, '0')}-${String(selectedStartDate.getMonth() + 1).padStart(2, '0')}-${selectedStartDate.getFullYear()}`,
-        enddate: `${String(selectedEndDate.getDate()).padStart(2, '0')}-${String(selectedEndDate.getMonth() + 1).padStart(2, '0')}-${selectedEndDate.getFullYear()}`,
+        todate: formatDate(selectedStartDate),
+        enddate: formatDate(selectedEndDate),
         staynight: stayNights.toString(),
       };
+
+      let requestBody: any;
+      if (selectedLocation) {
+        requestBody = { ...baseBody, location: selectedLocation };
+      } else {
+        requestBody = { ...baseBody, latitude: currentLatitude, longitude: currentLongitude };
+      }
+
+      requestBody = Object.fromEntries(
+        Object.entries(requestBody).filter(([_, v]) => v !== undefined && v !== null && v !== '')
+      );
       console.log('Search request body:', requestBody);
       const response = await fetch(`${API_URL}/properties/p/active-r`, {
         method: 'POST',
@@ -305,15 +357,14 @@ const EditSearchModal: React.FC<{
       const data = await response.json();
 
       if (response.ok) {
-        // Close modal first
-        onClose();
-
         // Navigate to search results with the data
         navigation.navigate('HotelBookingSearch', {
           searchResults: data,
           searchParams: requestBody,
         });
         console.log('Search results:', data);
+        // Close modal after successful navigation data setup
+        onClose();
       } else {
         Alert.alert('Error', data.message || 'Search failed');
       }
@@ -328,6 +379,8 @@ const EditSearchModal: React.FC<{
     onSave({
       destination: selectedLocation,
       location: selectedLocation,
+      latitude: currentLatitude ?? undefined,
+      longitude: currentLongitude ?? undefined,
       checkIn: selectedStartDate?.toISOString(),
       checkOut: selectedEndDate?.toISOString(),
       todate: selectedStartDate

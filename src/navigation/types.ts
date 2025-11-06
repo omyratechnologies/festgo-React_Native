@@ -1,5 +1,4 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NavigatorScreenParams } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import { SearchParams } from '~/screens/HotelBooking/HotelBookingSearch';
@@ -74,6 +73,8 @@ export type MainStackParamList = {
   DeviceActivityScreen: undefined;
   HelpScreen: undefined;
 
+
+  TripsScreen: undefined;
   // hotel bookings
   HotelBooking: undefined;
   HotelBookingDetails: {
@@ -117,6 +118,6 @@ export type MainStackParamList = {
 
 export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export type AuthNavigationProp = NativeStackNavigationProp<AuthStackParamList>;
-export type MainTabNavigationProp = BottomTabNavigationProp<MainStackParamList>;
+export type MainTabNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
 export type AuthRouteProp<T extends keyof AuthStackParamList> = RouteProp<AuthStackParamList, T>;

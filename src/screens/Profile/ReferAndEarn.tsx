@@ -7,6 +7,7 @@ import {
   ToastAndroid,
   ActivityIndicator,
   Image,
+  Linking,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Feather, FontAwesome, MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
@@ -26,6 +27,10 @@ const ReferAndEarn = () => {
   const [copied, setCopied] = useState(false);
   const [referralCode, setreferralCode] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // Create a referral message for sharing
+  const getShareMessage = () =>
+    `Join me on this awesome app! Use my referral code: ${referralCode} to sign up and earn rewards.`;
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -71,6 +76,29 @@ const ReferAndEarn = () => {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  // Handle Twitter
+  const handleShareTwitter = () => {
+    const message = encodeURIComponent(getShareMessage());
+    const url = `https://twitter.com/intent/tweet?text=${message}`;
+    Linking.openURL(url);
+  };
+
+  // Handle Whatsapp
+  const handleShareWhatsapp = () => {
+    const message = encodeURIComponent(getShareMessage());
+    const url = `whatsapp://send?text=${message}`;
+    Linking.openURL(url).catch(() => {
+      ToastAndroid.show('Whatsapp not installed', ToastAndroid.SHORT);
+    });
+  };
+
+  // Handle Messages/SMS
+  const handleShareMessages = () => {
+    const message = encodeURIComponent(getShareMessage());
+    const url = `sms:&body=${message}`;
+    Linking.openURL(url);
+  };
+
   const renderReferral = ({ item }: { item: { id: string; name: string } }) => (
     <View
       className={
@@ -102,10 +130,8 @@ const ReferAndEarn = () => {
 
   return (
     <View className="flex-1">
-      <View style={{
-                backgroundColor: '#F15A29',
-              }}>
-      <ProfileHeaderMenu isDifferentPage pageTitle="Refer" />
+      <View style={{ backgroundColor: '#F15A29' }}>
+        <ProfileHeaderMenu isDifferentPage pageTitle="Refer" />
       </View>
       <FlatList
         ListHeaderComponent={
@@ -126,8 +152,7 @@ const ReferAndEarn = () => {
                       resizeMode="cover"
                     />
                   </View>
-                  <Text
-                    className={'mb-6  px-16 text-center font-baloo text-3xl font-bold text-white'}>
+                  <Text className={'mb-6  px-16 text-center font-baloo text-3xl font-bold text-white'}>
                     Refer your friends and Earn
                   </Text>
                   {/* Referral Code Button */}
@@ -151,6 +176,7 @@ const ReferAndEarn = () => {
                 {/* Share Buttons */}
                 <View className={'-mb-10  flex-row justify-center gap-6'}>
                   <TouchableOpacity
+                    onPress={handleShareTwitter}
                     className={'flex-row items-center overflow-hidden rounded-full p-0'}>
                     <LinearGradient
                       colors={['#2B2B2B', '#555555']}
@@ -170,7 +196,9 @@ const ReferAndEarn = () => {
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
-                  <TouchableOpacity className={'overflow-hidden rounded-full p-0'}>
+                  <TouchableOpacity
+                    onPress={handleShareWhatsapp}
+                    className={'overflow-hidden rounded-full p-0'}>
                     <LinearGradient
                       colors={['#00EB62', '#3AFF8C']}
                       start={{ x: 0, y: 0 }}
@@ -189,7 +217,9 @@ const ReferAndEarn = () => {
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
-                  <TouchableOpacity className={'overflow-hidden rounded-full p-0'}>
+                  <TouchableOpacity
+                    onPress={handleShareMessages}
+                    className={'overflow-hidden rounded-full p-0'}>
                     <LinearGradient
                       colors={['#2F78FF', '#528FFF']}
                       start={{ x: 0, y: 0 }}

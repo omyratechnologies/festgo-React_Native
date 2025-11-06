@@ -33,7 +33,15 @@ export const ProtectedScreenWrapper: React.FC<ProtectedScreenWrapperProps> = ({ 
           Please login to access this feature
         </Text>
         <TouchableOpacity
-          onPress={() => navigation.navigate('Auth', { screen: 'Login' })}
+          onPress={() => {
+            try {
+              if (navigation && typeof navigation.navigate === 'function') {
+                navigation.navigate('Auth', { screen: 'Login' });
+              }
+            } catch (error) {
+              console.error('Navigation error:', error);
+            }
+          }}
           className="bg-[#F15A29] px-6 py-3 rounded-full">
           <Text className="text-white font-semibold">Go to Login</Text>
         </TouchableOpacity>

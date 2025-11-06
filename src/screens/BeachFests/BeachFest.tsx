@@ -97,7 +97,7 @@ const BeachFest = () => {
           justifyContent: 'flex-start',
         }}>
         {/* Background Image */}
-        <View className="absolute inset-0 overflow-hidden rounded-b-[30px] bg-[#0E54EC]">
+        <View className="absolute inset-0 overflow-hidden bg-[#0E54EC]">
           <Image
             source={{
               uri: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop',
@@ -154,9 +154,9 @@ const BeachFest = () => {
 
       {/* Main Content */}
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-white -mt-20 rounded-t-[40px]"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
+        contentContainerStyle={{ padding: 20, paddingBottom: 120, paddingTop: 36 }}>
         {loading && (
           <View className="flex items-center justify-center py-10">
             <ActivityIndicator size="large" color="#2563eb" />

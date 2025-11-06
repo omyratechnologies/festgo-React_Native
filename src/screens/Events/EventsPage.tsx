@@ -94,7 +94,7 @@ const EventsPage = () => {
           <HotelBookingHeaderMenu white />
           <EventsBackgroundImage
             width="100%"
-            height="100%"
+            height="120%"
             style={StyleSheet.absoluteFill}
             preserveAspectRatio="none"
           />
@@ -118,7 +118,7 @@ const EventsPage = () => {
           </View>
         </View>
       </View>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
+      <ScrollView className="flex-1 bg-white -mt-6 rounded-t-[40px]" contentContainerStyle={{ padding: 20, paddingBottom: 120, paddingTop: 36 }}>
         {loading ? (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 40 }}>
             <ActivityIndicator size="large" color="#FF6565" />

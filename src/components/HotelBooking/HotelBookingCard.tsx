@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, Text, Modal, TextInput, ScrollView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
+import { useOptionalNavigation } from '~/navigation/useOptionalNavigation';
 import BackIcon from '~/assets/icons/hotelBooking/BackIcon.svg';
 import SearchIcon from '~/assets/icons/search.svg';
 import LocationIcon from '~/assets/icons/navigationPin.svg';
@@ -49,6 +50,8 @@ const HotelBookingCard: React.FC<HotelBookingCardProps> = ({ initialTab = 'Hotel
   // Location state
   const [locationSearch, setLocationSearch] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
+  const [currentLatitude, setCurrentLatitude] = useState<number | null>(null);
+  const [currentLongitude, setCurrentLongitude] = useState<number | null>(null);
 
   // Date state
   const [selectedStartDate, setSelectedStartDate] = useState<Date | null>(null);
@@ -61,7 +64,7 @@ const HotelBookingCard: React.FC<HotelBookingCardProps> = ({ initialTab = 'Hotel
   const [children, setChildren] = useState(0);
   const [guestsText, setGuestsText] = useState('1 Room, 2 Adults');
 
-  const navigation = useNavigation<MainTabNavigationProp>();
+  const navigation = useOptionalNavigation<MainTabNavigationProp>();
   const months = generateMonths();
 
   // Update activeTab when initialTab prop changes
@@ -105,18 +108,51 @@ const HotelBookingCard: React.FC<HotelBookingCardProps> = ({ initialTab = 'Hotel
   };
 
   const handleNearMeLocation = async () => {
-    // Mock location for demo - in real app, use geolocation
-    console.log('Requesting location permissions');
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      console.log('Permission to access location was denied');
-      return;
-    }
+    try {
+      console.log('Requesting location permissions');
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Location permission is needed to find places near you.');
+        return;
+      }
 
-    console.log('Getting current position');
-    let location = await Location.getCurrentPositionAsync({});
-    console.log('Current position:', location.coords);
-    handleLocationSelect('Current Location');
+      console.log('Getting current position');
+      const position = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = position.coords;
+      setCurrentLatitude(latitude);
+      setCurrentLongitude(longitude);
+
+      // Reverse geocode to a friendly place name (city/locality)
+      let friendlyName = 'Current Location';
+      try {
+        const results = await Location.reverseGeocodeAsync({ latitude, longitude });
+        console.log(results)
+        if (results && results.length > 0) {
+          const r = results[0];
+          friendlyName = r.city || r.subregion || r.region || r.name || r.district || friendlyName;
+        }
+      } catch (e) {
+        console.warn('Reverse geocoding failed:', e);
+      }
+
+      setSelectedLocation(friendlyName);
+      setLocationSearch(friendlyName);
+      setLocationModalVisible(false);
+
+      // If dates are already picked, immediately search near current location
+      if (selectedStartDate && selectedEndDate) {
+        setTimeout(() => {
+          try {
+            handleSearch();
+          } catch (error) {
+            console.warn('Auto-search error:', error);
+          }
+        }, 200);
+      }
+    } catch (err) {
+      console.error('Near me error:', err);
+      Alert.alert('Error', 'Unable to get your current location.');
+    }
   };
 
   // Date handlers
@@ -170,8 +206,13 @@ const HotelBookingCard: React.FC<HotelBookingCardProps> = ({ initialTab = 'Hotel
       };
 
       // Navigate to checkout screen
-      navigation.navigate('HotelBookingCheckout', { checkoutData });
-      setDateModalVisible(false);
+      try {
+        navigation.navigate('HotelBookingCheckout', { checkoutData });
+        setDateModalVisible(false);
+      } catch (navError) {
+        console.warn('Navigation error:', navError);
+        Alert.alert('Error', 'Unable to navigate to checkout. Please try again.');
+      }
     }
   };
 
@@ -236,8 +277,9 @@ const HotelBookingCard: React.FC<HotelBookingCardProps> = ({ initialTab = 'Hotel
 
   // Search handler
   const handleSearch = async () => {
-    if (!selectedLocation) {
-      Alert.alert('Error', 'Please select a location');
+    // Allow either a typed location OR coordinates
+    if (!selectedLocation && (currentLatitude == null || currentLongitude == null)) {
+      Alert.alert('Error', 'Please select a location or use Near me');
       return;
     }
 
@@ -260,12 +302,10 @@ const HotelBookingCard: React.FC<HotelBookingCardProps> = ({ initialTab = 'Hotel
         return `${day}-${month}-${year}`;
       };
 
-      const requestBody: SearchParams = {
+      // Build payload supporting either name or lat/lng
+      const baseBody: any = {
         property_type:
           activeTab === 'Hotels' ? 'Hotel' : activeTab === 'Resorts' ? 'Resort' : 'HourlyStay',
-        latitude: null,
-        longitude: null,
-        location: selectedLocation,
         rooms: rooms.toString(),
         adult: adults.toString(),
         child: children.toString(),
@@ -273,6 +313,19 @@ const HotelBookingCard: React.FC<HotelBookingCardProps> = ({ initialTab = 'Hotel
         enddate: formatDate(selectedEndDate),
         staynight: stayNights.toString(),
       };
+
+      // Prefer location name if provided, otherwise use coordinates
+      let requestBody: any;
+      if (selectedLocation) {
+        requestBody = { ...baseBody, location: selectedLocation };
+      } else {
+        requestBody = { ...baseBody, latitude: currentLatitude, longitude: currentLongitude };
+      }
+
+      // Clean undefined/null fields
+      requestBody = Object.fromEntries(
+        Object.entries(requestBody).filter(([_, v]) => v !== undefined && v !== null && v !== '')
+      );
       // console.log('Search request body:', requestBody);
       const response = await fetch(`${API_URL}/properties/p/active-r`, {
         method: 'POST',
@@ -286,11 +339,16 @@ const HotelBookingCard: React.FC<HotelBookingCardProps> = ({ initialTab = 'Hotel
 
       if (response.ok) {
         // Navigate to search results with the data
-        navigation.navigate('HotelBookingSearch', {
-          searchResults: data,
-          searchParams: requestBody,
-        });
-        console.log('Search results:', data);
+        try {
+          navigation.navigate('HotelBookingSearch', {
+            searchResults: data,
+            searchParams: requestBody,
+          });
+          console.log('Search results:', data);
+        } catch (navError) {
+          console.warn('Navigation error:', navError);
+          Alert.alert('Error', 'Unable to navigate. Please try again.');
+        }
       } else {
         Alert.alert('Error', data.message || 'Search failed');
       }

@@ -20,6 +20,7 @@ import BottomMenu from '~/components/common/BottomMenu';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
+import { useOptionalNavigation } from '~/navigation/useOptionalNavigation';
 
 // --- Consistent TextInput Styles ---
 const inputBaseClass =
@@ -43,7 +44,7 @@ interface EditProfileForm {
 }
 
 const EditProfile = () => {
-  const navigation = useNavigation<MainTabNavigationProp>();
+  const navigation = useOptionalNavigation<MainTabNavigationProp>();
   const { userData } = useUserStore();
   const [formData, setFormData] = useState<EditProfileForm>({
     firstname: '',
@@ -181,7 +182,12 @@ const EditProfile = () => {
       const data = await response.json();
       if (data.status === 200) {
         Alert.alert('Success', 'Profile updated successfully');
-        navigation.goBack();
+        try {
+          navigation.goBack();
+        } catch (navError) {
+          console.warn('Navigation error:', navError);
+          // Profile was saved successfully, just can't navigate back
+        }
       } else {
         Alert.alert('Error', data.message || 'Update failed');
       }
@@ -325,22 +331,19 @@ const EditProfile = () => {
           </Text>
 
           {/* Gender */}
-          {/* <View className="mb-6">
+           <View className="mb-6">
             <Text className="mb-2 font-poppins text-sm font-medium text-gray-700">Gender</Text>
             <View className="flex-row space-x-4">
               {['Male', 'Female', 'Other'].map((genderOption) => (
                 <TouchableOpacity
                   key={genderOption}
                   onPress={() => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      gender: genderOption,
-                    }));
+                    setFormData((prev) => ({ ...prev, gender: genderOption }));
                   }}
-                  className={`flex-row items-center rounded-lg py-2 ${
+                  className={`flex-row items-center rounded-lg py-2 border ${
                     formData?.gender === genderOption
                       ? 'border-[#F15A29] bg-[#F15A29] shadow-sm'
-                      : 'border-gray-300'
+                      : 'border-gray-300 bg-white'
                   }`}
                   style={{ minWidth: 90, justifyContent: 'center', marginRight: 8 }}
                   activeOpacity={0.8}
@@ -368,7 +371,7 @@ const EditProfile = () => {
                 </TouchableOpacity>
               ))}
             </View>
-          </View> */}
+          </View> 
 
           {renderInput({
             label: 'First Name',
