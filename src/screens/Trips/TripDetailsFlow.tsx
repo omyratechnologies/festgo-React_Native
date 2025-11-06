@@ -94,6 +94,29 @@ const TripDetailsFlow: React.FC = () => {
 
       const result = await resp.json();
       if (!resp.ok || !result.success) {
+        // Handle specific error with available tiers
+        if (result.availableTiers && Array.isArray(result.availableTiers) && result.availableTiers.length > 0) {
+          const availableTiersText = result.availableTiers.join(', ');
+          const firstAvailableTier = result.availableTiers[0];
+          
+          Alert.alert(
+            'Invalid Group Size',
+            `${result.message || 'Selected group size is not applicable for this trip.'}\n\nAvailable group sizes: ${availableTiersText}\n\nWould you like to use ${firstAvailableTier} persons instead?`,
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+              },
+              {
+                text: `Use ${firstAvailableTier}`,
+                onPress: () => {
+                  setNumPersons(firstAvailableTier);
+                },
+              },
+            ]
+          );
+          return;
+        }
         throw new Error(result.message || 'Booking failed');
       }
 
