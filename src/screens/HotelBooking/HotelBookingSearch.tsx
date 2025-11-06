@@ -144,6 +144,7 @@ const HotelBookingSearch: React.FC = () => {
   );
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
+  const [appliedFilters, setAppliedFilters] = useState<any>({});
   console.log('Search Results:', searchResults);
   console.log('Search Params:', searchParams);
   // Initialize hotels data
@@ -220,8 +221,46 @@ const HotelBookingSearch: React.FC = () => {
       return expectedTypes.some(type => hotelPropertyType === type || hotelPropertyType.includes(type));
     });
 
+    // Apply price range filter
+    if (appliedFilters.minPrice || appliedFilters.maxPrice) {
+      filteredHotels = filteredHotels.filter((hotel: Hotel) => {
+        const price = hotel.pricePerNight 
+          ? Number(hotel.pricePerNight) 
+          : hotel.price?.base_price_for_2_adults 
+          ? Number(hotel.price.base_price_for_2_adults) 
+          : hotel.originalPrice 
+          ? Number(hotel.originalPrice) 
+          : 0;
+        
+        if (appliedFilters.minPrice && price < appliedFilters.minPrice) return false;
+        if (appliedFilters.maxPrice && price > appliedFilters.maxPrice) return false;
+        return true;
+      });
+    }
+
+    // Apply star rating filter
+    if (appliedFilters.starRatings && appliedFilters.starRatings.length > 0) {
+      filteredHotels = filteredHotels.filter((hotel: Hotel) => {
+        const hotelStarRating = hotel.star_rating || 0;
+        return appliedFilters.starRatings.includes(hotelStarRating);
+      });
+    }
+
+    // Apply user rating filter
+    if (appliedFilters.userRatings && appliedFilters.userRatings.length > 0) {
+      filteredHotels = filteredHotels.filter((hotel: Hotel) => {
+        const hotelRating = hotel.rating || 0;
+        return appliedFilters.userRatings.some((ratingType: string) => {
+          if (ratingType === 'excellent' && hotelRating >= 4.2) return true;
+          if (ratingType === 'very_good' && hotelRating >= 3.5) return true;
+          if (ratingType === 'good' && hotelRating >= 3.0) return true;
+          return false;
+        });
+      });
+    }
+
     // Apply other filters (check facilities/amenities)
-    if (selectedFilters.length > 0) {
+    if (selectedFilters.length > 0 || appliedFilters.amenities || appliedFilters.roomAmenities || appliedFilters.roomView) {
       filteredHotels = filteredHotels.filter((hotel: Hotel) => {
         // Check both amenities array and facilities array
         const hotelAmenities = hotel.amenities || [];
@@ -232,18 +271,54 @@ const HotelBookingSearch: React.FC = () => {
           f.amenity_name?.toLowerCase() || ''
         );
         
-        // Check if any selected filter matches
-        return selectedFilters.some((filter: string) => {
-          const filterLower = filter.toLowerCase().replace(/\s+/g, '_');
-          // Check direct match
-          if (hotelAmenities.includes(filter) || hotelAmenities.includes(filterLower)) {
-            return true;
-          }
-          // Check facility names
-          return facilityNames.some((name: string) => 
-            name.includes(filterLower) || name.includes(filter.replace(/_/g, ' ').toLowerCase())
-          );
-        });
+        // Check selected filters
+        if (selectedFilters.length > 0) {
+          const matchesSelected = selectedFilters.some((filter: string) => {
+            const filterLower = filter.toLowerCase().replace(/\s+/g, '_');
+            if (hotelAmenities.includes(filter) || hotelAmenities.includes(filterLower)) {
+              return true;
+            }
+            return facilityNames.some((name: string) => 
+              name.includes(filterLower) || name.includes(filter.replace(/_/g, ' ').toLowerCase())
+            );
+          });
+          if (!matchesSelected) return false;
+        }
+
+        // Check amenities filter
+        if (appliedFilters.amenities && appliedFilters.amenities.length > 0) {
+          const matchesAmenities = appliedFilters.amenities.some((amenity: string) => {
+            const amenityLower = amenity.toLowerCase().replace(/_/g, ' ');
+            return facilityNames.some((name: string) => 
+              name.includes(amenityLower) || name.includes(amenity)
+            );
+          });
+          if (!matchesAmenities) return false;
+        }
+
+        // Check room amenities filter
+        if (appliedFilters.roomAmenities && appliedFilters.roomAmenities.length > 0) {
+          const matchesRoomAmenities = appliedFilters.roomAmenities.some((amenity: string) => {
+            const amenityLower = amenity.toLowerCase().replace(/_/g, ' ');
+            return facilityNames.some((name: string) => 
+              name.includes(amenityLower) || name.includes(amenity)
+            );
+          });
+          if (!matchesRoomAmenities) return false;
+        }
+
+        // Check room view filter
+        if (appliedFilters.roomView && appliedFilters.roomView.length > 0) {
+          const matchesRoomView = appliedFilters.roomView.some((view: string) => {
+            const viewLower = view.toLowerCase().replace(/_/g, ' ');
+            return facilityNames.some((name: string) => 
+              name.includes(viewLower) || name.includes(view)
+            );
+          });
+          if (!matchesRoomView) return false;
+        }
+
+        return true;
       });
     }
 
@@ -314,6 +389,7 @@ const HotelBookingSearch: React.FC = () => {
   const handleApplyFilters = async (filters: any) => {
     setLoading(true);
     setFilterModalVisible(false);
+    setAppliedFilters(filters); // Store applied filters for client-side filtering
 
     try {
       const filterParams: FilterParams = {
@@ -804,6 +880,7 @@ const HotelBookingSearch: React.FC = () => {
           onSortChange={setSelectedSort}
           onPropertyTypeChange={setSelectedPropertyType}
           onFiltersChange={setSelectedFilters}
+          onApplyFilters={handleApplyFilters}
         />
       )}
     </View>

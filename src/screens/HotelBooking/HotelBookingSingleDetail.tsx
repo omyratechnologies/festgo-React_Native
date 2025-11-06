@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   FlatList,
   Dimensions,
   TouchableOpacity,
+  Linking,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NavigationProp } from '~/navigation/types';
@@ -58,11 +60,23 @@ export default function HotelBookingSingleDetail() {
     success?: boolean;
     status?: number;
     hotelName?: string;
+    name?: string;
     description?: string;
     cuisines?: { food: string }[];
     rating?: number;
-    latitude?: number;
-    longitude?: number;
+    location?: {
+      lat?: number;
+      lng?: number;
+      city?: string;
+      state?: string;
+      country?: string;
+      pincode?: string;
+      locality?: string;
+      houseNumber?: string;
+      searchLocation?: string;
+      address?: string;
+      [key: string]: any;
+    };
     amenities?: {
       category: string;
       items: { name: string; selected: boolean }[];
@@ -71,6 +85,7 @@ export default function HotelBookingSingleDetail() {
     review?: any[];
     propertyRules?: { rulesData: string }[];
     photos?: string[];
+    imageList?: string[];
     videos?: string[];
   };
 
@@ -130,6 +145,72 @@ export default function HotelBookingSingleDetail() {
     }
   }, [propertyId]);
 
+  // Get location coordinates (before early returns to maintain hook order)
+  const location = hotelData?.location;
+  const latitude = location?.lat;
+  const longitude = location?.lng;
+
+  // Generate Google Static Maps URL for preview (must be before early returns)
+  const staticMapUrl = useMemo(() => {
+    if (latitude && longitude) {
+      // Google Maps Static API URL
+      return `https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=15&size=600x300&markers=color:red%7C${latitude},${longitude}&scale=2`;
+    }
+    return null;
+  }, [latitude, longitude]);
+
+  // Get location display text (must be before early returns)
+  const locationText = useMemo(() => {
+    if (!location) return 'Location not available';
+    
+    // Build address from available fields
+    const parts: string[] = [];
+    if (location.houseNumber) parts.push(location.houseNumber);
+    if (location.locality) parts.push(location.locality);
+    if (location.city) parts.push(location.city);
+    if (location.state && location.state !== location.city) parts.push(location.state);
+    if (location.pincode) parts.push(location.pincode);
+    if (location.country) parts.push(location.country);
+    
+    if (parts.length > 0) {
+      return parts.join(', ');
+    }
+    
+    if (location.searchLocation) return location.searchLocation;
+    if (location.city) return location.city;
+    if (latitude && longitude) {
+      return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+    }
+    
+    return 'Location not available';
+  }, [location, latitude, longitude]);
+
+  // Function to open Google Maps
+  const handleOpenGoogleMaps = async () => {
+    if (!latitude || !longitude) {
+      Alert.alert('Location Not Available', 'Location coordinates are not available for this property.');
+      return;
+    }
+
+    // Try to open Google Maps app first, fallback to web
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+    const googleMapsAppUrl = `comgooglemaps://?q=${latitude},${longitude}`;
+
+    try {
+      // Try to open Google Maps app
+      const canOpen = await Linking.canOpenURL(googleMapsAppUrl);
+      if (canOpen) {
+        await Linking.openURL(googleMapsAppUrl);
+      } else {
+        // Fallback to web version
+        await Linking.openURL(googleMapsUrl);
+      }
+    } catch (error) {
+      console.error('Error opening Google Maps:', error);
+      Alert.alert('Error', 'Unable to open Google Maps. Please try again.');
+    }
+  };
+
   // Add retry functionality
   const handleRetry = () => {
     if (propertyId) {
@@ -171,12 +252,14 @@ export default function HotelBookingSingleDetail() {
 
   const {
     hotelName,
+    name,
     rating,
     description,
     amenities,
     review,
     propertyRules,
     photos,
+    imageList,
     totalReviewRate,
   } = hotelData;
 
@@ -212,10 +295,10 @@ export default function HotelBookingSingleDetail() {
                   return null;
                 })()}
 
-                {photos && photos.length > 0 ? (
+                {((photos && photos.length > 0) || (imageList && imageList.length > 0)) ? (
                   <>
                     <FlatList
-                      data={photos}
+                      data={photos || imageList}
                       horizontal
                       pagingEnabled
                       showsHorizontalScrollIndicator={false}
@@ -244,9 +327,9 @@ export default function HotelBookingSingleDetail() {
                     />
 
                     {/* Pagination Dots */}
-                    {photos.length > 1 && (
+                    {((photos && photos.length > 1) || (imageList && imageList.length > 1)) && (
                       <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
-                        {photos.map((_, index) => (
+                        {(photos || imageList || []).map((_, index) => (
                           <View
                             key={index}
                             className={`mx-1 h-2 w-2 rounded-full ${
@@ -260,7 +343,7 @@ export default function HotelBookingSingleDetail() {
                     {/* Image counter overlay */}
                     <View className="absolute bottom-2 right-2 rounded-full bg-black/50 px-2 py-1">
                       <Text className="text-xs font-semibold text-white">
-                        {currentImageIndex + 1} / {photos.length}
+                        {currentImageIndex + 1} / {((photos || imageList)?.length ?? 0)}
                       </Text>
                     </View>
                   </>
@@ -289,7 +372,7 @@ export default function HotelBookingSingleDetail() {
                   </View>
                   <View className="flex-row items-center gap-2">
                     <Text className="font-poppins text-lg font-semibold">
-                      {hotelName || 'Hotel Name'}
+                      {hotelName || name || 'Hotel Name'}
                     </Text>
                   </View>
                 </View>
@@ -312,10 +395,15 @@ export default function HotelBookingSingleDetail() {
                   </View>
                 </View>
               </View>
-              <View className="mb-2 flex-row items-center">
+              <TouchableOpacity 
+                className="mb-2 flex-row items-center"
+                onPress={handleOpenGoogleMaps}
+                disabled={!latitude || !longitude}
+                activeOpacity={0.7}
+              >
                 <LocationIcon width={16} height={16} className="mr-1" />
-                <Text className="font-poppins text-sm text-gray-600">Location</Text>
-              </View>
+                <Text className="font-poppins text-sm text-gray-600">{locationText}</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Dates, Rooms, Adults, Edit */}
@@ -657,24 +745,48 @@ export default function HotelBookingSingleDetail() {
             </Modal>
 
             {/* Location & Map */}
-            <View className="my-6 px-4">
-              <View className="mb-1 flex-row items-center justify-between">
-                <Text className="mr-2 font-poppins font-semibold text-blue-600">Location</Text>
-                <Pressable className="mb-2 flex-row items-center" onPress={() => {}}>
-                  <Text className="mr-2 font-poppins font-semibold text-[#00AEEF]">View Map</Text>
-                </Pressable>
+            {latitude && longitude && (
+              <View className="my-6 px-4">
+                <View className="mb-1 flex-row items-center justify-between">
+                  <Text className="mr-2 font-poppins font-semibold text-blue-600">Location</Text>
+                  <TouchableOpacity 
+                    className="mb-2 flex-row items-center" 
+                    onPress={handleOpenGoogleMaps}
+                    activeOpacity={0.7}
+                  >
+                    <Text className="mr-2 font-poppins font-semibold text-[#00AEEF]">View Map</Text>
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  onPress={handleOpenGoogleMaps}
+                  activeOpacity={0.9}
+                  className="mb-2 flex-col items-center justify-between rounded-xl border border-[#F3F3F3] p-2 overflow-hidden"
+                >
+                  {staticMapUrl ? (
+                    <Image
+                      source={{ uri: staticMapUrl }}
+                      className="h-40 w-full rounded-lg"
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View className="h-40 w-full rounded-lg bg-gray-200 items-center justify-center">
+                      <Text className="font-poppins text-gray-500">Map loading...</Text>
+                    </View>
+                  )}
+                  <View className="w-full flex-row items-center justify-between py-2">
+                    <Text className="flex-1 font-poppins text-sm text-gray-600">
+                      {locationText}
+                    </Text>
+                    <View className="flex-row items-center ml-2">
+                      <LocationIcon width={16} height={16} color="#0E54EC" />
+                      <Text className="ml-1 font-poppins text-sm font-semibold text-[#0E54EC]">
+                        Open in Maps
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
               </View>
-              <View className="mb-2 flex-col items-center justify-between rounded-xl border border-[#F3F3F3] p-2">
-                <Image
-                  source={{ uri: 'https://staticmapmaker.com/img/google-placeholder.png' }}
-                  className="h-40 w-full rounded-lg"
-                  resizeMode="cover"
-                />
-                <Text className="w-full py-1 text-start font-poppins text-sm text-gray-600">
-                  Hotel Location
-                </Text>
-              </View>
-            </View>
+            )}
 
           </>
         )}
