@@ -59,7 +59,7 @@ export type MainStackParamList = {
 
   // profile
   EditProfile: undefined;
-  MyOrders: undefined;
+  MyOrders: { filter?: 'hotel' | 'event' | 'beachfest' };
   PaymentHistory: undefined;
   Services: undefined;
   Rewards: undefined;

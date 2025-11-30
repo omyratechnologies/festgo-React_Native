@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
   Platform,
   TextInput,
+  Pressable,
+  KeyboardAvoidingView,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -20,7 +22,6 @@ import BottomMenu from '~/components/common/BottomMenu';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
-import { useOptionalNavigation } from '~/navigation/useOptionalNavigation';
 
 // --- Consistent TextInput Styles ---
 const inputBaseClass =
@@ -44,7 +45,7 @@ interface EditProfileForm {
 }
 
 const EditProfile = () => {
-  const navigation = useOptionalNavigation<MainTabNavigationProp>();
+  const navigation = useNavigation<MainTabNavigationProp>();
   const { userData } = useUserStore();
   const [formData, setFormData] = useState<EditProfileForm>({
     firstname: '',
@@ -66,6 +67,9 @@ const EditProfile = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
+  const [showGenderDropdown, setShowGenderDropdown] = useState(false);
+
+  const genderOptions = ['Male', 'Female', 'Other'];
 
   useEffect(() => {
     if (userData) {
@@ -182,11 +186,14 @@ const EditProfile = () => {
       const data = await response.json();
       if (data.status === 200) {
         Alert.alert('Success', 'Profile updated successfully');
-        try {
-          navigation.goBack();
-        } catch (navError) {
-          console.warn('Navigation error:', navError);
-          // Profile was saved successfully, just can't navigate back
+        // Safely navigate back if navigation is available
+        if (navigation && typeof navigation.goBack === 'function') {
+          try {
+            navigation.goBack();
+          } catch (navError) {
+            console.warn('Navigation error:', navError);
+            // Profile was saved successfully, just can't navigate back
+          }
         }
       } else {
         Alert.alert('Error', data.message || 'Update failed');
@@ -273,10 +280,18 @@ const EditProfile = () => {
   );
 
   return (
-    <View className="flex-1 bg-white">
-
+    <KeyboardAvoidingView 
+      className="flex-1 bg-white"
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       <ProfileHeaderMenu isDifferentPage pageTitle="Edit Profile" />
-      <ScrollView className="mb-32 flex-1 px-4">
+      <ScrollView 
+        className="mb-32 flex-1 px-4"
+        onScrollBeginDrag={() => setShowGenderDropdown(false)}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         {/* Profile Completion Banner */}
         <View className="mt-6">
           <View className="mx-4 rounded-xl bg-[#F15A29] p-4">
@@ -330,47 +345,94 @@ const EditProfile = () => {
             Personal Information
           </Text>
 
-          {/* Gender */}
-           <View className="mb-6">
-            <Text className="mb-2 font-poppins text-sm font-medium text-gray-700">Gender</Text>
-            <View className="flex-row space-x-4">
-              {['Male', 'Female', 'Other'].map((genderOption) => (
-                <TouchableOpacity
-                  key={genderOption}
-                  onPress={() => {
-                    setFormData((prev) => ({ ...prev, gender: genderOption }));
-                  }}
-                  className={`flex-row items-center rounded-lg py-2 border ${
-                    formData?.gender === genderOption
-                      ? 'border-[#F15A29] bg-[#F15A29] shadow-sm'
-                      : 'border-gray-300 bg-white'
-                  }`}
-                  style={{ minWidth: 90, justifyContent: 'center', marginRight: 8 }}
-                  activeOpacity={0.8}
-                >
-                  <View
-                    className={`mr-2 h-4 w-4 items-center justify-center rounded-full border-2 ${
-                      formData?.gender === genderOption
-                        ? 'border-white bg-white'
-                        : 'border-[#F15A29] bg-transparent'
-                    }`}
-                  >
-                    {formData?.gender === genderOption && (
-                      <View className="h-2 w-2 rounded-full bg-[#F15A29]" />
-                    )}
-                  </View>
-                  <Text
-                    className={`font-poppins text-sm ${
-                      formData?.gender === genderOption
-                        ? 'font-semibold text-white'
-                        : 'text-gray-700'
-                    }`}
-                  >
-                    {genderOption}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+          {/* Gender Dropdown */}
+          <View className="mb-4 flex-1 items-start w-full relative">
+            <Text className="-mb-2 mx-2 z-10 px-2 bg-white font-poppins text-sm font-medium text-gray-700">
+              Gender
+            </Text>
+            <Pressable
+              onPress={() => setShowGenderDropdown(!showGenderDropdown)}
+              className={`${inputBaseClass} ${
+                formData._activeField === 'gender' || (formData.gender && formData.gender.length > 0)
+                  ? inputActiveBorder
+                  : inputInactiveBorder
+              } w-full flex-row items-center justify-between`}
+            >
+              <Text
+                className={`text-base font-poppins ${
+                  formData.gender ? 'text-gray-800' : 'text-gray-400'
+                }`}
+              >
+                {formData.gender || 'Select gender'}
+              </Text>
+              <Ionicons
+                name={showGenderDropdown ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#666"
+              />
+            </Pressable>
+            {showGenderDropdown && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 56,
+                  left: 0,
+                  right: 0,
+                  backgroundColor: 'white',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#E5E7EB',
+                  zIndex: 999,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4,
+                  elevation: 5,
+                  maxHeight: 150,
+                }}
+              >
+                <ScrollView nestedScrollEnabled>
+                  {genderOptions.map((option) => (
+                    <Pressable
+                      key={option}
+                      onPress={() => {
+                        setFormData((prev) => ({ ...prev, gender: option }));
+                        setShowGenderDropdown(false);
+                      }}
+                      className={`px-4 py-3 border-b border-gray-100 ${
+                        formData.gender === option ? 'bg-orange-50' : 'bg-white'
+                      }`}
+                      style={{
+                        borderBottomWidth: genderOptions.indexOf(option) === genderOptions.length - 1 ? 0 : 1,
+                      }}
+                    >
+                      <View className="flex-row items-center">
+                        <View
+                          className={`mr-3 h-4 w-4 items-center justify-center rounded-full border-2 ${
+                            formData.gender === option
+                              ? 'border-[#F15A29] bg-[#F15A29]'
+                              : 'border-gray-300 bg-transparent'
+                          }`}
+                        >
+                          {formData.gender === option && (
+                            <View className="h-2 w-2 rounded-full bg-white" />
+                          )}
+                        </View>
+                        <Text
+                          className={`font-poppins text-base ${
+                            formData.gender === option
+                              ? 'font-semibold text-[#F15A29]'
+                              : 'text-gray-700'
+                          }`}
+                        >
+                          {option}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
           </View> 
 
           {renderInput({
@@ -568,7 +630,7 @@ const EditProfile = () => {
       )}
 
       <BottomMenu />
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

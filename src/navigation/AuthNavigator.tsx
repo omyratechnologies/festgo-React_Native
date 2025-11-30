@@ -1,5 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useEffect } from 'react';
+import { RouteProp, useRoute } from '@react-navigation/native';
 
 import { AuthStackParamList } from './types';
 
@@ -30,9 +31,14 @@ export const AuthNavigator = ({ deepLinkParams }: AuthNavigatorProps) => {
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="OTP" component={OTPScreen} />
       <Stack.Screen name="SignupScreen" component={SignupScreen} />
-      <Stack.Screen name="EmailVerification">
-        {() => <EmailVerificationScreen token={deepLinkParams?.token || ''} />}
-      </Stack.Screen>
+      <Stack.Screen 
+        name="EmailVerification"
+        component={({ route }: { route: RouteProp<AuthStackParamList, 'EmailVerification'> }) => {
+          // Get token from route params (React Navigation linking) or deepLinkParams (manual handling)
+          const token = route.params?.token || deepLinkParams?.token || '';
+          return <EmailVerificationScreen token={token} />;
+        }}
+      />
     </Stack.Navigator>
   );
 };

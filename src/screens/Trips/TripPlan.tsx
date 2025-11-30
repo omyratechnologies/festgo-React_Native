@@ -169,7 +169,7 @@ const TripPlan: React.FC = () => {
     <View className="flex-1 bg-white">
       <View
         style={{
-          height: 280,
+          height: 240,
           position: 'relative',
           alignItems: 'center',
           justifyContent: 'flex-start',

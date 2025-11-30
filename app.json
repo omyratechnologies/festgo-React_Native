@@ -2,7 +2,7 @@
   "expo": {
     "name": "FestGo",
     "slug": "festgo",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "scheme": "festgo",
     "linking": {
       "prefixes": [
@@ -31,7 +31,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.festgo.app",
-      "buildNumber": "7",
+      "buildNumber": "8",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app needs access to location to find nearby hotels and provide location-based services.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs access to location to find nearby hotels and provide location-based services even when the app is in the background.",
@@ -44,8 +44,8 @@
         ],
         "CFBundleDisplayName": "FestGo",
         "CFBundleName": "FestGo",
-        "CFBundleShortVersionString": "1.6.0",
-        "CFBundleVersion": "7",
+        "CFBundleShortVersionString": "1.7.0",
+        "CFBundleVersion": "8",
         "LSApplicationQueriesSchemes": [
           "tel",
           "mailto",
@@ -68,7 +68,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.festgo.app",
-      "versionCode": 7,
+      "versionCode": 8,
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -76,7 +76,41 @@
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
       ],
-      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.festgo.app"
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.festgo.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "www.festgo.in",
+              "pathPrefix": "/verify"
+            },
+            {
+              "scheme": "https",
+              "host": "festgo.in",
+              "pathPrefix": "/verify"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "festgo"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "owner": "festgo-app",
     "runtimeVersion": {

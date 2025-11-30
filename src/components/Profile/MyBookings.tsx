@@ -12,10 +12,10 @@ import BeachFestIcon from '~/assets/images/homepage/details/BeachFest.svg';
 // import FestBiteIcon from '~/assets/images/homepage/details/FestBite.svg';
 
 const services = [
-  { icon: HotelIcon, label: 'Hotels', screen: 'HotelBooking' as const },
-  { icon: ResortsIcon, label: 'Resorts', screen: 'HotelBooking' as const },
-  { icon: EventsIcon, label: 'Events', screen: 'EventsPage' as const },
-  { icon: BeachFestIcon, label: 'Beach Fest', screen: 'BeachFestsPage' as const },
+  { icon: HotelIcon, label: 'Hotels', filter: 'hotel' as const },
+  { icon: ResortsIcon, label: 'Resorts', filter: 'hotel' as const },
+  { icon: EventsIcon, label: 'Events', filter: 'event' as const },
+  { icon: BeachFestIcon, label: 'Beach Fest', filter: 'beachfest' as const },
   // { icon: BanquetsIcon, label: 'Banquets' },
   // { icon: CityFestsIcon, label: 'City Fests' },
   // { icon: TripsIcon, label: 'Trips' },
@@ -26,8 +26,9 @@ const MyBookings = () => {
   const navigation = useNavigation<MainTabNavigationProp>();
 
   const handleServicePress = (service: typeof services[0]) => {
-    if (service.screen) {
-      navigation.navigate(service.screen);
+    // Navigate to MyOrders with the appropriate filter
+    if (service.filter) {
+      navigation.navigate('MyOrders', { filter: service.filter });
     }
   };
 
@@ -55,11 +56,11 @@ const MyBookings = () => {
         </TouchableOpacity>
       </View>
       <View className="flex-row flex-wrap justify-between">
-        {services.map(({ icon: Icon, label, screen }) => (
+        {services.map(({ icon: Icon, label, filter }) => (
           <TouchableOpacity
             key={label}
             className="mx-2 mb-4 w-1/5 items-center justify-center rounded-full bg-white p-2"
-            onPress={() => handleServicePress({ icon: Icon, label, screen })}
+            onPress={() => handleServicePress({ icon: Icon, label, filter })}
             activeOpacity={0.7}
             style={{
               shadowColor: '#000',

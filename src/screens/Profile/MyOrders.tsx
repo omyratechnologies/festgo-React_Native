@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, RefreshControl, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { MainTabNavigationProp } from '~/navigation/types';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { MainTabNavigationProp, MainStackParamList } from '~/navigation/types';
 import ProfileHeaderMenu from '~/components/Profile/ProfileHeaderMenu';
 import BottomMenu from '~/components/common/BottomMenu';
 import dayjs from 'dayjs';
@@ -17,6 +17,8 @@ const TABS = [
 
 const MyOrders = () => {
   const navigation = useNavigation<MainTabNavigationProp>();
+  const route = useRoute<RouteProp<MainStackParamList, 'MyOrders'>>();
+  const filter = route.params?.filter; // 'hotel' | 'event' | 'beachfest' | undefined
   const [activeTab, setActiveTab] = useState('upcoming');
   const [propertyBookings, setPropertyBookings] = useState<any[]>([]);
   const [eventBookings, setEventBookings] = useState<any[]>([]);
@@ -272,15 +274,29 @@ const MyOrders = () => {
           {loading && (
             <Text className="text-center text-gray-500 mt-8">Loading your bookings...</Text>
           )}
-          {!loading && filteredEventBookings.length === 0 && filteredPropertyBookings.length === 0 && filteredBeachfestBookings.length === 0 && (
-            <Text className="text-center text-gray-500 mt-8">No {activeTab === 'upcoming' ? 'upcoming' : 'completed'} bookings found.</Text>
-          )}
-          {/* Event Bookings */}
-          {filteredEventBookings.map(renderEventBooking)}
-          {/* Property Bookings */}
-          {filteredPropertyBookings.map(renderPropertyBooking)}
-          {/* Beachfest Bookings */}
-          {filteredBeachfestBookings.map(renderBeachfestBooking)}
+          {!loading && (() => {
+            // Check if there are any bookings to show based on filter
+            const hasEventBookings = (!filter || filter === 'event') && filteredEventBookings.length > 0;
+            const hasPropertyBookings = (!filter || filter === 'hotel') && filteredPropertyBookings.length > 0;
+            const hasBeachfestBookings = (!filter || filter === 'beachfest') && filteredBeachfestBookings.length > 0;
+            const hasNoBookings = !hasEventBookings && !hasPropertyBookings && !hasBeachfestBookings;
+            
+            if (hasNoBookings) {
+              const filterLabel = filter === 'hotel' ? 'hotel/resort' : filter === 'event' ? 'event' : filter === 'beachfest' ? 'beach fest' : '';
+              return (
+                <Text className="text-center text-gray-500 mt-8">
+                  No {activeTab === 'upcoming' ? 'upcoming' : activeTab === 'completed' ? 'completed' : 'cancelled'} {filterLabel ? `${filterLabel} ` : ''}bookings found.
+                </Text>
+              );
+            }
+            return null;
+          })()}
+          {/* Event Bookings - show only if filter is 'event' or no filter */}
+          {(!filter || filter === 'event') && filteredEventBookings.map(renderEventBooking)}
+          {/* Property Bookings - show only if filter is 'hotel' or no filter */}
+          {(!filter || filter === 'hotel') && filteredPropertyBookings.map(renderPropertyBooking)}
+          {/* Beachfest Bookings - show only if filter is 'beachfest' or no filter */}
+          {(!filter || filter === 'beachfest') && filteredBeachfestBookings.map(renderBeachfestBooking)}
         </View>
       </ScrollView>
       <BottomMenu />

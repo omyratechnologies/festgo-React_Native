@@ -4,7 +4,7 @@ import ProfileHeaderMenu from '~/components/Profile/ProfileHeaderMenu';
 import BottomMenu from '~/components/common/BottomMenu';
 import WalletBackground from '~/assets/images/WalletBackground.svg';
 import ReferFriends from '~/assets/images/ReferFriends.svg';
-import LocationIcon from '~/assets/icons/location.svg';
+// import LocationIcon from '~/assets/icons/location.svg';
 import CoinIcon from '~/assets/icons/coinIcon.svg';
 import { useNavigation } from '@react-navigation/native';
 import { MainTabNavigationProp } from '~/navigation/types';
@@ -149,7 +149,7 @@ const WalletScreen = () => {
                 <View className="flex-1 gap-1">
                   <Text className="font-poppins font-semibold text-gray-900">{txn.heading}</Text>
                   <View className="mt-1 flex-row items-center">
-                    <LocationIcon width={14} height={14} />
+                    {/* <LocationIcon width={14} height={14} /> */}
                     <Text className="ml-1 font-poppins text-xs text-gray-500">{txn.location}</Text>
                   </View>
                   <Text className="font-poppins text-xs text-gray-400">

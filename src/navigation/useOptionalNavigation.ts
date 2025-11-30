@@ -1,14 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
 
-// Returns navigation if available, or undefined when not inside a NavigationContainer
-export function useOptionalNavigation<T = any>(): T | undefined {
-  try {
-    // Always call the hook; catch missing context at runtime
-    return useNavigation<T>();
-  } catch (error) {
-    console.warn('Navigation context not available:', error);
-    return undefined;
-  }
+// Returns navigation if available
+// Note: This hook will throw an error if used outside NavigationContainer
+// Components using this should always be rendered within a NavigationContainer
+export function useOptionalNavigation<T = any>(): T {
+  // Just use the regular hook - components should always be in NavigationContainer
+  return useNavigation<T>();
 }
 
 
