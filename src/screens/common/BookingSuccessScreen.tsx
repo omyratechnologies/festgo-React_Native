@@ -18,7 +18,7 @@ interface BookingSuccessScreenProps {
     params: {
       bookingData: any;
       paymentId: string;
-      bookingType: 'beachfest' | 'hotel' | 'event' | 'trip';
+      bookingType: 'beachfest' | 'hotel' | 'event' | 'trip' | 'cityfest';
     };
   };
 }
@@ -90,6 +90,8 @@ const BookingSuccessScreen: React.FC<BookingSuccessScreenProps> = ({ route }) =>
         return 'Event Booking Confirmed!';
       case 'trip':
         return 'Trip Booking Confirmed!';
+      case 'cityfest':
+        return 'CityFest Booking Confirmed!';
       default:
         return 'Booking Confirmed!';
     }
@@ -211,6 +213,45 @@ const BookingSuccessScreen: React.FC<BookingSuccessScreenProps> = ({ route }) =>
                       {bookingData?.tickets || 0}
                     </Text>
                   </View>
+                </>
+              )}
+
+              {bookingType === 'cityfest' && (
+                <>
+                  <View className="mb-2 flex-row items-center justify-between">
+                    <Text className="font-baloo text-sm text-gray-600">Fest Category</Text>
+                    <Text className="font-baloo font-semibold text-gray-800">
+                      {bookingData?.pricing_category_name || 'CityFest'}
+                    </Text>
+                  </View>
+                  <View className="mb-2 flex-row items-center justify-between">
+                    <Text className="font-baloo text-sm text-gray-600">Passes</Text>
+                    <Text className="font-baloo font-semibold text-gray-800">
+                      {bookingData?.passes || 0}
+                    </Text>
+                  </View>
+                  <View className="mb-2 flex-row items-center justify-between">
+                    <Text className="font-baloo text-sm text-gray-600">Event Start</Text>
+                    <Text className="font-baloo font-semibold text-gray-800">
+                      {bookingData?.event_start ? formatDate(bookingData.event_start) : 'N/A'}
+                    </Text>
+                  </View>
+                  <View className="mb-2 flex-row items-center justify-between">
+                    <Text className="font-baloo text-sm text-gray-600">Event End</Text>
+                    <Text className="font-baloo font-semibold text-gray-800">
+                      {bookingData?.event_end ? formatDate(bookingData.event_end) : 'N/A'}
+                    </Text>
+                  </View>
+                  {bookingData?.pricing_type_details && (
+                    <View className="mb-2">
+                      <Text className="mb-1 font-baloo text-sm text-gray-600">Ticket Details</Text>
+                      {bookingData.pricing_type_details.map((detail: any, index: number) => (
+                        <Text key={index} className="font-baloo text-xs text-gray-700">
+                          {detail.type}: {detail.quantity} ticket(s)
+                        </Text>
+                      ))}
+                    </View>
+                  )}
                 </>
               )}
 

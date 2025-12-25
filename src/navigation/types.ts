@@ -51,8 +51,12 @@ export type MainStackParamList = {
   CityFestsPage: undefined;
   CityFestCategory: { categoryId: string; categoryName: string };
   CityFestDetails: { festId: string };
+  CityFestSectionSelection: { festId: string };
   CityFestCheckout: {
     festId: string;
+    selectedSection?: string;
+    selectedType?: string;
+    quantity?: number;
   };
 
   FestBite: undefined;
@@ -106,7 +110,7 @@ export type MainStackParamList = {
   PaymentWebView: {
     razorpayOptions: any;
     bookingData?: any;
-    bookingType?: 'beachfest' | 'hotel' | 'event' | 'trip';
+    bookingType?: 'beachfest' | 'hotel' | 'event' | 'trip' | 'cityfest';
     onPaymentSuccess?: (data: any) => void;
     onPaymentError?: (data: any) => void;
   };
@@ -115,7 +119,7 @@ export type MainStackParamList = {
   BookingSuccess: {
     bookingData: any;
     paymentId: string;
-    bookingType: 'beachfest' | 'hotel' | 'event' | 'trip';
+    bookingType: 'beachfest' | 'hotel' | 'event' | 'trip' | 'cityfest';
   };
 };
 

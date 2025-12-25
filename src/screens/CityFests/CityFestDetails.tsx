@@ -1,96 +1,195 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  Dimensions,
+  ActivityIndicator,
+  Linking,
+} from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { MainTabNavigationProp } from '~/navigation/types';
+import { NavigationProp } from '~/navigation/types';
 import BottomMenu from '~/components/common/BottomMenu';
 import Svg, { Path } from 'react-native-svg';
+import { API_URL } from '~/utils/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
-// Mock event data
-const getEventDetails = (festId: string) => {
-  const events: Record<
-    string,
-    {
-      id: string;
-      title: string;
-      location: string;
-      date: string;
-      time: string;
-      price: string;
-      image: string;
-      highlights: string;
-      whatsIncluded: { icon: string; label: string }[];
-      mapLocation: string;
-    }
-  > = {
-    '1': {
-      id: '1',
-      title: 'DJ Nights',
-      location: 'Park Hyatt',
-      date: 'May 30',
-      time: '7:30 PM - 11:00 PM',
-      price: '500',
-      image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=300&fit=crop',
-      highlights:
-        'Join us for a weekend of night lights and music at the DJ Nights! Enjoy live performances, food Stalls and more',
-      whatsIncluded: [
-        { icon: '🎵', label: 'Music' },
-        { icon: '⭐', label: 'Live Performance' },
-        { icon: '🍔', label: 'Food Stalls' },
-      ],
-      mapLocation: 'Park Hyatt, Hyderabad',
-    },
-    '2': {
-      id: '2',
-      title: 'Concert Nights',
-      location: 'Taj Palace',
-      date: 'Jun 7',
-      time: '8:00 PM - 12:00 AM',
-      price: '800',
-      image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop',
-      highlights:
-        'Experience the ultimate concert night with amazing performances and great atmosphere!',
-      whatsIncluded: [
-        { icon: '🎤', label: 'Live Music' },
-        { icon: '🎪', label: 'Stage Show' },
-        { icon: '🍹', label: 'Beverages' },
-      ],
-      mapLocation: 'Taj Palace, Hyderabad',
-    },
-    '3': {
-      id: '3',
-      title: 'Rock Concert',
-      location: 'Marriott',
-      date: 'Jun 10',
-      time: '7:00 PM - 11:30 PM',
-      price: '1200',
-      image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&h=300&fit=crop',
-      highlights:
-        'Get ready for an electrifying rock concert experience with top bands and amazing sound!',
-      whatsIncluded: [
-        { icon: '🎸', label: 'Rock Music' },
-        { icon: '🎭', label: 'Band Performance' },
-        { icon: '🍕', label: 'Food & Drinks' },
-      ],
-      mapLocation: 'Marriott, Hyderabad',
-    },
-  };
-
-  return events[festId] || events['1'];
-};
+interface CityFest {
+  id: string;
+  categoryId: string;
+  location: string;
+  event_start: string;
+  event_end: string;
+  highlights: string;
+  image_urls: string[];
+  whats_included: string[];
+  gmap_url: string;
+  cityfest_category_name: string;
+  pricing_types: any[];
+}
 
 const CityFestDetails = () => {
-  const navigation = useNavigation<MainTabNavigationProp>();
+  const navigation = useNavigation<NavigationProp>();
   const route = useRoute<any>();
   const { festId } = route.params || {};
   const [selectedLocation, setSelectedLocation] = useState('Hyderabad');
+  const [fest, setFest] = useState<CityFest | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const eventDetails = getEventDetails(festId);
+  useEffect(() => {
+    const fetchFestDetails = async () => {
+      try {
+        setLoading(true);
+        const jwtToken = await AsyncStorage.getItem('jwtToken');
+        
+        if (!jwtToken) {
+          setIsAuthenticated(false);
+          setLoading(false);
+          return;
+        }
+
+        setIsAuthenticated(true);
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwtToken}`,
+        };
+        
+        const response = await fetch(`${API_URL}/city-fests/getall/cityfests`, {
+          method: 'GET',
+          headers,
+        });
+        const data = await response.json();
+        if (data.success && data.fests) {
+          const festData = data.fests.find((f: CityFest) => f.id === festId);
+          if (festData) {
+            setFest(festData);
+          } else {
+            console.error('Fest not found with id:', festId);
+          }
+        } else {
+          console.error('API Error:', data);
+        }
+      } catch (error) {
+        console.error('Error fetching fest details:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (festId) {
+      fetchFestDetails();
+    }
+  }, [festId]);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    return `${month} ${day}`;
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
+  const getMinPrice = (pricingTypes: any[]) => {
+    if (!pricingTypes || pricingTypes.length === 0) return '500';
+    let minPrice = Infinity;
+    pricingTypes.forEach((category) => {
+      category.types?.forEach((type: any) => {
+        if (type.price < minPrice) {
+          minPrice = type.price;
+        }
+      });
+    });
+    return minPrice === Infinity ? '500' : minPrice.toString();
+  };
 
   const handleBookNow = () => {
-    navigation.navigate('CityFestCheckout', { festId: festId });
+    navigation.navigate('Main', { screen: 'CityFestSectionSelection', params: { festId: festId } });
   };
+
+  const handleOpenMap = () => {
+    if (fest?.gmap_url) {
+      Linking.openURL(fest.gmap_url);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View className="flex-1 bg-white items-center justify-center">
+        <ActivityIndicator size="large" color="#0E54EC" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View className="flex-1 bg-white">
+        {/* Header Section */}
+        <View
+          style={{
+            height: 280,
+            position: 'relative',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+          }}>
+          <View className="absolute inset-0 overflow-hidden rounded-b-[30px] bg-[#0E54EC]">
+            <View className="h-full w-full opacity-20" />
+          </View>
+          <View className="absolute z-10 mt-16 w-full flex-row items-center justify-between bg-transparent px-8 pb-6 pt-2">
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 10 }}>
+              <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M15 18l-6-6 6-6"
+                  stroke="white"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="mb-2 text-center font-baloo text-2xl font-bold text-gray-800">
+            Login Required
+          </Text>
+          <Text className="mb-6 text-center font-poppins text-base text-gray-600">
+            Please login to view fest details
+          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              const rootNavigation = navigation.getParent()?.getParent();
+              if (rootNavigation) {
+                (rootNavigation as any).navigate('Auth', { screen: 'Login' });
+              }
+            }}
+            className="rounded-full bg-[#0E54EC] px-6 py-3">
+            <Text className="font-poppins font-semibold text-white">Go to Login</Text>
+          </TouchableOpacity>
+        </View>
+        <BottomMenu />
+      </View>
+    );
+  }
+
+  if (!fest) {
+    return (
+      <View className="flex-1 bg-white items-center justify-center">
+        <Text className="font-poppins text-gray-500">Fest not found</Text>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-white">
@@ -105,7 +204,9 @@ const CityFestDetails = () => {
         {/* Background Image */}
         <View className="absolute inset-0 overflow-hidden rounded-b-[30px] bg-[#0E54EC]">
           <Image
-            source={{ uri: eventDetails.image }}
+            source={{
+              uri: fest.image_urls?.[0] || 'https://via.placeholder.com/400',
+            }}
             className="h-full w-full opacity-30"
             resizeMode="cover"
           />
@@ -177,7 +278,7 @@ const CityFestDetails = () => {
             </Svg>
           </TouchableOpacity>
           <Text className="font-baloo" style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>
-            {eventDetails.title}
+            {fest.cityfest_category_name || 'City Fest'}
           </Text>
         </View>
 
@@ -208,7 +309,7 @@ const CityFestDetails = () => {
                 strokeLinejoin="round"
               />
             </Svg>
-            <Text className="font-poppins text-sm text-white">{eventDetails.location}</Text>
+            <Text className="font-poppins text-sm text-white">{fest.location}</Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
             <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" className="mr-1">
@@ -221,7 +322,8 @@ const CityFestDetails = () => {
               />
             </Svg>
             <Text className="font-poppins text-sm text-white">
-              {eventDetails.date} | {eventDetails.time}
+              {formatDate(fest.event_start)} | {formatTime(fest.event_start)} -{' '}
+              {formatTime(fest.event_end)}
             </Text>
           </View>
         </View>
@@ -239,7 +341,9 @@ const CityFestDetails = () => {
             zIndex: 3,
           }}>
           <Image
-            source={{ uri: eventDetails.image }}
+            source={{
+              uri: fest.image_urls?.[0] || 'https://via.placeholder.com/400',
+            }}
             className="h-full w-full"
             resizeMode="cover"
           />
@@ -265,7 +369,7 @@ const CityFestDetails = () => {
           <View className="mb-6">
             <Text className="mb-3 font-baloo text-3xl font-bold text-black">Highlights</Text>
             <Text className="font-poppins text-base leading-6 text-gray-700">
-              {eventDetails.highlights}
+              {fest.highlights}
             </Text>
           </View>
 
@@ -273,21 +377,21 @@ const CityFestDetails = () => {
           <View>
             <Text className="mb-3 font-baloo text-3xl font-bold text-black">What's included</Text>
             <View className="gap-3">
-              {eventDetails.whatsIncluded.map(
-                (item: { icon: string; label: string }, index: number) => (
-                  <View key={index} className="flex-row items-center">
-                    <Text className="mr-3 text-2xl">{item.icon}</Text>
-                    <Text className="font-poppins text-base text-gray-700">{item.label}</Text>
-                  </View>
-                )
-              )}
+              {fest.whats_included?.map((item: string, index: number) => (
+                <View key={index} className="flex-row items-center">
+                  <Text className="mr-3 text-2xl">✓</Text>
+                  <Text className="font-poppins text-base text-gray-700">{item}</Text>
+                </View>
+              ))}
             </View>
           </View>
         </View>
 
         {/* Map Section */}
         <View className="mb-6">
-          <View className="h-48 w-full overflow-hidden rounded-2xl bg-gray-200">
+          <TouchableOpacity
+            onPress={handleOpenMap}
+            className="h-48 w-full overflow-hidden rounded-2xl bg-gray-200">
             <View className="flex-1 items-center justify-center">
               <Svg width={48} height={48} viewBox="0 0 24 24" fill="none">
                 <Path
@@ -305,11 +409,9 @@ const CityFestDetails = () => {
                   strokeLinejoin="round"
                 />
               </Svg>
-              <Text className="mt-2 font-poppins text-sm text-gray-600">
-                {eventDetails.mapLocation}
-              </Text>
+              <Text className="mt-2 font-poppins text-sm text-gray-600">{fest.location}</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Call to Action Button */}
@@ -324,7 +426,7 @@ const CityFestDetails = () => {
             elevation: 8,
           }}>
           <Text className="text-center font-poppins text-lg font-semibold text-white">
-            Entry Pass at ₹{eventDetails.price}/- Only
+            Entry Pass at ₹{getMinPrice(fest.pricing_types)}/- Only
           </Text>
         </TouchableOpacity>
       </ScrollView>

@@ -23,6 +23,7 @@ import EventInfoPage from '~/screens/Events/EventInfoPage';
 import CityFests from '~/screens/CityFests/CityFests';
 import CityFestCategories from '~/screens/CityFests/CityFestCategories';
 import CityFestDetails from '~/screens/CityFests/CityFestDetails';
+import CityFestSectionSelection from '~/screens/CityFests/CityFestSectionSelection';
 import CityFestCheckout from '~/screens/CityFests/CityFestCheckout';
 import BeachFestCheckout from '~/screens/BeachFests/BeachFestCheckout';
 import BeachFest from '~/screens/BeachFests/BeachFest';
@@ -103,6 +104,7 @@ export const MainNavigator = () => {
         <Stack.Screen name="CityFestsPage" component={CityFests} />
         <Stack.Screen name="CityFestCategory" component={CityFestCategories} />
         <Stack.Screen name="CityFestDetails" component={CityFestDetails} />
+        <Stack.Screen name="CityFestSectionSelection" component={CityFestSectionSelection} />
         <Stack.Screen name="BeachFestsPage" component={BeachFest} />
         <Stack.Screen name="FestBite" component={FestBite} />
         <Stack.Screen name="UpcomingScreen" component={UpcomingScreen} />

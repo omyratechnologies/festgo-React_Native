@@ -9,27 +9,22 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  ScrollView
+  ScrollView,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HeaderMenu from '../HomePage/HeaderMenu';
 import BottomMenu from '~/components/common/BottomMenu';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { NavigationProp } from '~/navigation/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path } from 'react-native-svg';
+import { API_URL } from '~/utils/api';
+import { createRazorpayOptions } from '~/utils/payment';
 
 const ICON_SIZE = 22;
 
 const icons = {
-  passes: (
-    <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
-        fill="#888"
-      />
-      <Path d="M7 12c0-2.76 2.24-5 5-5s5 2.24 5 5-2.24 5-5 5-5-2.24-5-5z" fill="#888" />
-    </Svg>
-  ),
   name: (
     <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none">
       <Path
@@ -57,116 +52,99 @@ const icons = {
 };
 
 const paymentMethods = [
-  { label: 'Card', value: 'CARD' },
-  { label: 'UPI', value: 'UPI' },
-  { label: 'Wallet', value: 'WALLET' },
+  { label: 'Card', value: 'card', icon: '💳' },
+  { label: 'UPI', value: 'upi', icon: '📱' },
+  { label: 'Wallet', value: 'wallet', icon: '👛' },
 ];
 
-// Mock event data for CityFest
-const getEventDetails = (festId: string) => {
-  const events: Record<
-    string,
-    {
-      id: string;
-      title: string;
-      location: string;
-      date: string;
-      time: string;
-      price: string;
-      image: string;
-      highlights: string;
-      whatsIncluded: { icon: string; label: string }[];
-      mapLocation: string;
-    }
-  > = {
-    '1': {
-      id: '1',
-      title: 'DJ Nights',
-      location: 'Park Hyatt',
-      date: 'May 30',
-      time: '7:30 PM - 11:00 PM',
-      price: '500',
-      image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=300&fit=crop',
-      highlights:
-        'Join us for a weekend of night lights and music at the DJ Nights! Enjoy live performances, food Stalls and more',
-      whatsIncluded: [
-        { icon: '🎵', label: 'Music' },
-        { icon: '⭐', label: 'Live Performance' },
-        { icon: '🍔', label: 'Food Stalls' },
-      ],
-      mapLocation: 'Park Hyatt, Hyderabad',
-    },
-    '2': {
-      id: '2',
-      title: 'Concert Nights',
-      location: 'Taj Palace',
-      date: 'Jun 7',
-      time: '8:00 PM - 12:00 AM',
-      price: '800',
-      image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop',
-      highlights:
-        'Experience the ultimate concert night with amazing performances and great atmosphere!',
-      whatsIncluded: [
-        { icon: '🎤', label: 'Live Music' },
-        { icon: '🎪', label: 'Stage Show' },
-        { icon: '🍹', label: 'Beverages' },
-      ],
-      mapLocation: 'Taj Palace, Hyderabad',
-    },
-    '3': {
-      id: '3',
-      title: 'Rock Concert',
-      location: 'Marriott',
-      date: 'Jun 10',
-      time: '7:00 PM - 11:30 PM',
-      price: '1200',
-      image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&h=300&fit=crop',
-      highlights:
-        'Get ready for an electrifying rock concert experience with top bands and amazing sound!',
-      whatsIncluded: [
-        { icon: '🎸', label: 'Rock Music' },
-        { icon: '🎭', label: 'Band Performance' },
-        { icon: '🍕', label: 'Food & Drinks' },
-      ],
-      mapLocation: 'Marriott, Hyderabad',
-    },
-  };
-
-  return events[festId] || events['1'];
-};
+interface CityFest {
+  id: string;
+  categoryId: string;
+  location: string;
+  event_start: string;
+  event_end: string;
+  highlights: string;
+  image_urls: string[];
+  cityfest_category_name: string;
+  pricing_types: any[];
+}
 
 const CityFestCheckout = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const route = useRoute<any>();
-  const { festId } = route.params || {};
+  const { festId, selectedSection, selectedType, quantity = 1 } = route.params || {};
 
-  const [fest, setFest] = useState<any>(null);
+  const [fest, setFest] = useState<CityFest | null>(null);
   const [loadingFest, setLoadingFest] = useState(true);
   const [form, setForm] = useState({
-    passes: '',
     name: '',
     phone: '',
     email: '',
-    payment_method: 'CARD',
+    payment_method: 'card',
   });
+  const [payLater, setPayLater] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedTicketPrice, setSelectedTicketPrice] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const fetchFest = async () => {
       try {
         setLoadingFest(true);
-        // For now, use mock data instead of API call
-        const eventDetails = getEventDetails(festId);
-        setFest(eventDetails);
+        const jwtToken = await AsyncStorage.getItem('jwtToken');
+        
+        if (!jwtToken) {
+          setIsAuthenticated(false);
+          setLoadingFest(false);
+          return;
+        }
+
+        setIsAuthenticated(true);
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwtToken}`,
+        };
+        const response = await fetch(`${API_URL}/city-fests/getall/cityfests`, {
+          method: 'GET',
+          headers,
+        });
+        const data = await response.json();
+        if (data.success && data.fests) {
+          const festData = data.fests.find((f: CityFest) => f.id === festId);
+          if (festData) {
+            setFest(festData);
+            // Calculate ticket price
+            if (selectedSection && selectedType && festData.pricing_types) {
+              const section = festData.pricing_types.find(
+                (p: any) => p.name.toLowerCase() === selectedSection.toLowerCase()
+              );
+              if (section && section.types) {
+                const ticketType = section.types.find(
+                  (t: any) => t.type.toLowerCase() === selectedType.toLowerCase()
+                );
+                if (ticketType) {
+                  setSelectedTicketPrice(ticketType.price * quantity);
+                }
+              }
+            }
+          } else {
+            console.error('Fest not found with id:', festId);
+          }
+        } else {
+          console.error('API Error:', data);
+        }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error('Error fetching fest:', error);
         Alert.alert('Error', errorMessage);
       } finally {
         setLoadingFest(false);
       }
     };
-    fetchFest();
-  }, [festId]);
+    if (festId) {
+      fetchFest();
+    }
+  }, [festId, selectedSection, selectedType, quantity]);
 
   const handleInput = (key: string, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -177,7 +155,7 @@ const CityFestCheckout = () => {
   };
 
   const handleContinue = async () => {
-    if (!form.passes || !form.name || !form.phone || !form.email) {
+    if (!form.name || !form.phone || !form.email) {
       Alert.alert('Missing Fields', 'Please fill all fields.');
       return;
     }
@@ -188,204 +166,373 @@ const CityFestCheckout = () => {
         Alert.alert('Error', 'You must be logged in to book a fest.');
         return;
       }
-      console.log(
-        JSON.stringify({
-          passes: Number(form.passes),
-          name: form.name,
-          phone: form.phone,
-          email: form.email,
-          payment_method: form.payment_method,
-          fest_type: fest?.title,
-          id: festId,
-        })
-      );
-      console.log('auth token:', jwtToken);
 
-      // For now, simulate API call success
-      // In production, replace with actual API endpoint
-      // const res = await fetch('https://server.festgo.in/api/cityfest-booking', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     Authorization: `Bearer ${jwtToken}`,
-      //   },
-      //   body: JSON.stringify({
-      //     passes: Number(form.passes),
-      //     name: form.name,
-      //     phone: form.phone,
-      //     email: form.email,
-      //     payment_method: form.payment_method,
-      //     fest_type: fest?.title,
-      //     id: festId,
-      //   }),
-      // });
-      // if (!res.ok) {
-      //   const err = await res.json();
-      //   throw new Error(err.message || 'Booking failed');
-      // }
+      // Build pricing_type object based on selected type
+      const pricingType: Record<string, number> = {};
+      if (selectedType) {
+        pricingType[selectedType] = quantity;
+      }
 
-      Alert.alert('Success', 'Booking successful!');
-      navigation.goBack();
+      const bookingData = {
+        id: festId,
+        name: form.name,
+        phone: form.phone,
+        email: form.email,
+        payment_method: form.payment_method.toLowerCase(),
+        pricing_category: selectedSection || 'general',
+        pricing_type: pricingType,
+        referral_id: '',
+        requestedCoins: payLater ? '0' : '0', // Can be updated if user wants to use coins
+        coupon_code: '',
+      };
+
+      const res = await fetch(`${API_URL}/cityfest-booking`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${jwtToken}`,
+        },
+        body: JSON.stringify(bookingData),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Booking failed');
+      }
+
+      const result = await res.json();
+      if (result.success) {
+        const { booking, razorpayOrder } = result.data;
+        
+        // If pay later is selected, skip payment and go to success screen
+        if (payLater) {
+          navigation.navigate('Main', { screen: 'BookingSuccess', params: {
+            bookingData: booking,
+              paymentId: 'pay_later',
+              bookingType: 'cityfest',
+            },
+          });
+          return;
+        }
+        
+        // Create Razorpay options for WebView
+        const razorpayOptions = createRazorpayOptions({
+          amount: razorpayOrder.amount,
+          currency: razorpayOrder.currency,
+          name: 'FestGo CityFest',
+          description: `CityFest booking for ${booking.name}`,
+          orderId: razorpayOrder.id,
+          bookingId: booking.id,
+          prefill: {
+            email: booking.email,
+            contact: booking.phone,
+            name: booking.name,
+          },
+          notes: {
+            booking_id: booking.id,
+            payment_for: 'cityfest_booking',
+            payment_type: booking.payment_method,
+          },
+        });
+
+        console.log('Created Razorpay options:', razorpayOptions);
+
+        // Navigate to PaymentWebView
+        navigation.navigate('Main', { screen: 'PaymentWebView', params: {
+          razorpayOptions,
+          bookingData: booking,
+          bookingType: 'cityfest',
+        },
+      });
+      } else {
+        throw new Error(result.message || 'Booking failed');
+      }
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert('Error', e.message || 'Booking failed. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-white">
-      <View className="flex-1">
-        <HeaderMenu />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{ flex: 1 }}>
-          <ScrollView contentContainerStyle={{ paddingHorizontal: 20 }}>
-            {/* Back Button & Heading */}
-            <View className="mb-6 flex-row items-center">
-              <TouchableOpacity
-                onPress={() => navigation.goBack()}
-                className=" p-2"
-                accessibilityLabel="Go back">
-                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                  <Path
-                    d="M15 18l-6-6 6-6"
-                    stroke="#222"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-              </TouchableOpacity>
-              <Text className="mt-2 font-baloo text-2xl font-bold">Check out</Text>
-            </View>
+  const getTicketName = () => {
+    if (!selectedSection || !selectedType) return 'Ticket';
+    const sectionName = selectedSection.charAt(0).toUpperCase() + selectedSection.slice(1);
+    const typeName = selectedType.charAt(0).toUpperCase() + selectedType.slice(1);
+    return `${sectionName} ${typeName}`;
+  };
 
-            {/* Fest Image Placeholder */}
-            <View className="mb-6 h-40 w-full items-center justify-center overflow-hidden rounded-xl bg-gray-200">
-              {loadingFest ? (
-                <ActivityIndicator size="large" color="#888" />
-              ) : fest?.image ? (
-                <Image source={{ uri: fest.image }} className="h-full w-full" resizeMode="cover" />
-              ) : (
-                <Image
-                  source={{
-                    uri: 'https://festgo.blr1.digitaloceanspaces.com/festgo/public/1753272751709-dd0009ac8f8325258b38268cf5026b7bae72c4ba.png',
-                  }}
-                  className="h-full w-full"
-                  resizeMode="cover"
+  if (!isAuthenticated) {
+    return (
+      <View className="flex-1 bg-white">
+        {/* Header Section */}
+        <View
+          style={{
+            height: 280,
+            position: 'relative',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+          }}>
+          <View className="absolute inset-0 overflow-hidden rounded-b-[30px] bg-[#0E54EC]">
+            <View className="h-full w-full opacity-20" />
+          </View>
+          <View className="absolute z-10 mt-16 w-full flex-row items-center justify-between bg-transparent px-8 pb-6 pt-2">
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 10 }}>
+              <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M15 18l-6-6 6-6"
+                  stroke="white"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
-              )}
-            </View>
-
-            {/* Input Fields */}
-            <View className="gap-4 gap-4">
-              {/* Passes */}
-              <View>
-                <Text className="mb-1 font-poppins text-sm font-semibold">Number of Passes</Text>
-                <View className="flex-row items-center rounded-lg border border-gray-300 px-3 py-3">
-                  <TextInput
-                    keyboardType="numeric"
-                    placeholder="Enter no. of passes"
-                    value={form.passes}
-                    onChangeText={(v) => handleInput('passes', v.replace(/[^0-9]/g, ''))}
-                    className="flex-1 font-poppins text-base"
-                  />
-                  {icons.passes}
-                </View>
-              </View>
-              {/* Name */}
-              <View>
-                <Text className="mb-1 font-poppins text-sm font-semibold">Name</Text>
-                <View className="flex-row items-center rounded-lg border border-gray-300 p-3">
-                  <TextInput
-                    placeholder="Enter name"
-                    value={form.name}
-                    onChangeText={(v) => handleInput('name', v)}
-                    className="flex-1 font-poppins text-base"
-                  />
-                  {icons.name}
-                </View>
-              </View>
-              {/* Phone */}
-              <View>
-                <Text className="mb-1 font-poppins text-sm font-semibold">Phone Number</Text>
-                <View className="flex-row items-center rounded-lg border border-gray-300 p-3">
-                  <TextInput
-                    keyboardType="phone-pad"
-                    placeholder="Enter phone number"
-                    value={form.phone}
-                    onChangeText={(v) => handleInput('phone', v.replace(/[^0-9]/g, ''))}
-                    className="flex-1 font-poppins text-base"
-                    maxLength={10}
-                  />
-                  {icons.phone}
-                </View>
-              </View>
-              {/* Email */}
-              <View>
-                <Text className="mb-1 font-poppins text-sm font-semibold">Email ID</Text>
-                <View className="flex-row items-center rounded-lg border border-gray-300 p-3">
-                  <TextInput
-                    keyboardType="email-address"
-                    placeholder="Enter email"
-                    value={form.email}
-                    onChangeText={(v) => handleInput('email', v)}
-                    className="flex-1 font-poppins text-base"
-                    autoCapitalize="none"
-                  />
-                  {icons.email}
-                </View>
-              </View>
-            </View>
-
-            {/* Payment Method */}
-            <View className="mb-4 mt-8">
-              <Text className="mb-3 font-poppins text-base font-semibold">Payment Method</Text>
-              {paymentMethods.map((method) => (
-                <TouchableOpacity
-                  key={method.value}
-                  className={`mb-2 flex-row items-center rounded-lg border px-4 py-3 ${
-                    form.payment_method === method.value
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-300'
-                  }`}
-                  onPress={() => handleRadio(method.value)}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: form.payment_method === method.value }}>
-                  <View
-                    className={`mr-3 h-5 w-5 rounded-full border-2 ${
-                      form.payment_method === method.value
-                        ? 'border-blue-500 bg-blue-500'
-                        : 'border-gray-400'
-                    } items-center justify-center`}>
-                    {form.payment_method === method.value && (
-                      <View className="h-2.5 w-2.5 rounded-full bg-white" />
-                    )}
-                  </View>
-                  <Text className="font-poppins text-base">{method.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* Continue Button */}
-            <TouchableOpacity
-              className="mb-48 mt-4 rounded-lg bg-blue-600 py-4"
-              onPress={handleContinue}
-              disabled={submitting}
-              accessibilityRole="button">
-              {submitting ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text className="text-center font-poppins text-lg font-semibold text-white">
-                  Continue
-                </Text>
-              )}
+              </Svg>
             </TouchableOpacity>
-          </ScrollView>
-        </KeyboardAvoidingView>
+            <Text className="font-baloo" style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>
+              Check out
+            </Text>
+          </View>
+        </View>
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="mb-2 text-center font-baloo text-2xl font-bold text-gray-800">
+            Login Required
+          </Text>
+          <Text className="mb-6 text-center font-poppins text-base text-gray-600">
+            Please login to proceed with checkout
+          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              const rootNavigation = navigation.getParent()?.getParent();
+              if (rootNavigation) {
+                (rootNavigation as any).navigate('Auth', { screen: 'Login' });
+              }
+            }}
+            className="rounded-full bg-[#0E54EC] px-6 py-3">
+            <Text className="font-poppins font-semibold text-white">Go to Login</Text>
+          </TouchableOpacity>
+        </View>
         <BottomMenu />
       </View>
-    </SafeAreaView>
+    );
+  }
+
+  return (
+    <View className="flex-1 bg-white">
+      {/* Header Section */}
+      <View
+        style={{
+          height: 280,
+          position: 'relative',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+        }}>
+        {/* Background Image */}
+        <View className="absolute inset-0 overflow-hidden rounded-b-[30px] bg-[#0E54EC]">
+          {fest?.image_urls?.[0] && (
+            <Image
+              source={{ uri: fest.image_urls[0] }}
+              className="h-full w-full opacity-20"
+              resizeMode="cover"
+            />
+          )}
+        </View>
+
+        {/* Top Bar */}
+        <View className="absolute z-10 mt-16 w-full flex-row items-center justify-between bg-transparent px-8 pb-6 pt-2">
+          <View className="flex-row items-center">
+            <TouchableOpacity className="flex-row items-center">
+              <View className="mr-2 h-8 w-8 rounded-full bg-white/20" />
+              <Text className="mr-1 font-poppins text-base font-medium text-white">
+                {fest?.location || 'Hyderabad'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View className="flex-row items-center">
+            <TouchableOpacity className="mr-4">
+              <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M8 2v2M16 2v2M3 7h18M5 11h2M9 11h2M13 11h2M17 11h2M5 15h2M9 15h2M13 15h2M17 15h2M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"
+                  stroke="white"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"
+                  fill="white"
+                />
+              </Svg>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Navigation and Title */}
+        <View
+          style={{
+            position: 'absolute',
+            top: 110,
+            left: 20,
+            flexDirection: 'row',
+            alignItems: 'center',
+            zIndex: 2,
+          }}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 10 }}>
+            <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M15 18l-6-6 6-6"
+                stroke="white"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </TouchableOpacity>
+          <Text className="font-baloo" style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>
+            Check out
+          </Text>
+        </View>
+      </View>
+
+      {/* Main Content */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}>
+        <ScrollView
+          className="flex-1 bg-white"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ padding: 20, paddingBottom: 120 }}>
+          {/* Tickets Section */}
+          <View className="mb-6">
+            <Text className="mb-3 font-baloo text-xl font-bold text-black">Tickets</Text>
+            <View className="rounded-xl border border-gray-200 bg-white p-4">
+              <Text className="font-poppins text-base font-semibold text-black">
+                {getTicketName()}
+              </Text>
+              <Text className="mt-1 font-poppins text-lg font-bold text-[#0E54EC]">
+                ₹{selectedTicketPrice.toLocaleString('en-IN')}
+              </Text>
+            </View>
+          </View>
+
+          {/* Input Fields */}
+          <View className="mb-6 gap-4">
+            {/* Name */}
+            <View>
+              <View className="flex-row items-center rounded-lg border border-gray-300 p-3">
+                <TextInput
+                  placeholder="Enter Name"
+                  value={form.name}
+                  onChangeText={(v) => handleInput('name', v)}
+                  className="flex-1 font-poppins text-base"
+                />
+                {icons.name}
+              </View>
+            </View>
+            {/* Phone */}
+            <View>
+              <View className="flex-row items-center rounded-lg border border-gray-300 p-3">
+                <TextInput
+                  keyboardType="phone-pad"
+                  placeholder="+91"
+                  value={form.phone}
+                  onChangeText={(v) => handleInput('phone', v.replace(/[^0-9]/g, ''))}
+                  className="flex-1 font-poppins text-base"
+                  maxLength={10}
+                />
+                {icons.phone}
+              </View>
+            </View>
+            {/* Email */}
+            <View>
+              <View className="flex-row items-center rounded-lg border border-gray-300 p-3">
+                <TextInput
+                  keyboardType="email-address"
+                  placeholder="Enter your email"
+                  value={form.email}
+                  onChangeText={(v) => handleInput('email', v)}
+                  className="flex-1 font-poppins text-base"
+                  autoCapitalize="none"
+                />
+                {icons.email}
+              </View>
+            </View>
+          </View>
+
+          {/* Payment Method */}
+          <View className="mb-6">
+            <Text className="mb-3 font-poppins text-base font-semibold">Payment Method</Text>
+            {paymentMethods.map((method) => (
+              <TouchableOpacity
+                key={method.value}
+                className={`mb-2 flex-row items-center rounded-lg border px-4 py-3 ${
+                  form.payment_method === method.value
+                    ? 'border-[#0E54EC] bg-blue-50'
+                    : 'border-gray-300'
+                }`}
+                onPress={() => handleRadio(method.value)}>
+                <View
+                  className={`mr-3 h-5 w-5 rounded-full border-2 ${
+                    form.payment_method === method.value
+                      ? 'border-[#0E54EC] bg-[#0E54EC]'
+                      : 'border-gray-400'
+                  } items-center justify-center`}>
+                  {form.payment_method === method.value && (
+                    <View className="h-2.5 w-2.5 rounded-full bg-white" />
+                  )}
+                </View>
+                <Text className="mr-2 text-lg">{method.icon}</Text>
+                <Text className="font-poppins text-base">{method.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Pay Later Option */}
+          <View className="mb-6">
+            <TouchableOpacity
+              className="flex-row items-center"
+              onPress={() => setPayLater(!payLater)}>
+              <View
+                className={`mr-2 h-5 w-5 rounded border-2 ${
+                  payLater ? 'border-[#0E54EC] bg-[#0E54EC]' : 'border-gray-400'
+                } items-center justify-center`}>
+                {payLater && (
+                  <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
+                    <Path
+                      d="M20 6L9 17l-5-5"
+                      stroke="white"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </Svg>
+                )}
+              </View>
+              <Text className="font-poppins text-base">Book for ₹0 and pay later</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Continue Payment Button */}
+          <TouchableOpacity
+            className="mb-6 overflow-hidden rounded-lg bg-[#0E54EC] py-4"
+            onPress={handleContinue}
+            disabled={submitting}>
+            {submitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text className="text-center font-poppins text-lg font-semibold text-white">
+                Continue Payment
+              </Text>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      <BottomMenu />
+    </View>
   );
 };
 

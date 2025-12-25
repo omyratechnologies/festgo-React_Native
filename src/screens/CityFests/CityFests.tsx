@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,102 +7,160 @@ import {
   Image,
   TextInput,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { MainTabNavigationProp } from '~/navigation/types';
+import { NavigationProp } from '~/navigation/types';
 import BottomMenu from '~/components/common/BottomMenu';
 import Svg, { Path } from 'react-native-svg';
+import { API_URL } from '~/utils/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
-// Mock data for categories
-const categories = [
-  { id: 1, name: 'DJ Nights', icon: '🎤', color: '#8B5CF6' },
-  { id: 2, name: 'Concerts', icon: '🎵', color: '#F59E0B' },
-  { id: 3, name: 'Sports', icon: '🏏', color: '#10B981' },
-  { id: 4, name: 'Music', icon: '🎶', color: '#EF4444' },
-];
+interface Category {
+  id: string;
+  name: string;
+  image: string;
+}
 
-// Mock data for popular events
-const popularEvents = [
-  {
-    id: 1,
-    title: 'Concert Nights',
-    location: '@ Park Hyatt',
-    price: 'Rs 500/- onwards',
-    date: '5th Jun',
-    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop',
-  },
-  {
-    id: 2,
-    title: 'DJ Night',
-    location: '@ Taj Palace',
-    price: 'Rs 800/- onwards',
-    date: '7th Jun',
-    image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=300&fit=crop',
-  },
-  {
-    id: 3,
-    title: 'Rock Concert',
-    location: '@ Marriott',
-    price: 'Rs 1200/- onwards',
-    date: '10th Jun',
-    image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&h=300&fit=crop',
-  },
-];
+interface CityFest {
+  id: string;
+  categoryId: string;
+  location: string;
+  event_start: string;
+  event_end: string;
+  highlights: string;
+  image_urls: string[];
+  cityfest_category_name: string;
+  cityfest_category_image: string;
+  pricing_types: any[];
+}
 
-// Mock data for nearby events
-const nearbyEvents = [
-  {
-    id: 1,
-    title: 'Comedy Nights',
-    location: '@ Park Hyatt',
-    price: 'Rs 500/- onwards',
-    date: '5th Jun',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=200&fit=crop',
-  },
-  {
-    id: 2,
-    title: 'Stand-up Comedy',
-    location: '@ Taj Palace',
-    price: 'Rs 600/- onwards',
-    date: '6th Jun',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=200&fit=crop',
-  },
-  {
-    id: 3,
-    title: 'Open Mic Night',
-    location: '@ Marriott',
-    price: 'Rs 400/- onwards',
-    date: '8th Jun',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=200&fit=crop',
-  },
-  {
-    id: 4,
-    title: 'Poetry Slam',
-    location: '@ Hilton',
-    price: 'Rs 300/- onwards',
-    date: '9th Jun',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=200&fit=crop',
-  },
-];
+const locations = ['All Cities', 'Hyderabad', 'Guntur', 'Mumbai', 'Delhi'];
 
 const CityFests = () => {
-  const navigation = useNavigation<MainTabNavigationProp>();
-  const [selectedLocation, setSelectedLocation] = useState('Hyderabad');
+  const navigation = useNavigation<NavigationProp>();
+  const [selectedLocation, setSelectedLocation] = useState('All Cities');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [fests, setFests] = useState<CityFest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingFests, setLoadingFests] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const location = selectedLocation === 'All Cities' ? 'hyderabad' : selectedLocation.toLowerCase();
+        const response = await fetch(`${API_URL}/city-fests/categories`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ location }),
+        });
+        const data = await response.json();
+        if (data.success && data.data) {
+          setCategories(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    fetchCategories();
+  }, [selectedLocation]);
+
+  // Check authentication and fetch all fests
+  useEffect(() => {
+    const checkAuthAndFetchFests = async () => {
+      try {
+        setLoadingFests(true);
+        const jwtToken = await AsyncStorage.getItem('jwtToken');
+        
+        if (!jwtToken) {
+          setIsAuthenticated(false);
+          setFests([]);
+          setLoadingFests(false);
+          setLoading(false);
+          return;
+        }
+
+        setIsAuthenticated(true);
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwtToken}`,
+        };
+        
+        const response = await fetch(`${API_URL}/city-fests/getall/cityfests`, {
+          method: 'GET',
+          headers,
+        });
+        const data = await response.json();
+        if (data.success && data.fests) {
+          // Filter by location if not "All Cities"
+          let filteredFests = data.fests;
+          if (selectedLocation !== 'All Cities') {
+            filteredFests = data.fests.filter(
+              (fest: CityFest) => fest.location.toLowerCase() === selectedLocation.toLowerCase()
+            );
+          }
+          // Filter by search query
+          if (searchQuery) {
+            filteredFests = filteredFests.filter(
+              (fest: CityFest) =>
+                fest.highlights?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                fest.cityfest_category_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                fest.location?.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+          }
+          setFests(filteredFests);
+        } else {
+          console.error('API Error:', data);
+          setFests([]);
+        }
+      } catch (error) {
+        console.error('Error fetching fests:', error);
+        setFests([]);
+      } finally {
+        setLoadingFests(false);
+        setLoading(false);
+      }
+    };
+    checkAuthAndFetchFests();
+  }, [selectedLocation, searchQuery]);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date;
+  };
+
+  const getMinPrice = (pricingTypes: any[]) => {
+    if (!pricingTypes || pricingTypes.length === 0) return '500';
+    let minPrice = Infinity;
+    pricingTypes.forEach((category) => {
+      category.types?.forEach((type: any) => {
+        if (type.price < minPrice) {
+          minPrice = type.price;
+        }
+      });
+    });
+    return minPrice === Infinity ? '500' : minPrice.toString();
+  };
 
   return (
     <View className="flex-1 bg-white">
       {/* Header Section */}
       <View
         style={{
-          height: 280,
+          height: 200,
           position: 'relative',
           alignItems: 'center',
           justifyContent: 'flex-start',
         }}>
         {/* Background Image */}
-        <View className="absolute inset-0 overflow-hidden rounded-b-[30px] bg-[#0E54EC]">
+        <View className="absolute inset-0 overflow-hidden bg-[#0E54EC]">
           <Image
             source={{
               uri: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop',
@@ -182,10 +240,18 @@ const CityFests = () => {
           </Text>
         </View>
 
-        {/* Search Bar */}
-        <View className="absolute bottom-16 left-4 right-4">
+      </View>
+
+      {/* Main Content */}
+      <ScrollView
+        className="flex-1 bg-white -mt-6 rounded-t-[40px]"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 16, paddingBottom: 120, paddingTop: 16 }}>
+        {/* Location Filter Tabs - Below Search Bar */}
+
+        <View className="my-6">
           <View className="relative">
-            <View className="overflow-hidden rounded-full bg-white shadow-lg">
+            <View className="overflow-hidden rounded-full bg-white border border-gray-300">
               <View className="flex-row items-center px-4 py-4">
                 <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" className="mr-3">
                   <Path
@@ -197,182 +263,137 @@ const CityFests = () => {
                   />
                 </Svg>
                 <TextInput
-                  placeholder="Search Fests"
+                  placeholder="Search City Fests"
                   placeholderTextColor="#999"
                   className="flex-1 font-poppins text-base"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
                 />
               </View>
             </View>
           </View>
         </View>
-      </View>
-
-      {/* Main Content */}
-      <ScrollView
-        className="flex-1 bg-white"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
-        {/* Categories Section */}
         <View className="mb-6">
-          <Text className="mb-4 font-baloo text-xl font-bold text-black">Categories</Text>
-          <View className="flex-row justify-between">
-            {categories.map((category) => (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2">
+            {locations.map((location) => (
               <TouchableOpacity
-                key={category.id}
-                className="items-center"
-                onPress={() =>
-                  navigation.navigate('CityFestCategory', {
-                    categoryId: category.id.toString(),
-                    categoryName: category.name,
-                  })
-                }>
-                <View
-                  className="mb-2 h-24 w-24 items-center justify-center rounded-full border border-gray-200 bg-white"
-                  style={{
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 10 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 3.84,
-                  }}>
-                  <Text className="text-2xl">{category.icon}</Text>
-                  <Text className="text-center font-poppins text-xs text-gray-700">
-                    {category.name}
+                key={location}
+                onPress={() => setSelectedLocation(location)}
+                className={`rounded-full mr-2 px-4 py-2 ${
+                  selectedLocation === location ? 'bg-[#0E54EC]' : 'bg-white border border-gray-300'
+                }`}
+                >
+                <Text
+                  className={`font-poppins text-sm font-medium ${
+                    selectedLocation === location ? 'text-white' : 'text-gray-700'
+                  }`}>
+                  {location}
                   </Text>
-                </View>
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
         </View>
 
-        {/* Popular Events Section */}
+        {/* All City Fests Section */}
         <View className="mb-6">
-          <View className="mb-4 flex-row items-center justify-between">
-            <Text className="font-baloo text-xl font-bold text-black">Popular Events</Text>
-            <TouchableOpacity>
-              <Text className="font-poppins text-sm font-medium text-[#0E54EC]">See all</Text>
-            </TouchableOpacity>
+          <Text className="mb-4 font-baloo text-2xl font-bold text-black">All City Fests</Text>
+          {!isAuthenticated ? (
+            <View className="items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 p-8">
+              <Text className="mb-2 text-center font-baloo text-xl font-bold text-gray-800">
+                Login Required
+              </Text>
+              <Text className="mb-6 text-center font-poppins text-base text-gray-600">
+                Please login to view city fests
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                    navigation.navigate('Auth', { screen: 'Login' });
+                }}
+                className="rounded-full bg-[#0E54EC] px-6 py-3">
+                <Text className="font-poppins font-semibold text-white">Go to Login</Text>
+              </TouchableOpacity>
           </View>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View className="flex-row gap-4">
-              {popularEvents.map((event) => (
+          ) : loadingFests ? (
+            <View className="items-center justify-center py-10">
+              <ActivityIndicator size="large" color="#0E54EC" />
+            </View>
+          ) : fests.length === 0 ? (
+            <View className="items-center justify-center py-10">
+              <Text className="font-poppins text-gray-500">No fests found</Text>
+            </View>
+          ) : (
+            <View className="flex-row flex-wrap justify-between">
+              {fests.map((fest) => (
                 <TouchableOpacity
-                  key={event.id}
-                  className="w-80"
-                  onPress={() =>
-                    navigation.navigate('CityFestDetails', { festId: event.id.toString() })
-                  }>
-                  <View className="overflow-hidden rounded-xl shadow-sm">
+                  key={fest.id}
+                  className="mb-4 w-[48%]"
+                  onPress={() => navigation.navigate('Main', { screen: 'CityFestDetails', params: { festId: fest.id } })}>
+                  <View className="relative aspect-square w-full overflow-hidden rounded-2xl bg-white shadow-sm">
                     <Image
-                      source={{ uri: event.image }}
-                      className="h-40 w-full"
+                      source={{
+                        uri: fest.image_urls?.[0] || 'https://via.placeholder.com/300',
+                      }}
+                      className="h-full w-full"
                       resizeMode="cover"
                     />
-                    <View className="rounded-b-xl border border-[#00000047] bg-[#FCF0F0] p-3">
-                      <Text className="mb-1 font-poppins font-semibold text-black">
-                        {event.title}
+                    {/* Date Badge - Quarter Circle */}
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: -25,
+                        right: -25,
+                        backgroundColor: '#0E54EC',
+                        borderRadius: 9999,
+                        width: 80,
+                        height: 80,
+                        zIndex: 3,
+                        alignItems: 'flex-start',
+                        justifyContent: 'flex-end',
+                        paddingBottom: 14,
+                        paddingLeft: 18,
+                      }}>
+                      <Text className="text-center text-lg font-bold leading-none text-white">
+                        {formatDate(fest.event_start).getDate()}
                       </Text>
-                      <Text className="mb-1 font-poppins text-sm text-gray-600">
-                        {event.location}
+                      <Text className="text-xs text-center font-semibold leading-none text-white">
+                        {formatDate(fest.event_start)
+                          .toLocaleDateString('en-US', { month: 'short' })
+                          .toUpperCase()}
                       </Text>
-                      <View className="flex-row items-center justify-between">
-                        <View className="flex-row items-center gap-2">
-                          <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                            <Path
-                              d="M4 9V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"
-                              stroke="#0E54EC"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                            <Path
-                              d="M8 12h.01M12 12h.01M16 12h.01"
-                              stroke="#0E54EC"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </Svg>
-                          <Text className="font-poppins text-sm font-medium text-[#0E54EC]">
-                            {event.price}
+                    </View>
+                    {/* Gradient Overlay */}
+                    <View
+                      style={{
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: '50%',
+                        backgroundColor: 'rgba(0,0,0,0.4)',
+                      }}
+                    />
+                    {/* Event Details Overlay */}
+                    <View
+                      style={{
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        padding: 12,
+                        zIndex: 2,
+                      }}>
+                      <Text className="text-base font-bold text-white" numberOfLines={1}>
+                        {fest.cityfest_category_name || 'City Fest'}
+                      </Text>
+                      <Text className="text-sm text-gray-200" numberOfLines={1}>
+                        {fest.location ? fest.location : ''}
                           </Text>
-                        </View>
-                        <View className="flex-row items-center gap-2">
-                          <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                            <Path
-                              d="M8 2v2M16 2v2M3 7h18M5 11h2M9 11h2M13 11h2M17 11h2M5 15h2M9 15h2M13 15h2M17 15h2M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"
-                              stroke="#0E54EC"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </Svg>
-                          <Text className="font-poppins text-sm text-gray-500">{event.date}</Text>
-                        </View>
-                      </View>
                     </View>
                   </View>
                 </TouchableOpacity>
               ))}
             </View>
-          </ScrollView>
-        </View>
-
-        {/* Nearby Events Section */}
-        <View className="mb-6">
-          <View className="mb-4 flex-row items-center justify-between">
-            <Text className="font-baloo text-xl font-bold text-black">Nearby Events</Text>
-            <TouchableOpacity>
-              <Text className="font-poppins text-sm font-medium text-[#0E54EC]">See all</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View className="gap-3">
-            {nearbyEvents.map((event) => (
-              <TouchableOpacity
-                key={event.id}
-                className="overflow-hidden rounded-xl bg-white shadow-sm"
-                onPress={() =>
-                  navigation.navigate('CityFestDetails', { festId: event.id.toString() })
-                }>
-                <View className="flex-row">
-                  <Image source={{ uri: event.image }} className="h-24 w-24" resizeMode="cover" />
-                  <View className="flex-1 justify-between rounded-r-xl border border-[#00000047] bg-[#FCF0F0] p-3">
-                    <View>
-                      <Text className="mb-1 font-poppins font-semibold text-black">
-                        {event.title}
-                      </Text>
-                      <Text className="font-poppins text-sm text-gray-600">{event.location}</Text>
-                    </View>
-                    <View className="flex-row items-center justify-between">
-                      <View className="flex-row items-center gap-2">
-                        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                          <Path
-                            d="M4 9V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"
-                            stroke="#0E54EC"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <Path
-                            d="M8 12h.01M12 12h.01M16 12h.01"
-                            stroke="#0E54EC"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </Svg>
-                        <Text className="font-poppins text-sm font-medium text-[#0E54EC]">
-                          {event.price}
-                        </Text>
-                      </View>
-                      <Text className="font-poppins text-sm text-gray-500">{event.date}</Text>
-                    </View>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+          )}
         </View>
       </ScrollView>
 
