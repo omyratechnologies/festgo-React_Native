@@ -98,7 +98,11 @@ export const MainNavigator = () => {
       screenOptions={{ headerShown: false, animation: 'simple_push' }}
       initialRouteName="HomePage">
         {/* Public screens - no authentication required */}
-        <Stack.Screen name="HomePage" component={HomePage} />
+        <Stack.Screen 
+          name="HomePage" 
+          component={HomePage} 
+          options={{ animation: 'none' }}
+        />
         <Stack.Screen name="EventsPage" component={EventsPage} />
         <Stack.Screen name="EventsInfoPage" component={EventInfoPage} />
         <Stack.Screen name="CityFestsPage" component={CityFests} />
@@ -107,7 +111,11 @@ export const MainNavigator = () => {
         <Stack.Screen name="CityFestSectionSelection" component={CityFestSectionSelection} />
         <Stack.Screen name="BeachFestsPage" component={BeachFest} />
         <Stack.Screen name="FestBite" component={FestBite} />
-        <Stack.Screen name="UpcomingScreen" component={UpcomingScreen} />
+        <Stack.Screen 
+          name="UpcomingScreen" 
+          component={UpcomingScreen} 
+          options={{ animation: 'none' }}
+        />
         <Stack.Screen name="TripsScreen" component={TripsScreen} />
         <Stack.Screen name="TripBrowse" component={TripBrowse} />
         <Stack.Screen name="TripDetailsFlow" component={TripDetailsFlow} />
@@ -120,7 +128,11 @@ export const MainNavigator = () => {
 
         {/* Protected screens - authentication required */}
         <Stack.Screen name="Profile" component={ProtectedProfileScreen} />
-        <Stack.Screen name="ReferAndEarn" component={ProtectedReferAndEarn} />
+        <Stack.Screen 
+          name="ReferAndEarn" 
+          component={ProtectedReferAndEarn} 
+          options={{ animation: 'none' }}
+        />
         <Stack.Screen name="RecommendAndEarn" component={ProtectedRecommendAndEarn} />
         <Stack.Screen name="EditProfile" component={ProtectedEditProfile} />
         <Stack.Screen name="MyOrders" component={ProtectedMyOrders} />
@@ -130,7 +142,11 @@ export const MainNavigator = () => {
         <Stack.Screen name="Wishlist" component={ProtectedWishlist} />
         <Stack.Screen name="Offers" component={ProtectedOffers} />
         <Stack.Screen name="SavedCards" component={ProtectedSavedCards} />
-        <Stack.Screen name="HelpScreen" component={ProtectedHelpScreen} />
+        <Stack.Screen 
+          name="HelpScreen" 
+          component={ProtectedHelpScreen} 
+          options={{ animation: 'none' }}
+        />
         <Stack.Screen name="GSTDetails" component={ProtectedGSTDetails} />
         <Stack.Screen name="DeviceActivityScreen" component={ProtectedDeviceActivityScreen} />
 

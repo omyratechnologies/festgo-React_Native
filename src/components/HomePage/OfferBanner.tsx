@@ -1,6 +1,7 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { Text, StyleSheet, View, FlatList, Dimensions, Animated } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Text, StyleSheet, View, Dimensions, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { API_URL } from '~/utils/api';
 
 const { width } = Dimensions.get('window');
 
@@ -25,102 +26,67 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  highlight: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
 });
 
-const banners = [
-  {
-    key: '1',
-    text: (
-      <>
-        Get Up to <Text style={styles.highlight}>50% OFF</Text> on Festive Bookings
-      </>
-    ),
-    colors: ['#00E871', '#008742'],
-  },
-  {
-    key: '2',
-    text: (
-      <>
-        <Text style={styles.highlight}>Refer & Earn </Text>
-        exciting Rewards!
-      </>
-    ),
-    colors: ['#FFBF47', '#FF8C00'],
-  },
-  {
-    key: '3',
-    text: (
-      <>
-        Special <Text style={styles.highlight}>Weekend Sale!</Text> Save Big!
-      </>
-    ),
-    colors: ['#2FB1FF', '#0050B3'],
-  },
-];
-
-const AUTO_SCROLL_INTERVAL = 2000;
-
 const OfferBanner = () => {
-  const flatListRef = useRef<FlatList>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  // For smoothness of transition (snapping) on scroll
-  const scrollX = useRef(new Animated.Value(0)).current;
+  const [bannerContent, setBannerContent] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      let nextIndex = currentIndex + 1;
-      if (nextIndex === banners.length) nextIndex = 0;
-      setCurrentIndex(nextIndex);
-      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
-    }, AUTO_SCROLL_INTERVAL);
+    const fetchBanner = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_URL}/homescreen-banner`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-    return () => clearInterval(interval);
-  }, [currentIndex]);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-  // In case user manually scrolls (optional: update currentIndex)
-  const onMomentumScrollEnd = (event: any) => {
-    const newIdx = Math.round(event.nativeEvent.contentOffset.x / CARD_WIDTH);
-    setCurrentIndex(newIdx);
-  };
+        const data = await response.json();
+        if (data.success && data.data && data.data.content && data.data.content.length > 0) {
+          // Get the first content item
+          setBannerContent(data.data.content[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching banner:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBanner();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ paddingHorizontal: CARD_HORIZONTAL_PADDING, paddingVertical: 16 }}>
+        <View style={[styles.banner, { backgroundColor: '#f3f4f6', justifyContent: 'center' }]}>
+          <ActivityIndicator size="small" color="#0E54EC" />
+        </View>
+      </View>
+    );
+  }
+
+  if (!bannerContent) {
+    return null;
+  }
 
   return (
-    <View style={{ paddingHorizontal: CARD_HORIZONTAL_PADDING }}>
-      <Animated.FlatList
-        ref={flatListRef}
-        data={banners}
-        keyExtractor={(item) => item.key}
-        renderItem={({ item }) => (
-          <LinearGradient
-            colors={item.colors}
-            style={styles.banner}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}>
-            <Text className="font-baloo" style={styles.text}>
-              {item.text}
-            </Text>
-          </LinearGradient>
-        )}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={CARD_WIDTH}
-        decelerationRate="fast"
-        getItemLayout={(_, index) => ({
-          length: CARD_WIDTH,
-          offset: CARD_WIDTH * index,
-          index,
-        })}
-        style={{ width: '100%' }}
-        contentContainerStyle={{}}
-        onMomentumScrollEnd={onMomentumScrollEnd}
-        scrollEventThrottle={16}
-      />
+    <View style={{ paddingHorizontal: CARD_HORIZONTAL_PADDING}}>
+      <LinearGradient
+        colors={['#00E871', '#008742']}
+        style={styles.banner}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}>
+        <Text className="font-baloo" style={styles.text}>
+          {bannerContent}
+        </Text>
+      </LinearGradient>
     </View>
   );
 };

@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import React from 'react';
-import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import BottomMenuIcon from '~/assets/images/homepage/BottomMenu.svg';
 import MenuPlayButton from '~/assets/images/homepage/MenuPlayButton.svg';
 import HomeIcon from '~/assets/images/common/BottomMenu/Home.svg';
@@ -41,12 +41,12 @@ const BottomMenu = () => {
   const activeKey = MENU_ITEMS.find((item) => item.route === route.name)?.key || 'home';
 
   const handlePress = (key: string, routeName: string) => {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: routeName }],
-      })
-    );
+    // Don't navigate if already on this route
+    if (route.name === routeName) {
+      return;
+    }
+    // Use navigate for tab-like behavior (instant switch, no animation)
+    navigation.navigate(routeName as never);
   };
 
   return (

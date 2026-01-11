@@ -9,8 +9,23 @@ import NotificationIcon from '~/assets/images/common/Navbar/NotificationLight.sv
 import UserProfileLight from '~/assets/images/common/Navbar/userProfileLight.svg';
 import Svg, { Path } from 'react-native-svg';
 import BottomMenu from '~/components/common/BottomMenu';
+import { Ionicons } from '@expo/vector-icons';
 
 type RouteP = RouteProp<MainStackParamList, 'TripDetailsFlow'>;
+
+const ICON_SIZE = 22;
+
+const inputIcons = {
+  name: <Ionicons name="person-outline" size={ICON_SIZE} color="#888" />,
+  phone: <Ionicons name="call-outline" size={ICON_SIZE} color="#888" />,
+  email: <Ionicons name="mail-outline" size={ICON_SIZE} color="#888" />,
+};
+
+const paymentMethodIcons = {
+  card: <Ionicons name="card-outline" size={ICON_SIZE} color="#666" />,
+  upi: <Ionicons name="phone-portrait-outline" size={ICON_SIZE} color="#666" />,
+  wallet: <Ionicons name="wallet-outline" size={ICON_SIZE} color="#666" />,
+};
 
 const StepButton = ({ title, onPress, disabled }: { title: string; onPress: () => void; disabled?: boolean }) => (
   <TouchableOpacity onPress={onPress} disabled={disabled} className={`mt-4 rounded-full py-3 ${disabled ? 'bg-gray-400' : 'bg-[#0E54EC]'}`}>
@@ -51,11 +66,39 @@ const TripDetailsFlow: React.FC = () => {
       case 1:
         return 'Select Plan';
       case 2:
-        return 'Preview';
+        return 'Check out';
       case 3:
-        return 'Traveler Details';
+        return 'Check out';
       default:
         return trip.tripName;
+    }
+  };
+
+  const formatDisplayDate = (dateString: string) => {
+    try {
+      // Try to parse the date - handle different formats
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        // If parsing fails, try DD-MM-YYYY format
+        const parts = dateString.split(/[-/]/);
+        if (parts.length === 3) {
+          const [day, month, year] = parts;
+          const parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          return parsedDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          });
+        }
+        return dateString;
+      }
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    } catch (error) {
+      return dateString;
     }
   };
 
@@ -240,75 +283,207 @@ const TripDetailsFlow: React.FC = () => {
           {step === 1 && (
             <View>
               <Text className="text-lg font-semibold mb-3 font-baloo">Tuning Plans – Group Pricing</Text>
-              {trip.pricing?.map((p: any) => (
-                <TouchableOpacity
-                  key={p.id}
-                  onPress={() => setSelectedPricing(p)}
-                  className={`mb-3 rounded-xl border p-4 ${selectedPricing?.id === p.id ? 'border-[#0E54EC] bg-[#0E54EC]/10' : 'border-gray-300 bg-white'}`}
-                >
-                  <Text className="font-semibold text-base">{p.title}</Text>
-                  <Text className="text-gray-600 mt-1">{p.price}</Text>
-                </TouchableOpacity>
-              ))}
+              {trip.pricing?.map((p: any, idx: number) => {
+                const vehicleImages = [
+                  require('~/assets/images/trips/car.png'),
+                  require('~/assets/images/trips/van.png'),
+                  require('~/assets/images/trips/bus2.png'),
+                ];
+                const vehicleImage = vehicleImages[idx] || vehicleImages[0];
+                return (
+                  <TouchableOpacity
+                    key={p.id}
+                    onPress={() => setSelectedPricing(p)}
+                    className={`mb-3 rounded-xl border p-4 flex-row items-center justify-between ${selectedPricing?.id === p.id ? 'border-[#0E54EC] bg-[#0E54EC]/10' : 'border-gray-300 bg-white'}`}
+                  >
+                    <View className="flex-1">
+                      <Text className="font-semibold text-base">{p.title}</Text>
+                      <Text className="text-gray-600 mt-1">{p.price}</Text>
+                    </View>
+                    <Image 
+                      source={vehicleImage} 
+                      style={{ width: 60, height: 60 }} 
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                );
+              })}
               <StepButton title="Next" onPress={goNext} disabled={!canContinuePricing} />
+              <Image 
+                source={require('~/assets/images/trips/bottom.png')} 
+                style={{ width: '100%', marginTop: 16 }} 
+                resizeMode="contain"
+              />
               <StepButton title="Back" onPress={goBack} />
             </View>
           )}
 
           {step === 2 && (
             <View>
-              <Text className="text-lg font-semibold mb-3 font-baloo">Preview</Text>
-              <View className="mb-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <Text className="text-gray-700 mb-2"><Text className="font-semibold">Trip:</Text> {trip.tripName}</Text>
-                <Text className="text-gray-700 mb-2"><Text className="font-semibold">Dates:</Text> {trip.startDate} → {trip.endDate}</Text>
-                <Text className="text-gray-700 mb-2"><Text className="font-semibold">Duration:</Text> {trip.numberOfDays} days</Text>
+              <View className="rounded-xl border border-gray-200 bg-white p-5 mb-4">
+                {/* Trip Title */}
+                <Text className="text-2xl font-bold mb-2 font-baloo text-black">{trip.tripName}</Text>
+                
+                {/* Trip Summary */}
+                <Text className="text-base text-gray-700 mb-5">
+                  {trip.numberOfDays} days Trip | {numPersons} Member{parseInt(numPersons) !== 1 ? 's' : ''}
+                </Text>
+
+                {/* Selected Plan with Image */}
                 {selectedPricing && (
-                  <Text className="text-gray-700"><Text className="font-semibold">Selected Plan:</Text> {selectedPricing.title} ({selectedPricing.price})</Text>
+                  <View className="mb-5 flex-row items-center">
+                    <Image
+                      source={
+                        (() => {
+                          const pricingIndex = trip.pricing?.findIndex((p: any) => p.id === selectedPricing.id) ?? 0;
+                          const vehicleImages = [
+                            require('~/assets/images/trips/car.png'),
+                            require('~/assets/images/trips/van.png'),
+                            require('~/assets/images/trips/bus2.png'),
+                          ];
+                          return vehicleImages[pricingIndex] || vehicleImages[0];
+                        })()
+                      }
+                      style={{ width: 80, height: 80, borderRadius: 12, marginRight: 16 }}
+                      resizeMode="contain"
+                    />
+                    <View className="flex-1">
+                      <Text className="text-base text-gray-700 mb-1">For {numPersons} member{parseInt(numPersons) !== 1 ? 's' : ''}</Text>
+                      <Text className="text-lg font-semibold text-gray-900">{selectedPricing.price}</Text>
+                    </View>
+                  </View>
                 )}
+
+                {/* Depart Date */}
+                <View className="mb-4 flex-row items-center">
+                  <Text className="font-semibold text-base text-gray-900 mr-2">Depart Date</Text>
+                  <Ionicons name="calendar-outline" size={18} color="#666" style={{ marginRight: 8 }} />
+                  <Text className="text-base text-gray-700">{formatDisplayDate(trip.startDate)}</Text>
+                </View>
+
+                {/* Pickup Location */}
+                <View className="mb-4 flex-row items-center">
+                  <Text className="font-semibold text-base text-gray-900 mr-2">Pickup Location</Text>
+                  <Ionicons name="location-outline" size={18} color="#666" style={{ marginRight: 8 }} />
+                  <Text className="text-base text-gray-700">{trip.pickupLocation}</Text>
+                </View>
+
+                {/* Inclusions */}
+                <View className="mb-5 flex-row items-center">
+                  <Text className="font-semibold text-base text-gray-900 mr-2">Inclusions</Text>
+                  <Text className="text-sm text-gray-500 mr-2">(costs extra)</Text>
+                  <Ionicons name="checkmark-circle" size={20} color="#0E54EC" style={{ marginRight: 8 }} />
+                  <Text className="text-base text-gray-700 flex-1">
+                    {trip.inclusions && trip.inclusions.length > 0 
+                      ? trip.inclusions.join(', ') 
+                      : 'Accommodation, Transport, etc'}
+                  </Text>
+                </View>
+
+                {/* Confirm Button */}
+                <TouchableOpacity
+                  onPress={goNext}
+                  className="mt-4 rounded-full bg-[#0E54EC] py-3"
+                >
+                  <Text className="text-center text-white font-semibold text-base">Confirm</Text>
+                </TouchableOpacity>
               </View>
-              <StepButton title="Next" onPress={goNext} />
               <StepButton title="Back" onPress={goBack} />
             </View>
           )}
 
           {step === 3 && (
-            <View>
-              <Text className="text-lg font-semibold mb-4 font-baloo">Traveler Details</Text>
-              <View className="mb-3">
-                <Text className="mb-1 text-gray-700 font-medium">Name</Text>
-                <TextInput value={name} onChangeText={setName} placeholder="Enter name" className="rounded-xl border border-gray-300 px-3 py-3 bg-white" />
-              </View>
-              <View className="mb-3">
-                <Text className="mb-1 text-gray-700 font-medium">Phone</Text>
-                <TextInput value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="Enter phone" className="rounded-xl border border-gray-300 px-3 py-3 bg-white" />
-              </View>
-              <View className="mb-3">
-                <Text className="mb-1 text-gray-700 font-medium">Email</Text>
-                <TextInput value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="Enter email" className="rounded-xl border border-gray-300 px-3 py-3 bg-white" />
-              </View>
-              <View className="mb-3">
-                <Text className="mb-1 text-gray-700 font-medium">Number of Persons</Text>
-                <TextInput value={numPersons} onChangeText={setNumPersons} keyboardType="number-pad" placeholder="e.g. 4" className="rounded-xl border border-gray-300 px-3 py-3 bg-white" />
-              </View>
-              <View className="mb-3">
-                <Text className="mb-1 text-gray-700 font-medium">Referral ID (optional)</Text>
-                <TextInput value={referralId} onChangeText={setReferralId} placeholder="Enter referral id" className="rounded-xl border border-gray-300 px-3 py-3 bg-white" />
-              </View>
-              <View className="mb-4">
-                <Text className="mb-1 text-gray-700 font-medium">Coins to use (optional)</Text>
-                <TextInput value={requestedCoins} onChangeText={setRequestedCoins} keyboardType="number-pad" placeholder="e.g. 100" className="rounded-xl border border-gray-300 px-3 py-3 bg-white" />
+            <View className="pb-32">
+              {/* Input Fields */}
+              <View className="mb-6 gap-4">
+                {/* Name */}
+                <View>
+                  <Text className="mb-1 text-gray-700 font-medium">Name</Text>
+                  <View className="flex-row items-center rounded-lg border border-gray-300 bg-white px-3 py-3">
+                    <TextInput
+                      value={name}
+                      onChangeText={setName}
+                      placeholder="Enter Name"
+                      className="flex-1 text-base"
+                    />
+                    {inputIcons.name}
+                  </View>
+                </View>
+                {/* Phone */}
+                <View>
+                  <Text className="mb-1 text-gray-700 font-medium">Phone no.</Text>
+                  <View className="flex-row items-center rounded-lg border border-gray-300 bg-white px-3 py-3">
+                    <Text className="text-gray-500 mr-2">+91</Text>
+                    <TextInput
+                      value={phone}
+                      onChangeText={(v) => setPhone(v.replace(/[^0-9]/g, ''))}
+                      keyboardType="phone-pad"
+                      placeholder=""
+                      className="flex-1 text-base"
+                      maxLength={10}
+                    />
+                    {inputIcons.phone}
+                  </View>
+                </View>
+                {/* Email */}
+                <View>
+                  <Text className="mb-1 text-gray-700 font-medium">Email id</Text>
+                  <View className="flex-row items-center rounded-lg border border-gray-300 bg-white px-3 py-3">
+                    <TextInput
+                      value={email}
+                      onChangeText={setEmail}
+                      keyboardType="email-address"
+                      placeholder="Enter your email"
+                      autoCapitalize="none"
+                      className="flex-1 text-base"
+                    />
+                    {inputIcons.email}
+                  </View>
+                </View>
               </View>
 
-              <Text className="mb-2 text-gray-700 font-medium">Payment Method</Text>
-              <View className="flex-row gap-2 mb-4">
-                {['upi','card','wallet'].map((m) => (
-                  <TouchableOpacity key={m} onPress={() => setPaymentMethod(m as any)} className={`rounded-full border px-4 py-2 ${paymentMethod===m ? 'border-[#0E54EC] bg-[#0E54EC]/10' : 'border-gray-300 bg-white'}`}>
-                    <Text className={`${paymentMethod===m ? 'text-[#0E54EC] font-semibold' : 'text-gray-700'}`}>{m.toUpperCase()}</Text>
+              {/* Payment Method */}
+              <View className="mb-6">
+                <Text className="mb-3 text-gray-700 font-semibold">Payment Method</Text>
+                {[
+                  { value: 'card', label: 'Card' },
+                  { value: 'upi', label: 'UPI' },
+                  { value: 'wallet', label: 'Wallet' },
+                ].map((method) => (
+                  <TouchableOpacity
+                    key={method.value}
+                    className={`mb-2 flex-row items-center justify-between rounded-lg border px-4 py-3 ${
+                      paymentMethod === method.value
+                        ? 'border-[#0E54EC] bg-blue-50'
+                        : 'border-gray-300 bg-white'
+                    }`}
+                    onPress={() => setPaymentMethod(method.value as any)}>
+                    <View className="flex-row items-center flex-1">
+                      {paymentMethodIcons[method.value as keyof typeof paymentMethodIcons]}
+                      <Text className="ml-3 text-base text-gray-900">{method.label}</Text>
+                    </View>
+                    <View
+                      className={`h-5 w-5 rounded-full border-2 ${
+                        paymentMethod === method.value
+                          ? 'border-[#0E54EC] bg-[#0E54EC]'
+                          : 'border-gray-400 bg-white'
+                      } items-center justify-center`}>
+                      {paymentMethod === method.value && (
+                        <View className="h-2.5 w-2.5 rounded-full bg-white" />
+                      )}
+                    </View>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <StepButton title="Confirm Booking" onPress={handleBook} />
+              {/* Continue Payment Button */}
+              <TouchableOpacity
+                onPress={handleBook}
+                className="rounded-lg bg-[#0E54EC] py-4 mb-4">
+                <Text className="text-center text-white font-semibold text-base">
+                  Continue Payment
+                </Text>
+              </TouchableOpacity>
               <StepButton title="Back" onPress={goBack} />
             </View>
           )}

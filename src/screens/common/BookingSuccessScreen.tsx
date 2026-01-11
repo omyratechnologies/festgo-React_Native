@@ -359,7 +359,7 @@ const BookingSuccessScreen: React.FC<BookingSuccessScreenProps> = ({ route }) =>
             </View>
 
             {/* Action Buttons */}
-            <View className="mb-8 space-y-3">
+            <View className="mb-8 gap-3">
               <TouchableOpacity
                 onPress={handleViewBookings}
                 className="rounded-full bg-[#F15A29] py-4">

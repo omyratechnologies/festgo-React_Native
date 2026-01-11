@@ -52,9 +52,9 @@ const icons = {
 };
 
 const paymentMethods = [
-  { label: 'Card', value: 'card', icon: '💳' },
-  { label: 'UPI', value: 'upi', icon: '📱' },
-  { label: 'Wallet', value: 'wallet', icon: '👛' },
+  { label: 'Card', value: 'card'},
+  { label: 'UPI', value: 'upi'},
+  { label: 'Wallet', value: 'wallet'},
 ];
 
 interface CityFest {
@@ -468,12 +468,13 @@ const CityFestCheckout = () => {
             {paymentMethods.map((method) => (
               <TouchableOpacity
                 key={method.value}
-                className={`mb-2 flex-row items-center rounded-lg border px-4 py-3 ${
+                className={`mb-2 flex-row items-center justify-between rounded-lg border px-4 py-3 ${
                   form.payment_method === method.value
                     ? 'border-[#0E54EC] bg-blue-50'
                     : 'border-gray-300'
                 }`}
                 onPress={() => handleRadio(method.value)}>
+                <Text className="font-poppins text-base">{method.label}</Text>
                 <View
                   className={`mr-3 h-5 w-5 rounded-full border-2 ${
                     form.payment_method === method.value
@@ -484,8 +485,6 @@ const CityFestCheckout = () => {
                     <View className="h-2.5 w-2.5 rounded-full bg-white" />
                   )}
                 </View>
-                <Text className="mr-2 text-lg">{method.icon}</Text>
-                <Text className="font-poppins text-base">{method.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
